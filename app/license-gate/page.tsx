@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LicenseGateDesk } from "@/components/license-gate/LicenseGateDesk";
+import { ToolStub } from "@/components/ToolStub";
 
 export const metadata: Metadata = {
   title: "License Risk Gate",
@@ -8,8 +8,9 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <main className="flex min-h-screen w-full max-w-full min-w-0 flex-col bg-[var(--cb-bg)] font-sans text-[var(--cb-ink)]">
-      <LicenseGateDesk />
-    </main>
+    <ToolStub
+      title="License Risk Gate"
+      blurb="Drop a lockfile and see if license risk is a pass or fail."
+    />
   );
 }

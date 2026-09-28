@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { Scorecard } from "@/components/scorecard/Scorecard";
+import { ToolStub } from "@/components/ToolStub";
 
 export const metadata: Metadata = {
-  title: "Enterprise Scorecard",
-  description: "See if LinkedIn, Investing, and Build are on track this week.",
+  title: "Scorecard",
+  description: "Pillar scorecard for Build bets.",
 };
 
 export default function Page() {
   return (
-    <main className="flex min-h-screen flex-col bg-[var(--cb-bg)] text-[var(--cb-ink)] font-sans">
-      <Scorecard />
-    </main>
+    <ToolStub
+      title="Scorecard"
+      blurb="Pillar scorecard for Build bets."
+    />
   );
 }

@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { DecisionDesk } from "@/components/deploy-decision/DecisionDesk";
+import { ToolStub } from "@/components/ToolStub";
 
 export const metadata: Metadata = {
-  title: "Deploy Decision Card",
-  description:
-    "Investment Desk dogfood — opportunity card, approve / size / pass, append-only log.",
+  title: "Deploy Decision",
+  description: "Kill / hold / ship decision card.",
 };
 
 export default function Page() {
   return (
-    <main className="flex min-h-screen flex-col bg-[var(--cb-bg)] text-[var(--cb-ink)] font-sans">
-      <DecisionDesk />
-    </main>
+    <ToolStub
+      title="Deploy Decision"
+      blurb="Kill / hold / ship decision card."
+    />
   );
 }

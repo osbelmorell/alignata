@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { WhatChangedDesk } from "@/components/what-changed/WhatChangedDesk";
+import { ToolStub } from "@/components/ToolStub";
 
 export const metadata: Metadata = {
-  title: "What-Changed Card",
-  description:
-    "List what changed before you decide go or hold — deploys, config, flags, upstreams.",
+  title: "What Changed",
+  description: "Ship card: what moved since last week.",
 };
 
 export default function Page() {
   return (
-    <main className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-[var(--cb-bg)] font-sans text-[var(--cb-ink)]">
-      <WhatChangedDesk />
-    </main>
+    <ToolStub
+      title="What Changed"
+      blurb="Ship card: what moved since last week."
+    />
   );
 }

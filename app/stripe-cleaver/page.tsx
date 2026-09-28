@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { CleaverDesk } from "@/components/stripe-cleaver/CleaverDesk";
+import { ToolStub } from "@/components/ToolStub";
 
 export const metadata: Metadata = {
-  title: "Stripe→Books Cleaver",
-  description: "Turn Stripe payout CSV into QuickBooks or Xero rows.",
+  title: "Stripe Cleaver",
+  description: "Split Stripe CSV exports into clean slices.",
 };
 
 export default function Page() {
   return (
-    <main className="flex min-h-screen w-full max-w-full min-w-0 flex-col bg-[var(--cb-bg)] font-sans text-[var(--cb-ink)]">
-      <CleaverDesk />
-    </main>
+    <ToolStub
+      title="Stripe Cleaver"
+      blurb="Split Stripe CSV exports into clean slices."
+    />
   );
 }
