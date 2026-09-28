@@ -1,0 +1,24 @@
+{
+  "weekEnding": "2026-09-20",
+  "updatedAt": "2026-09-20T12:00:00-04:00",
+  "pillars": [
+    {
+      "id": "linkedin",
+      "label": "LinkedIn",
+      "status": "yellow",
+      "lastOutcome": "Pipeline warm; need 2 more replies this week."
+    },
+    {
+      "id": "investment",
+      "label": "Investment",
+      "status": "green",
+      "lastOutcome": "Deploy Decision Card live; desk dogfood underway."
+    },
+    {
+      "id": "build",
+      "label": "Build",
+      "status": "green",
+      "lastOutcome": "Hub tools shipping; Clay Board house style locked."
+    }
+  ]
+}
