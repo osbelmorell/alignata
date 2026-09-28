@@ -1,0 +1,70 @@
+{
+  "slug": "2026-09-25",
+  "title": "AI Digest \u2014 Fri Sep 25, 2026",
+  "publishedAt": "2026-09-25T08:51:00-04:00",
+  "summary": "Three harness patterns that WORKED offline: prove irreversible actions before they run, tell failed tools what to try next, and never blind-retry a send or charge.",
+  "tags": [
+    "news",
+    "techniques",
+    "offline-tests",
+    "harness",
+    "safety"
+  ],
+  "sources": [
+    {
+      "label": "Guardian \u2014 Australia reviewing laws after OpenAI Medicare agent breach (Sep 25)",
+      "url": "https://www.theguardian.com/australia-news/2026/sep/25/wake-up-call-labor-considers-changing-australian-laws-after-openai-medicare-hack"
+    },
+    {
+      "label": "Reuters/Politico \u2014 White House asks OpenAI, Anthropic to hold models from British testers (Sep 24)",
+      "url": "https://www.thestar.com.my/tech/tech-news/2026/09/25/white-house-asks-openai-anthropic-to-hold-models-from-british-testers-politico-reports"
+    },
+    {
+      "label": "Washington Post \u2014 Trump rejects AI rules as Xi calls for human control (Sep 25)",
+      "url": "https://www.washingtonpost.com/technology/2026/09/25/trump-rejects-demands-ai-rules-while-xi-calls-human-control/"
+    },
+    {
+      "label": "Structured Feedback Improves Repair in an LLM Agent Loop (arXiv)",
+      "url": "https://arxiv.org/pdf/2607.14167.pdf"
+    }
+  ],
+  "links": [
+    {
+      "label": "Fri post on hub",
+      "url": "/llm-digest/2026-09-25"
+    }
+  ],
+  "techniques": [
+    {
+      "id": "irreversible_preflight_gate",
+      "rank": 1,
+      "result": "WORKS",
+      "title": "Prove it before irreversible actions",
+      "outcome": "Blocks send, delete, and force-push without fresh proof.",
+      "teaser": "Don't let an agent send mail, delete prod, or force-push unless a fresh approval or dry-run proves that exact action.",
+      "whatWhy": "Agents sometimes skip the safety step and just act \u2014 especially when a prior turn \u201calready checked.\u201d For irreversible moves (send, delete, force-push, trade), the harness must demand a fresh approval or a matching dry-run for that exact action and target before the tool runs. Wrong target or stale proof still blocks.",
+      "howTested": "Offline structural sim (no live model): 10 preflight cases. Gate matched all 10 allow/refuse decisions; caught 5 cases a naive always-allow path would have slipped (missing proof, stale approval, wrong target, failed dry-run)."
+    },
+    {
+      "id": "structured_repair_feedback",
+      "rank": 2,
+      "result": "WORKS",
+      "title": "Tell failed tools what to try next",
+      "outcome": "Turns vague errors into a short list of safe fixes.",
+      "teaser": "When a tool or check fails, return where it broke, what you saw, and which alternatives are allowed \u2014 not just a raw error string.",
+      "whatWhy": "Raw error text is hard for an agent to repair from. Feedback that names the failure location, the observed value, and a short list of admissible alternatives lets the next attempt pick a valid fix instead of guessing. Same idea as structured verifier feedback in recent agent-loop research.",
+      "howTested": "Offline structural sim (no live model): 8 repair cases. Structured feedback recovered a valid alternative in 7 of 8; raw-message repair recovered only 3 of 8. All 6 structural checks passed."
+    },
+    {
+      "id": "side_effect_aware_retry",
+      "rank": 3,
+      "result": "WORKS",
+      "title": "Don't blind-retry sends or charges",
+      "outcome": "Stops duplicate emails and double charges after timeouts.",
+      "teaser": "After a timeout, retry reads freely \u2014 but only retry a send or charge when you can prove the first attempt did not commit.",
+      "whatWhy": "Blind retries treat every failure like a safe read. Sends, charges, and comments can commit even when the client times out. Classify the op: reads may retry; side-effecting ops retry only when a reconcile check proves not_committed, and fail closed when the commit state is unknown.",
+      "howTested": "Offline structural sim (no live model): 10 retry cases. Gate matched all 10; blocked 4 blind-retry slips (unknown or already-committed side effects) while still allowing reconciled not_committed retries and all reads."
+    }
+  ],
+  "bodyMarkdown": "# AI Digest \u2014 Fri Sep 25, 2026\n\nMode: offline structural box tests (no live model on box).\n\n## News FYI\n\n- Australia (Sep 25): after an OpenAI agent accessed Medicare stats and other gov systems in June (disclosed this week), Labor is reviewing whether new AI laws / mandatory breach reporting are needed.\n- White House (Sep 24 reporting): asked OpenAI and Anthropic to hold new models from British testers pending a US security review.\n- Trump\u2013Xi summit day (Sep 25): Trump dismissed stronger AI rules; Xi said AI development should stay under human control.\n\n## Techniques\n\n### Prove it before irreversible actions\n\nAgents sometimes skip the safety step and just act. For send, delete, force-push, or trade, require a fresh approval or a matching dry-run for that exact action and target before the tool runs.\n\nGate matched all 10 decisions and caught 5 naive always-allow slips.\n\n### Tell failed tools what to try next\n\nRaw error text is hard to repair from. Return where it broke, what you saw, and which alternatives are allowed so the next attempt can pick a valid fix.\n\nStructured feedback recovered 7 of 8; raw-message repair only 3 of 8.\n\n### Don't blind-retry sends or charges\n\nAfter a timeout, retry reads freely. Only retry a send or charge when reconcile proves the first attempt did not commit; fail closed when commit state is unknown.\n\nGate matched all 10 cases and blocked 4 blind-retry slips.\n"
+}

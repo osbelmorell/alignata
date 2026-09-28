@@ -15,6 +15,7 @@ function AppCard({ app }: { app: HubApp }) {
     app.pitch || app.what || app.why || (app.how && app.how.length),
   );
   const hubRelative = isHubRelative(app.url);
+  // Plain purpose line on the card face — do not change apps.json blurbs.
   const purpose = app.blurb;
   const linkProps = hubRelative
     ? {}
@@ -24,12 +25,16 @@ function AppCard({ app }: { app: HubApp }) {
     <li
       className="relative flex h-full flex-col overflow-hidden rounded-[var(--cb-radius-squircle)] border border-[var(--cb-line)] bg-[var(--cb-surface)] shadow-[var(--cb-shadow)] transition hover:border-[color-mix(in_srgb,var(--cb-ink)_12%,var(--cb-line))]"
     >
+      {/* Whole-card tap target (UX Lead: card opens the app) */}
       <a
         href={app.url}
         {...linkProps}
         aria-label={`Open ${app.name}`}
         className="absolute inset-0 z-0 rounded-[var(--cb-radius-squircle)]"
       />
+
+      {/* Content is pointer-events-none so the inset link receives taps;
+          About + Open re-enable pointer-events. */}
       <div className="pointer-events-none relative z-10 flex flex-1 flex-col p-5 pt-4">
         <div className="min-w-0 flex-1 space-y-2">
           <h2 className="text-[20px] font-semibold leading-snug tracking-tight text-[var(--cb-ink)] sm:text-[22px]">
@@ -39,6 +44,7 @@ function AppCard({ app }: { app: HubApp }) {
             {purpose}
           </p>
         </div>
+
         {hasDetail ? (
           <div className="mt-3">
             <button
@@ -98,6 +104,8 @@ function AppCard({ app }: { app: HubApp }) {
             ) : null}
           </div>
         ) : null}
+
+        {/* Primary Open: full-width black pill only (circle ↗ dropped) */}
         <a
           href={app.url}
           {...linkProps}
@@ -162,6 +170,7 @@ export function AppHub({ apps }: { apps: HubApp[] }) {
             className="w-full rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-bg)_70%,white)] px-4 py-3 text-base text-[var(--cb-ink)] placeholder:text-[var(--cb-ink-muted)] outline-none focus:border-[var(--cb-ink)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--cb-ink)_15%,transparent)] sm:py-2.5 sm:text-sm"
           />
         </label>
+        {/* Board: one obvious lime live count — kill “N of N · live first • N live” */}
         {liveCount > 0 ? (
           <p
             className="inline-flex items-center gap-2 self-start rounded-[var(--cb-radius-pill)] bg-[var(--cb-lime)] px-3.5 py-1.5 text-base font-semibold text-[var(--cb-lime-ink)] sm:self-auto"

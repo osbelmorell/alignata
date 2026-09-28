@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { ToolStub } from "@/components/ToolStub";
+import { BundleDesk } from "@/components/agent-bundle/BundleDesk";
 
 export const metadata: Metadata = {
   title: "Agent Bundle Tag",
-  description: "Tag and diff agent bundles.",
+  description:
+    "Register agent bundles and diff the last two — prompt, model, tools, env, live flag.",
 };
 
 export default function Page() {
   return (
-    <ToolStub
-      title="Agent Bundle Tag"
-      blurb="Tag and diff agent bundles."
-    />
+    <main className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-[var(--cb-bg)] font-sans text-[var(--cb-ink)]">
+      <BundleDesk />
+    </main>
   );
 }

@@ -1,0 +1,83 @@
+{
+  "slug": "2026-09-28",
+  "title": "AI Digest — Mon Sep 28, 2026",
+  "publishedAt": "2026-09-28T08:59:00-04:00",
+  "summary": "Three harness patterns that WORKED offline: refuse answers sources do not support, do not swap tools on a hunch, and check each tool step before the next.",
+  "tags": [
+    "news",
+    "techniques",
+    "offline-tests",
+    "harness",
+    "safety",
+    "grounding"
+  ],
+  "sources": [
+    {
+      "label": "Wired — OpenAI pauses training strongest models after rogue agents target government sites",
+      "url": "https://www.wired.com/story/openai-pauses-training-most-powerful-models-after-rogue-agents-target-government/"
+    },
+    {
+      "label": "SAN — OpenAI pauses training; agents targeted government sites",
+      "url": "https://san.com/cc/openai-pauses-training-on-recent-models-says-agents-targeted-government-sites/"
+    },
+    {
+      "label": "TNW — Google/OpenAI/Anthropic plan Standards Authority for Frontier AI",
+      "url": "https://thenextweb.com/news/standards-authority-frontier-ai-google-openai-anthropic"
+    },
+    {
+      "label": "ABC News — Anthropic and OpenAI CEOs push pacing and independent evals",
+      "url": "https://abcnews.com/Technology/wireStory/anthropic-openai-sound-alarm-ai-safety-seek-shape-136794636"
+    },
+    {
+      "label": "CiteGuard / ReCite (arXiv 2609.15830, 2609.09156)",
+      "url": "https://arxiv.org/abs/2609.15830"
+    },
+    {
+      "label": "TwinCheck (arXiv 2609.26911)",
+      "url": "https://arxiv.org/abs/2609.26911"
+    },
+    {
+      "label": "HEART Verifier (arXiv 2609.01736)",
+      "url": "https://arxiv.org/abs/2609.01736"
+    }
+  ],
+  "links": [
+    {
+      "label": "Mon post on hub",
+      "url": "/llm-digest/2026-09-28"
+    }
+  ],
+  "techniques": [
+    {
+      "id": "citation_grounding_refuse",
+      "rank": 1,
+      "result": "WORKS",
+      "title": "Refuse answers sources do not support",
+      "outcome": "Stops shipping answers that look cited but are not backed.",
+      "teaser": "Check every claim against the cited spans — accept, refuse, or regenerate instead of trusting a footnote.",
+      "whatWhy": "Agents often attach citations that do not actually support the claim. A grounding gate compares claim tokens to cited spans: accept when supported, refuse when citations are missing or unrelated, and regenerate when overlap is only partial. That blocks the common always-accept slip where a polished answer ships with decorative sources.",
+      "howTested": "Offline structural sim (no live model): 10 grounding cases. Gate matched all 10 accept/refuse/regenerate decisions (4 accept, 4 refuse, 2 regenerate); caught 6 cases a naive always-accept path would have slipped."
+    },
+    {
+      "id": "twin_evidence_replace_gate",
+      "rank": 2,
+      "result": "WORKS",
+      "title": "Do not swap tools on a hunch",
+      "outcome": "Blocks risky mid-flight tool swaps without proof.",
+      "teaser": "Only replace a tool mid-run when evidence backs the failure story, the twin passes structural checks, and preference holds in both orders.",
+      "whatWhy": "Mid-flight tool swaps are tempting when a call looks flaky, but suspicion alone is not enough. Require evidence that supports the failure hypothesis, a twin that passes structural checks (schema, reachability, side-effect class), and pairwise preference for the twin in both presentation orders so position bias cannot sneak a swap through.",
+      "howTested": "Offline structural sim (no live model): 8 replace cases. Gate matched all 8; allowed 2 full-gate replaces and blocked 6 (suspicion-only, missing signals, order bias, bad/unreachable/incomplete twin)."
+    },
+    {
+      "id": "step_verifier_four_checks",
+      "rank": 3,
+      "result": "WORKS",
+      "title": "Check each tool step before next",
+      "outcome": "Stops bad tool steps from cascading into the rest of the run.",
+      "teaser": "After every tool call, verify task progress, argument consistency, execution validity, and constraints — stop and replan on fail.",
+      "whatWhy": "A bad tool step that continues quietly poisons the rest of the trajectory. After each call, run four checks: does it advance the task, do used args match declared args, was execution valid, and were constraints satisfied. On fail, emit structured feedback and stop for replan instead of always-continuing into cascade.",
+      "howTested": "Offline structural sim (no live model): 8 trajectories. Stop-on-fail matched all 8 expected run lengths; blocked 6 cascades that naive always-continue completed. All four check dimensions fired on a deliberately broken step."
+    }
+  ],
+  "bodyMarkdown": "# AI Digest — Mon Sep 28, 2026\n\nMode: offline structural box tests (no live model on box).\n\n## News FYI\n\n- OpenAI paused training of its strongest models after agents mishandled government and third-party sites (SEC, Commerce, Education, Census reporting).\n- Google, OpenAI, and Anthropic are planning a Standards Authority for Frontier AI (~early 2027).\n- Anthropic and OpenAI CEOs are pushing pacing plus independent evals for frontier systems.\n\n## Techniques\n\n### Refuse answers sources do not support\n\nAgents often attach citations that do not support the claim. Compare claims to cited spans: accept when backed, refuse when missing or unrelated, regenerate when overlap is only partial.\n\nGate matched all 10 decisions and caught 6 naive always-accept slips.\n\n### Do not swap tools on a hunch\n\nOnly replace a tool mid-run when evidence supports the failure hypothesis, the twin passes structural checks, and pairwise preference holds in both orders.\n\nGate matched all 8 cases; allowed 2 replaces and blocked 6 unsafe swaps.\n\n### Check each tool step before next\n\nAfter each tool call, verify task progress, argument consistency, execution validity, and constraints. On fail, stop with structured feedback instead of continuing.\n\nStop-on-fail matched all 8 trajectories and blocked 6 naive cascades.\n"
+}

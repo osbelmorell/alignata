@@ -1,15 +1,27 @@
-export type CleaverTarget = "quickbooks" | "xero";
+export type BooksPreset = "quickbooks" | "xero";
 
-export type CleaverRow = {
+export type StripeTxn = {
+  date: string;
+  description: string;
+  type: string;
+  currency: string;
+  amount: number;
+  fee: number;
+  net: number;
+};
+
+export type BooksRow = {
   date: string;
   description: string;
   amount: number;
-  payee?: string;
-  reference?: string;
+  kind: "payout" | "fee" | "other";
 };
 
-export type CleaverResult = {
-  target: CleaverTarget;
-  rows: CleaverRow[];
-  sourceLabel: string;
+export type CleaveResult = {
+  preset: BooksPreset;
+  rows: BooksRow[];
+  sourceCount: number;
+  strippedCount: number;
+  feeCount: number;
+  csv: string;
 };

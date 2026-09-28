@@ -1,31 +1,23 @@
 import Link from "next/link";
 
-/** Temporary shell for a hub route that is not fully migrated yet. */
-export function ToolStub({
-  title,
-  blurb,
-}: {
-  title: string;
-  blurb: string;
-}) {
+export function ToolStub({ title }: { title: string }) {
   return (
-    <main className="mx-auto flex min-h-[60vh] w-full max-w-xl flex-col justify-center gap-4 px-4 py-16">
-      <p className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--cb-ink-muted)]">
-        Coming soon
+    <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center gap-6 px-4 py-16">
+      <p className="text-xs font-medium uppercase tracking-[0.2em] text-zinc-500">
+        Build · Enterprise
       </p>
-      <h1 className="text-2xl font-semibold tracking-tight text-[var(--cb-ink)]">
+      <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">
         {title}
       </h1>
-      <p className="text-base leading-relaxed text-[var(--cb-ink-muted)]">{blurb}</p>
-      <p className="text-sm text-[var(--cb-ink-muted)]">
+      <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
         Migrating… Full tool UI lands in a later PR. This route is a shell stub
-        so the hub link is not a 404.
+        in the monorepo hub.
       </p>
       <Link
-        href="/apps"
-        className="mt-2 inline-flex w-fit items-center rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[var(--cb-surface)] px-4 py-2 text-sm font-medium text-[var(--cb-ink)] shadow-[var(--cb-shadow)] transition hover:opacity-90"
+        href="/"
+        className="text-sm text-zinc-400 underline-offset-4 hover:text-emerald-300 hover:underline"
       >
-        ← Apps
+        ← Back to hub
       </Link>
     </main>
   );

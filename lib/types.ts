@@ -1,11 +1,11 @@
-export type HubAppStatus = "live" | "stub";
+export type AppStatus = "live" | "wip" | "planned";
 
 export type HubApp = {
   id: string;
   name: string;
   url: string;
   blurb: string;
-  status: HubAppStatus;
+  status: AppStatus | string;
   pitch?: string;
   what?: string;
   why?: string;

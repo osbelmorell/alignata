@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { ToolStub } from "@/components/ToolStub";
+import { EvalDesk } from "@/components/agent-eval/EvalDesk";
 
 export const metadata: Metadata = {
-  title: "Agent Eval",
-  description: "Score agent runs locally.",
+  title: "Agent Eval Go/No-Go",
+  description:
+    "One-pager agent eval checklist: score must-haves → GO / NO-GO.",
 };
 
 export default function Page() {
   return (
-    <ToolStub
-      title="Agent Eval"
-      blurb="Score agent runs locally."
-    />
+    <main className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-[var(--cb-bg)] font-sans text-[var(--cb-ink)]">
+      <EvalDesk />
+    </main>
   );
 }

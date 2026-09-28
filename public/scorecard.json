@@ -1,24 +1,28 @@
 {
-  "weekEnding": "2026-09-20",
-  "updatedAt": "2026-09-20T12:00:00-04:00",
+  "title": "Bet A — Enterprise Scorecard",
+  "subtitle": "Board 1:1 snapshot · week ending Sep 20",
+  "updatedAt": "2026-09-20T21:51:00.000Z",
   "pillars": [
     {
       "id": "linkedin",
-      "label": "LinkedIn",
+      "name": "LinkedIn",
       "status": "yellow",
-      "lastOutcome": "Pipeline warm; need 2 more replies this week."
+      "lastOutcome": "ADJUST — freeze / low-cadence (ban risk). No high-volume scrapes; reopen light after Mon Sep 21 ~3pm ET clear.",
+      "updatedAt": "2026-09-20T21:51:00.000Z"
     },
     {
       "id": "investment",
-      "label": "Investment",
+      "name": "Investment",
       "status": "green",
-      "lastOutcome": "Deploy Decision Card live; desk dogfood underway."
+      "lastOutcome": "ON TRACK — powder hold default; Soft risk-on recommend-only size cards reopened.",
+      "updatedAt": "2026-09-20T21:51:00.000Z"
     },
     {
       "id": "build",
-      "label": "Build",
+      "name": "Build",
       "status": "green",
-      "lastOutcome": "Hub tools shipping; Clay Board house style locked."
+      "lastOutcome": "ON TRACK — dogfood + monorepo migrate in flight (hub shell live; Scorecard on /scorecard).",
+      "updatedAt": "2026-09-20T21:51:00.000Z"
     }
   ]
 }

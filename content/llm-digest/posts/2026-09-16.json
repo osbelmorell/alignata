@@ -1,0 +1,63 @@
+{
+  "slug": "2026-09-16",
+  "title": "AI Digest — Tue Sep 16, 2026",
+  "publishedAt": "2026-09-16T12:00:00-04:00",
+  "summary": "Three harness patterns that WORKED offline: reuse stable keys on tool retries, require held-out lift before shipping harness edits, and load only the tools you need.",
+  "tags": [
+    "news",
+    "techniques",
+    "offline-tests",
+    "harness",
+    "archive"
+  ],
+  "sources": [
+    {
+      "label": "Gemini 3.8 Live / Extended Thinking (Google, Sep 15 reporting)",
+      "url": "https://blog.google/"
+    },
+    {
+      "label": "HarnessDev (arXiv:2609.01437)",
+      "url": "https://arxiv.org/abs/2609.01437"
+    },
+    {
+      "label": "Beyond Prompts / PRISM (arXiv:2609.05736)",
+      "url": "https://arxiv.org/abs/2609.05736"
+    }
+  ],
+  "links": [
+    {
+      "label": "Tue post on hub",
+      "url": "/llm-digest/2026-09-16"
+    }
+  ],
+  "techniques": [
+    {
+      "id": "idempotency_key_gate_on_tool_retry",
+      "rank": 1,
+      "title": "Reuse the same key when a tool retries",
+      "outcome": "Prevents double-charges on payment or deploy retries.",
+      "teaser": "When a tool call is retried after a dropped ack, reuse the same idempotency key — a fresh key double-charges.",
+      "whatWhy": "Agents that retry payments, posts, or deploys after a timeout often mint a new key each try. That creates duplicate side effects. A gate that requires a stable key per logical order blocks release when retries would double-charge.",
+      "howTested": "Offline structural sim (no live model): 5 drop_ack charge episodes. Stable keys: 0 I1 violations (one charge each). Fresh UUID keys: 5 of 5 double-charges; gate blocked release on that pattern."
+    },
+    {
+      "id": "held_out_harness_selection",
+      "rank": 2,
+      "title": "Require held-out lift before shipping harness edits",
+      "outcome": "Stops train-only tweaks that fail on new cases.",
+      "teaser": "Don't ship a prompt or middleware tweak on in-dev lift alone — require positive held-out lift first.",
+      "whatWhy": "Harness edits that look great on the training set can collapse on held-out cases. Selecting by train lift alone ships the brittle option. A gate that requires held-out mean lift and non-negative worst-case held-out delta picks the version that transfers.",
+      "howTested": "Offline structural sim (no live model): two mock harnesses A (train overfit) vs B (transfers). Train-only selection shipped A (held lift −0.15). Held-out + worst-Δ gate shipped B (held lift +0.143)."
+    },
+    {
+      "id": "tool_search_deferred_loading",
+      "rank": 3,
+      "title": "Load only the tools this turn needs",
+      "outcome": "Cuts prompt size without losing the needed tool.",
+      "teaser": "Don't dump every tool schema into context — search and load only the ones this turn needs.",
+      "whatWhy": "Large tool catalogs burn tokens when every schema is always loaded. Deferred load via keyword search keeps the needed tool available while cutting prompt size. A bad query negative control confirms the search can miss when it should.",
+      "howTested": "Offline structural sim (no live model): 8-tool catalog. Naive load-all used 1530 mock tokens; tool-search top path used 220 (−85.6%) with needed tool still available; bad query correctly left needed tool unavailable."
+    }
+  ],
+  "bodyMarkdown": "# AI Digest — Tue Sep 16, 2026\n\nMode: offline structural box tests (no live model on box).\n\n## News FYI\n\n- Gemini 3.8 Live / Live Extended Thinking (Google, Sep 15): live dialogue with background tool use while conversing.\n- GPT-6 Astra + Codex harness speed (OpenAI, vendor numbers — not re-run here): Astra rolling to limited orgs; Codex harness claimed ~1.9× faster computer-use task completion vs prior on Mind2Web.\n- Harness research: HarnessDev (arXiv:2609.01437) — self-evolved harnesses unstable / partial held-out transfer; Beyond Prompts / PRISM (arXiv:2609.05736) — held-out lift reporting for harness edits.\n\n## Techniques\n\n### Reuse the same key when a tool retries\n\nAgents that retry payments, posts, or deploys after a timeout often mint a new key each try. That creates duplicate side effects. A gate that requires a stable key per logical order blocks release when retries would double-charge.\n\nStable keys: 0 I1 violations across 5 drop_ack episodes. Fresh UUID keys: 5 of 5 double-charges; the gate blocked release.\n\n### Require held-out lift before shipping harness edits\n\nHarness edits that look great on the training set can collapse on held-out cases. Selecting by train lift alone ships the brittle option. Require held-out mean lift and non-negative worst-case held-out delta before adopting.\n\nTrain-only selection shipped brittle A (held lift −0.15). Held-out gate shipped B (held lift +0.143).\n\n### Load only the tools this turn needs\n\nLarge tool catalogs burn tokens when every schema is always loaded. Search and load only what this turn needs.\n\nNaive load-all: 1530 mock tokens. Tool-search path: 220 tokens (−85.6%) with the needed tool still available; bad query negative control caught.\n"
+}
