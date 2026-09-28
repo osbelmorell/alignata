@@ -27,8 +27,8 @@ export default function HomePage() {
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href="/apps"
-            className="inline-flex items-center rounded-full px-5 py-2.5 text-[14px] font-medium text-white"
-            style={{ background: "#121410" }}
+            className="cb-open-pill inline-flex items-center rounded-full px-5 py-2.5 text-[14px] font-medium text-white"
+            style={{ background: "#121410", color: "#ffffff" }}
           >
             Tools
           </Link>
