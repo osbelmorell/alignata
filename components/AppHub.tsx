@@ -109,7 +109,7 @@ function AppCard({ app }: { app: HubApp }) {
         <a
           href={app.url}
           {...linkProps}
-          className="pointer-events-auto relative z-20 mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-[var(--cb-radius-pill)] bg-[var(--cb-ink)] px-4 py-3.5 text-base font-semibold text-white transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cb-ink)] sm:py-3 sm:text-sm"
+          className="cb-open-pill pointer-events-auto relative z-20 mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-[var(--cb-radius-pill)] bg-[var(--cb-ink)] px-4 py-3.5 text-base font-semibold text-white transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cb-ink)] sm:py-3 sm:text-sm"
         >
           {hubRelative ? "Open" : "Open ↗"}
         </a>

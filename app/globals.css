@@ -35,8 +35,16 @@ body {
   line-height: 1.55;
 }
 
-a {
-  color: inherit;
+/* Do not force all anchors to inherit ink — that paints white-on-black Open pills black.
+   About / text links set their own colors; primary CTAs use .cb-open-pill. */
+a.cb-open-pill {
+  color: #ffffff;
+  background-color: var(--cb-ink);
+  text-decoration: none;
+}
+a.cb-open-pill:hover {
+  opacity: 0.9;
+  color: #ffffff;
 }
 
 input[type="checkbox"] {
