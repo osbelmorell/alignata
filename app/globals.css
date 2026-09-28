@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+
+  /* Clay Board tokens v1 — BOARD LOCKED 2026-09-27 */
+  --cb-bg: #f6f1ea;
+  --cb-surface: #ffffff;
+  --cb-ink: #121410;
+  --cb-ink-muted: #5c5a54;
+  --cb-line: #e7e1d8;
+
+  --cb-olive-deep: #3f4a2e;
+  --cb-olive: #5c6b3a;
+  --cb-clay: #e8b89a;
+  --cb-clay-deep: #c47a62;
+  --cb-lime: #c8f05a;
+  --cb-lime-ink: #121410;
+  --cb-danger: #e86a3a;
+
+  --cb-grad-olive: linear-gradient(135deg, #3f4a2e 0%, #8bc34a 55%, #c8f05a 100%);
+  --cb-grad-clay: linear-gradient(135deg, #e8b89a 0%, #d4a574 50%, #c47a62 100%);
+
+  --cb-radius-squircle: 32px;
+  --cb-radius-card-sm: 24px;
+  --cb-radius-pill: 999px;
+
+  --cb-shadow: 0 12px 40px rgba(18, 20, 16, 0.08);
+}
+
+body {
+  background: var(--cb-bg);
+  color: var(--cb-ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.55;
+}
+
+a {
+  color: inherit;
+}
