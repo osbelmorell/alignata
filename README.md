@@ -1,9 +1,10 @@
 # Alignata
 
-Brand home for Build tools — [alignata.com](https://alignata.com).
+Build tools for busy humans.
 
-- Clay Board visual system (`--cb-*`)
-- Vercel Hobby, Auth OFF
-- Blog: techniques only under `/blog`
+- `/` — brand home
+- `/apps` — Clay Board tool grid (Build hub)
+- `/blog` — techniques blog (Keep hard rules sticky)
+- Tool routes: `/license-gate`, `/stripe-cleaver`, `/llm-digest`, `/scorecard`, …
 
-Tools currently live at [enterprise-app-hub](https://enterprise-app-hub.vercel.app). Per-tool landings (`/cleaver`, `/license-gate`) come later.
+Auth OFF. Clay Board house style.
