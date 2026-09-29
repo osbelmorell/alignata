@@ -1,0 +1,71 @@
+{
+  "slug": "2026-09-29",
+  "title": "AI Digest — Tue Sep 29, 2026",
+  "publishedAt": "2026-09-29T17:30:00-04:00",
+  "summary": "Three harness patterns that worked offline: ask before doing what wasn't asked, test the search tool before saying none, and make routers pick from a fixed list.",
+  "tags": [
+    "news",
+    "techniques",
+    "offline-tests",
+    "harness",
+    "safety",
+    "tools"
+  ],
+  "sources": [
+    {
+      "label": "TechCrunch — OpenAI launches GPT-6.1 Sol at DevDay (Sep 29)",
+      "url": "https://techcrunch.com/2026/09/29/openai-launches-gpt-6-1-sol-says-it-nearly-matches-gpt-6-astra-and-costs-less/"
+    },
+    {
+      "label": "The Decoder — DevDay: Agents API computer use, Decisions API, Ultrafast (Sep 29)",
+      "url": "https://the-decoder.com/openai-expands-codex-and-its-api-at-devday-with-security-scans-a-decisions-api-and-ultrafast/"
+    },
+    {
+      "label": "Anthropic — Introducing Claude Sonnet 5.5 (Sep 28)",
+      "url": "https://www.anthropic.com/claude-sonnet-5-5"
+    },
+    {
+      "label": "OpenAI API — Deprecations (legacy models shut down Sep 28)",
+      "url": "https://developers.openai.com/api/docs/deprecations"
+    }
+  ],
+  "links": [
+    {
+      "label": "Tue post",
+      "url": "/llm-digest/2026-09-29"
+    }
+  ],
+  "techniques": [
+    {
+      "id": "requested_scope_gate",
+      "rank": 1,
+      "result": "WORKS",
+      "title": "Ask before doing what wasn't asked",
+      "outcome": "Stops agents from doing helpful extras nobody asked for.",
+      "teaser": "Write down what the user actually asked for, and pause for a yes on any step outside it, even when the step is undoable.",
+      "whatWhy": "Eager agents add unrequested extras: the user asks for a draft and the agent sends it, asks for a test fix and it also edits CI, asks for a summary and it declines a meeting. Guarding only irreversible actions misses most of these because many extras are technically undoable. Turn the request into an explicit scope (allowed verbs and targets) and ask before anything outside it. For our agents this means fewer surprise side effects in mail, repos, tickets and deploys, and it pairs with the irreversible-action preflight from Sep 25 rather than replacing it. This week's reporting that OpenAI held back GPT-6.1 Astra partly over a tendency to move forward without asking permission is the same failure at model level.",
+      "howTested": "How to apply: (1) when a task starts, restate it as a short scope list: verbs (draft, edit, read) times targets (this email, these files); (2) before each tool call, check the verb and target against that list; (3) out of scope means pause and ask one plain question; in scope means proceed; (4) keep the irreversible-action preflight as a second layer. Evidence (offline structural sim, no live model): 12 hand-written tasks with 37 proposed actions; 19 were hand-labeled as ones the user would want to be asked about, including 3 edge cases planted to make the literal rule wrong. Executing everything ran all 19 unwanted actions. Guarding only irreversible actions ran 13 of 19 and asked needlessly 2 times. The scope gate ran 1 of 19 (a ticket reassignment that fell inside the literal target) and also asked needlessly 2 times (a needed test fixture and a harmless read of metrics). Limit: the labels and proposals are hand-authored, so the counts show the rule's shape, not real agent rates. A live retest needs real agent transcripts with user-labeled 'should have asked' actions, and a measure of how often the extra questions annoy users."
+    },
+    {
+      "id": "canary_before_no_results",
+      "rank": 2,
+      "result": "WORKS",
+      "title": "Test the search tool before saying none",
+      "outcome": "Stops a broken tool from turning into a false 'nothing found'.",
+      "teaser": "When search comes back empty, look up one record you know exists; if that is empty too, report the tool as broken instead of claiming nothing exists.",
+      "whatWhy": "An expired token, an empty index or a down shard often returns a clean-looking empty list, and the agent confidently reports 'no matching records'. That is worse than an error because it looks like an answer. After any empty result, run a known-answer canary lookup. If the canary also comes back empty, say the tool looks broken and stop claiming absence. For our agents this keeps a dead connector from quietly becoming 'no tickets', 'no emails' or 'no incidents'. OpenAI's GPT-6.1 Sol notes this week list flagging broken search tools as a trained behavior, so it is a known weak spot worth guarding in the harness too.",
+      "howTested": "How to apply: (1) pick one stable known-present record per data source, or one per shard or partition; (2) on an empty result, query the canary; (3) canary empty means answer 'search looks broken, can't confirm absence' and surface it; (4) canary found means accept 'none found'. Evidence (offline structural sim, no live model): 120 seeded search calls over a 2-shard mock index; the tool was healthy on 90, fully silent on 15, and had one shard down on 15; 63 queries had a real match. Baseline made 11 false 'none exist' claims. One canary cut that to 5 for 68 extra calls, and all 15 broken flags came during real outages. The 5 misses were all partial outages where the down shard was not the canary's shard. One canary per shard cut false claims to 0 for 136 extra calls, and all 27 broken flags came during real outages. Limit: the outage mix and index are synthetic, so the rates are not production rates. A live retest needs a real connector with injected failures (expired auth, empty index, partial outage) and a check on the latency cost of the extra lookup."
+    },
+    {
+      "id": "fixed_list_router_with_abstain",
+      "rank": 3,
+      "result": "WORKS",
+      "title": "Make routers pick from a fixed list",
+      "outcome": "Stops chatty router replies from sending tickets to the wrong queue.",
+      "teaser": "Have the routing step return exactly one label from an allowed list plus confidence, reject anything off-list, and send low-confidence cases to a human.",
+      "whatWhy": "Routers that answer in prose ('not billing, this is account security') get keyword-parsed by the harness, which often picks the first route word it sees or falls back to a default queue. Invented labels slip through the same way. Make the router return one value from a fixed list plus confidence, validate it, and send off-list or low-confidence answers to a human instead of guessing. For our agents this keeps security and refund cases out of the wrong queue, and it matches the shape of OpenAI's new Decisions API (a fixed set of answers per question).",
+      "howTested": "How to apply: (1) define the allowed labels as an enum in a structured-output schema; (2) validate the returned label against the list and reject anything else; (3) require a confidence value and route anything under your threshold (0.6 in the sim) to a human; (4) log rejects so the list can grow on purpose. Evidence (offline structural sim, no live model): 90 seeded support messages across 4 routes (26 were account security). The simulated router made the same underlying call under both contracts: about 88% right, otherwise a close neighbor, and sometimes an invented 'fraud' label. Only the output format changed. With free text (70% followed the 'Route: X' format, 30% drifted into prose) the keyword parser got 65 right and 25 wrong, 10 of them account-security cases; 12 of those errors came purely from parsing when the model's call was right. The fixed list got 75 right and 3 wrong (1 account security) and sent 12 to a human (5 off-list labels plus 7 low confidence). Limit: the error rate and the prose-drift mix are assumptions of the sim, so the size of the gap depends on them; the direction is what carries over. A live retest needs real router outputs on labeled tickets, plus a measure of whether the human-handoff load is acceptable."
+    }
+  ],
+  "bodyMarkdown": "# AI Digest — Tue Sep 29, 2026\n\nMode: offline structural box tests (no live model on box).\n\n## News FYI\n\n- **OpenAI DevDay (Sep 29):** GPT-6.1 Sol launched at the same $2/$10 per million tokens as GPT-6 Sol, and OpenAI says it comes close to GPT-6 Astra on agentic coding and computer use. TechCrunch notes GPT-6.1 Astra did not ship; the WSJ reported safety concerns, including a tendency to move ahead without asking permission.\n- **Agents API adds computer use (Sep 29):** OpenAI's Agents API now includes computer use, tool search, context compaction and multi-agent features. A Decisions API (fixed-answer questions on GPT-6 Luna, for routing and next-step choices) is in limited preview.\n- **Claude Sonnet 5.5 (Sep 28):** Same price as Sonnet 5 ($2/$10), 30%+ faster output, and Anthropic says it needs fewer tokens per task. If you run Sonnet with thinking off, you need to switch to the new `between_tools` setting before migrating.\n- **Legacy OpenAI models shut down (Sep 28):** gpt-3.5-turbo-instruct, babbage-002, davinci-002 and gpt-3.5-turbo-1106 are retired (replacement listed: gpt-5.6-terra). That ends the models behind the legacy completions endpoint. Check for hard-coded model IDs.\n\n## Techniques\n\n### Ask before doing what wasn't asked\n\nEager agents add extras nobody asked for, like sending a draft or editing CI during a test fix. Turn the request into an explicit scope and pause for a yes on anything outside it, even if the step can be undone.\n\nIn the offline sim, the scope gate let through 1 of 19 unwanted actions. Guarding only irreversible actions let through 13, and doing no check let through all 19. Both guards asked needlessly 2 times.\n\n### Test the search tool before saying none\n\nAn empty result from a broken tool looks just like a real \"nothing found\". After an empty result, look up one record you know exists. If that is empty too, report the tool as broken.\n\nIn the offline sim, false \"none exist\" claims fell from 11 to 5 with one canary and to 0 with one canary per shard. The cost was 68 and 136 extra calls out of 120.\n\n### Make routers pick from a fixed list\n\nKeyword-parsing a router's prose sends tickets to the wrong queue. Have it return exactly one allowed label plus confidence, and send off-list or unsure answers to a human.\n\nIn the offline sim, misroutes fell from 25 to 3 and account-security misroutes fell from 10 to 1, while 12 of 90 messages went to a human.\n"
+}
