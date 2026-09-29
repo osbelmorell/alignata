@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     template: "%s · Alignata",
   },
   description: "Build tools for busy humans",
+  metadataBase: new URL("https://alignata.com"),
 };
 
 export default function RootLayout({
@@ -44,10 +45,10 @@ export default function RootLayout({
                 Apps
               </Link>
               <Link
-                href="/blog"
+                href="/daily-digest"
                 className="rounded-full px-3 py-1.5 hover:bg-[var(--cb-bg)]"
               >
-                Blog
+                Daily Digest
               </Link>
             </nav>
           </div>

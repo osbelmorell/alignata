@@ -3,17 +3,28 @@ import type { Metadata } from "next";
 import { getPostsNewestFirst } from "@/content/posts";
 
 export const metadata: Metadata = {
-  title: "Blog",
+  title: "Daily Digest",
   description: "Techniques for building with agents — Alignata",
+  alternates: {
+    canonical: "/daily-digest",
+    types: { "application/rss+xml": "/daily-digest/rss.xml" },
+  },
+  openGraph: {
+    type: "website",
+    title: "Daily Digest",
+    description: "Techniques for building with agents — Alignata",
+    url: "/daily-digest",
+    siteName: "Alignata",
+  },
 };
 
-export default function BlogIndexPage() {
+export default function DailyDigestIndexPage() {
   const posts = getPostsNewestFirst();
 
   return (
     <div className="space-y-8">
       <header className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Blog</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Daily Digest</h1>
         <p className="text-[15px]" style={{ color: "var(--cb-ink-muted)" }}>
           Techniques only — plain notes from building with agents.
         </p>
@@ -23,7 +34,7 @@ export default function BlogIndexPage() {
         {posts.map((post) => (
           <li key={post.slug}>
             <Link
-              href={`/blog/${post.slug}`}
+              href={`/daily-digest/${post.slug}`}
               className="block p-6 transition-shadow hover:shadow-[var(--cb-shadow)]"
               style={{
                 background: "var(--cb-surface)",

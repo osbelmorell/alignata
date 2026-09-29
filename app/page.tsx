@@ -33,7 +33,7 @@ export default function HomePage() {
             Tools
           </Link>
           <Link
-            href="/blog"
+            href="/daily-digest"
             className="inline-flex items-center rounded-full px-5 py-2.5 text-[14px] font-medium"
             style={{
               background: "var(--cb-surface)",
@@ -41,7 +41,7 @@ export default function HomePage() {
               color: "var(--cb-ink)",
             }}
           >
-            Blog
+            Daily Digest
           </Link>
         </div>
       </section>

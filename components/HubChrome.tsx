@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 /**
  * Persistent tool chrome: on tool routes, always offer a path back to `/apps`
- * (All apps). Hidden on brand home, /apps, and /blog so Alignata nav leads.
+ * (All apps). Hidden on brand home, /apps, and /daily-digest so Alignata nav leads.
  * Clay Board light nav — paper bg, ink link — matches hub shell.
  */
 export function HubChrome() {
@@ -14,7 +14,7 @@ export function HubChrome() {
     pathname === "/" ||
     pathname === "" ||
     pathname === "/apps" ||
-    pathname.startsWith("/blog");
+    pathname.startsWith("/daily-digest");
 
   if (hide) {
     return null;

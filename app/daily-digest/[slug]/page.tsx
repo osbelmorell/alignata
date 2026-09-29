@@ -1,29 +1,58 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getPost } from "@/content/posts";
+import { getPost, posts } from "@/content/posts";
 import { notFound } from "next/navigation";
 
-const SLUG = "keep-hard-rules-sticky";
+export const dynamicParams = false;
 
-export const metadata: Metadata = {
-  title: "Keep hard rules sticky",
-  description:
-    "Soft reminders fade in long chats. Re-inject the non-negotiables every turn.",
-};
+export function generateStaticParams() {
+  return posts.map((post) => ({ slug: post.slug }));
+}
 
-export default function KeepHardRulesStickyPage() {
-  const post = getPost(SLUG);
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const post = getPost(slug);
+  if (!post) return {};
+  return {
+    title: post.title,
+    description: post.dek,
+    alternates: {
+      canonical: `/daily-digest/${post.slug}`,
+      types: { "application/rss+xml": "/daily-digest/rss.xml" },
+    },
+    openGraph: {
+      type: "article",
+      title: post.title,
+      description: post.dek,
+      url: `/daily-digest/${post.slug}`,
+      siteName: "Alignata",
+      publishedTime: post.date,
+    },
+  };
+}
+
+export default async function DailyDigestPostPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const post = getPost(slug);
   if (!post) notFound();
 
   return (
     <article className="space-y-8">
       <p>
         <Link
-          href="/blog"
+          href="/daily-digest"
           className="text-[13px]"
           style={{ color: "var(--cb-ink-muted)" }}
         >
-          ← Blog
+          ← Daily Digest
         </Link>
       </p>
 
