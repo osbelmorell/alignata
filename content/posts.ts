@@ -1,3 +1,14 @@
+/**
+ * Daily Digest articles. Body convention (rendered by components/daily-digest/ArticleBody):
+ * - Section title: a paragraph starting with "## " → <h2>; "### " → <h3>.
+ * - Bulleted list: consecutive paragraphs starting with "- " (or "* ").
+ * - Numbered list: consecutive paragraphs starting with "1. " (or "1) ").
+ * - Anything else is a normal paragraph. One string may also hold several lines split by "\n".
+ * Example:
+ *   paragraphs: ["## Why it matters", "Short intro.", "- first point", "- second point", "1. Do this", "2. Then this"]
+ * Optional: `sections: [{ heading: "Why it matters", body: ["Short intro.", "- first point"] }]`
+ * renders after `paragraphs`, each heading as <h2>.
+ */
 export type Post = {
   slug: string;
   title: string;
@@ -5,6 +16,7 @@ export type Post = {
   date: string;
   sourceNote?: string;
   paragraphs: string[];
+  sections?: { heading: string; body: string[] }[];
 };
 
 export const posts: Post[] = [

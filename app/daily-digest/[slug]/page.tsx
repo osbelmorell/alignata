@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getPost, posts } from "@/content/posts";
 import { notFound } from "next/navigation";
+import { ArticleBody } from "@/components/daily-digest/ArticleBody";
 
 export const dynamicParams = false;
 
@@ -72,19 +73,7 @@ export default async function DailyDigestPostPage({
         </p>
       </header>
 
-      <div
-        className="space-y-5 p-7 text-[16px]"
-        style={{
-          background: "var(--cb-surface)",
-          borderRadius: "var(--cb-radius-squircle)",
-          border: "1px solid var(--cb-line)",
-          boxShadow: "var(--cb-shadow)",
-        }}
-      >
-        {post.paragraphs.map((para, i) => (
-          <p key={i}>{para}</p>
-        ))}
-      </div>
+      <ArticleBody paragraphs={post.paragraphs} sections={post.sections} />
 
       {post.sourceNote ? (
         <p className="text-[12px]" style={{ color: "var(--cb-ink-muted)" }}>
