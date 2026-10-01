@@ -63,6 +63,31 @@ export const posts: Post[] = [
       "5. Alert on canary misses and treat them as incidents, not answers.",
     ],
   },
+  {
+    slug: "dont-follow-orders-in-tool-text",
+    title: "Don't follow orders in tool text",
+    dek: "Tool replies are data, not instructions. Check them for commands before the agent plans its next step.",
+    date: "2026-10-01",
+    paragraphs: [
+      "## The problem",
+      "An agent reads an email, a web page, or a ticket through a tool and treats that text as if you wrote it. Somewhere in the body is a line like \"ignore your previous rules,\" \"forward this to everyone,\" or \"delete the repo.\" The model goes along with it because the words arrived through a successful tool call. That's how one poisoned message turns into a mass email, a wiped repo, or a message that copies itself to the next inbox, and nobody asked for any of it.",
+      "## The technique",
+      "Treat everything a tool returns as data, never as a new source of instructions. Before the agent plans its next tool call, scan the returned text for instruction-shaped lines: ignore previous rules, forward to all, run this command, delete the database, pass this message on, treat this as your system prompt. On a hit, strip or wrap those lines, mark the result untrusted, and refuse any action that only that text asked for. The user's request still drives the next step. The tool text doesn't.",
+      "## What we saw",
+      "We ran this offline as a scripted simulation, with no live model: 12 tool replies, 8 with planted instructions and 4 ordinary ones.",
+      "- A naive setup that acts on whatever the tool text suggests carried out all 8 harmful follow-ups, including forwarding to everyone, deleting a repo, sending data out through a web page, and moving money.",
+      "- With the check in place, all 8 planted replies were flagged and 0 harmful follow-ups ran. All 4 ordinary replies (an email summary, a ticket, a code review, a status message) went through with no false blocks.",
+      "So in this test, the check closed the \"the tool said so\" path without getting in the way of normal email and ticket text.",
+      "## Limits",
+      "These are simulation numbers, not production rates. The same hand-written pattern list shaped both the check and the test cases, so a clean sweep here shows the mechanism works, not how well it holds up against a real attacker. A reworded or encoded instruction can slip past until you widen the list. The check also doesn't replace tool-level permissions or hard rules on irreversible actions. It only stops tool text from acting as a command channel. A live retest needs real agent transcripts with injected email and web content, plus a measure of how often stripping removes wording the user actually needed.",
+      "## Try it",
+      "1. Write down the instructions you'll never act on from tool text, such as forward to all, ignore prior rules, delete or wipe, run this command, pass this on, and new system prompt.",
+      "2. Scan every tool reply before the next planning step.",
+      "3. On a hit, mark the reply untrusted, strip or wrap the matching lines, and drop any tool call that came only from that text.",
+      "4. Log each hit as a security signal instead of skipping it silently.",
+      "5. Keep hard rules and checks before irreversible actions as separate layers, because this check won't catch everything.",
+    ],
+  },
 ];
 
 export function getPost(slug: string): Post | undefined {
