@@ -142,22 +142,6 @@
       ]
     },
     {
-      "id": "llm-digest",
-      "name": "AI Digest",
-      "url": "/llm-digest",
-      "blurb": "Weekday AI news and techniques that actually worked.",
-      "status": "live",
-      "pitch": "Weekday board feed: AI news worth knowing plus harness techniques that WORKED on the box. Static JSON posts in-repo \u2014 searchable, infinite scroll, shareable detail URLs.",
-      "what": "LLM/AI Expert digests used to die in chat. The board needs a durable feed URL and a per-day post URL the CEO can forward after each weekday run.",
-      "why": "Weekday board feed with durable shareable post URLs. Static in-repo posts \u2014 no new database. Auth off.",
-      "how": [
-        "Open /llm-digest \u2014 posts sort newest-first.",
-        "Search across title, summary, tags, and body.",
-        "Scroll / Load more for infinite pagination.",
-        "Open a post for full article, sources, outbound links, and tags."
-      ]
-    },
-    {
       "id": "stripe-cleaver",
       "name": "Stripe\u2192Books Cleaver",
       "url": "/stripe-cleaver",
