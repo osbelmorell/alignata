@@ -6,6 +6,7 @@
  * - "## Title"  → <h2>,  "### Title" → <h3>
  * - "- item" / "* item" lines (consecutive) → <ul>
  * - "1. item" / "1) item" lines (consecutive) → <ol> (start number kept)
+ * - "---" (or "***") on its own line → section break (<hr>)
  * - anything else → <p>
  * Each paragraph string may hold one line or several lines separated by "\n".
  *
@@ -25,6 +26,7 @@ export const LEGACY_SECTION_TITLES = [
 export type ArticleBlock =
   | { kind: "heading"; level: 2 | 3; text: string }
   | { kind: "paragraph"; text: string }
+  | { kind: "rule" }
   | { kind: "ul"; items: string[] }
   | { kind: "ol"; start: number; items: string[] };
 
@@ -35,6 +37,7 @@ const H3_RE = /^###\s+(.+)$/;
 const H2_RE = /^##\s+(.+)$/;
 const UL_RE = /^[-*]\s+(.*)$/;
 const OL_RE = /^(\d+)[.)]\s+(.*)$/;
+const RULE_RE = /^(?:-{3,}|\*{3,})$/;
 
 function heading(line: string): { level: 2 | 3; text: string } | null {
   const h3 = H3_RE.exec(line);
@@ -56,6 +59,10 @@ export function parseArticle(paragraphs: string[]): ArticleBlock[] {
 
   const blocks: ArticleBlock[] = [];
   for (const line of lines) {
+    if (RULE_RE.test(line)) {
+      blocks.push({ kind: "rule" });
+      continue;
+    }
     const h = heading(line);
     if (h) {
       blocks.push({ kind: "heading", ...h });

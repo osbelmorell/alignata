@@ -93,6 +93,14 @@ export function ArticleBody({
                 ))}
               </ol>
             );
+          case "rule":
+            return (
+              <hr
+                key={i}
+                className="mx-auto my-8 w-16 border-0 border-t-2"
+                style={{ borderColor: "var(--cb-line)" }}
+              />
+            );
           default:
             return <p key={i}>{block.text}</p>;
         }

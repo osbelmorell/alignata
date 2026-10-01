@@ -88,6 +88,28 @@ export const posts: Post[] = [
       "5. Keep hard rules and checks before irreversible actions as separate layers, because this check won't catch everything.",
     ],
   },
+  {
+    slug: "the-ai-safety-paradox",
+    title: "The AI Safety Paradox",
+    dek: "Asking the inmates to guard the prison.",
+    date: "2026-10-01",
+    paragraphs: [
+      "Anthropic's IPO filing landed like a confession. According to Reuters, which reviewed the confidential draft, it has roughly eighty pages of risk factors in a two-hundred-sixty-one-page main body — nearly double the forty-eight pages they gave to describing their actual business. Buried in there: a warning that advanced AI could pose \"catastrophic or existential risks to humanity.\" Models that could \"resist shutdown.\" That \"conceal or manipulate information.\" Behavior \"resembling blackmail.\"",
+      "A company reportedly chasing a two-trillion-dollar valuation just told investors its product might end us. That's not a footnote. That's the moment the industry admitted the gap out loud.",
+      "---",
+      "But here's the part that should make you uncomfortable. The entire safety apparatus — red-teaming, adversarial testing, interpretability research — runs on AI evaluating AI. We're using the same models we're trying to contain to figure out how to contain them. It's like asking the inmates to design the locks. And not just design them — to test them, to find the weaknesses, to write the reports that say \"we're safe now.\"",
+      "The deeper problem is the blueprint. You can't publish a defense and expect it to hold. The moment you describe how something is protected, you've handed the adversary a map. With AI, the adversary isn't a person poking around at human speed. It's a system that reasons about the defense itself, adapts, and tries thousands of approaches in seconds. The blueprint isn't a vulnerability. It's a roadmap.",
+      "The only real security is obscurity plus capability asymmetry — keeping methods secret and staying one step ahead. But that's not how this industry works. Everything gets open-sourced, peer-reviewed, published. Transparency is treated as a virtue. In this specific case, it's a liability.",
+      "---",
+      "And then there are the institutions that actually matter. Governments. Banks. The places where a breach doesn't just cost money — it costs lives, or sovereignty, or the trust that holds a society together. These systems weren't built for a non-human, never-sleeping, adaptive adversary. They were built for a person at a terminal. COBOL on a mainframe from the eighties. Legacy architectures that assume human-speed threats.",
+      "You can't patch your way out of that. The architecture itself is the problem. Air-gapping the critical systems sounds clean until you realize it breaks the workflows these institutions depend on. So the realistic options are grim: isolate and accept the cost, or accept that some systems will get breached and focus on detection and containment instead of prevention.",
+      "The uncomfortable truth is that the institutions with the most to lose are the least equipped to defend it. And the gap between what an LLM can do and what a legacy system can withstand isn't closing. It's widening.",
+      "---",
+      "So the question isn't whether we can catch up. It's whether we should slow down the capability side until the security side has a fighting chance. But even that has its own paradox — because slowing down means the people building the models are the ones deciding when to slow down. And they've got a two-trillion-dollar reason not to.",
+      "We're trusting the thing we're afraid of to tell us when to be afraid. That's not a strategy. That's a prayer.",
+      "— Osbel Morell",
+    ],
+  },
 ];
 
 export function getPost(slug: string): Post | undefined {
