@@ -42,7 +42,7 @@ export function GET() {
   <channel>
     <title>${FEED_TITLE}</title>
     <link>${SITE}/daily-digest</link>
-    <description>Techniques only — plain notes from building with agents.</description>
+    <description>Proven AI techniques, deep dives, and the occasional essay, tested and written in plain English.</description>
     <language>en</language>
     <lastBuildDate>${lastBuild}</lastBuildDate>
     <atom:link href="${SITE}/daily-digest/rss.xml" rel="self" type="application/rss+xml" />

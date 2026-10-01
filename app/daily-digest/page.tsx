@@ -26,7 +26,7 @@ export default function DailyDigestIndexPage() {
       <header className="space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">Daily Digest</h1>
         <p className="text-[15px]" style={{ color: "var(--cb-ink-muted)" }}>
-          Techniques only — plain notes from building with agents.
+          Proven AI techniques, deep dives, and the occasional essay, tested and written in plain English.
         </p>
       </header>
 
