@@ -39,6 +39,11 @@ export const COPY = {
     n === 1
       ? "1 duplicate line was left out. The problem list shows it."
       : `${n} duplicate lines were left out. The problem list shows it.`,
+  /** Duplicate-only (no real problems, d ≥ 1 duplicate lines): count lines for include-anyway OFF / ON. */
+  summaryCountsDupOnly: (ready: number, d: number) =>
+    `${ready} ready for LightBurn · ${d === 1 ? "1 duplicate left out" : `${d} duplicates left out`}`,
+  summaryCountsDupOnlyIncluded: (inFile: number, d: number) =>
+    `${inFile} in your merge file · ${d === 1 ? "1 duplicate left out" : `${d} duplicates left out`}`,
   /** "Put items that need a look in the merge file anyway" ON: count line. n = items with problems (same unit). */
   summaryCountsIncluded: (inFile: number, n: number) => `${inFile} in your merge file · ${n} with problems`,
   /** "Include anyway" ON and some items in the file have problems. n = items. */

@@ -35,9 +35,14 @@ export function summaryView(ok: Pick<ProcessOk, "stats" | "problems">, includeFl
   const duplicatesOnly = shown.length > 0 && dupLines === shown.length;
   const hasProblems = shown.length > 0;
   const n = s.flagged_in_merge_items;
-  const countLine = includeFlagged
-    ? COPY.summaryCountsIncluded(s.ready_items, n)
-    : COPY.summaryCounts(s.ready_items, s.held_items);
+  // Never a "0" next to a table with rows: duplicate-only shows the duplicate count instead.
+  const countLine = duplicatesOnly
+    ? includeFlagged
+      ? COPY.summaryCountsDupOnlyIncluded(s.ready_items, dupLines)
+      : COPY.summaryCountsDupOnly(s.ready_items, dupLines)
+    : includeFlagged
+      ? COPY.summaryCountsIncluded(s.ready_items, n)
+      : COPY.summaryCounts(s.ready_items, s.held_items);
   const warning = includeFlagged && n > 0 ? COPY.summaryIncludedWarning(n) : null;
   let note: string | null = null;
   if (!hasProblems) note = COPY.summaryAllReady; // this pick really has zero problems

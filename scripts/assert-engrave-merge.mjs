@@ -17,6 +17,7 @@ import { validateEvent } from "../lib/engrave-merge/events.ts";
 import { handleEvent } from "../lib/engrave-merge/handler.ts";
 import { DEFAULT_SETTINGS } from "../lib/engrave-merge/types.ts";
 import { howManyLabel, summaryView } from "../lib/engrave-merge/summary.ts";
+import { readCsv } from "../lib/engrave-merge/csv.ts";
 import { computeKpis, parseLog } from "./engrave-merge-kpis.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -211,6 +212,84 @@ test('"Which items" pick: on-screen table rows reconcile with the count (fx05, e
   assert.equal(empty.showProblems, false);
   assert.equal(empty.problems.length, 0);
   assert.equal(empty.note, "Everything is ready.");
+});
+
+// Synthetic duplicate-only files built from fx01 (no real problems): d = 1 and d = 3.
+function dupOnlyFile(d) {
+  const raw = read("fx01_simple.csv");
+  const nl = raw.includes("\r\n") ? "\r\n" : "\n";
+  const { header, rows } = readCsv(raw);
+  const q = (v) => (/[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
+  const line = (r) => header.map((h) => q(r[h] ?? "")).join(",");
+  const extra = rows.slice(0, d);
+  return [header.map(q).join(","), ...rows.map(line), ...extra.map(line)].join(nl) + nl;
+}
+
+test("Duplicate-only count lines: OFF and ON, singular and plural (no 0 next to the table)", () => {
+  const expected = {
+    1: {
+      off: "3 ready for LightBurn · 1 duplicate left out",
+      on: "3 in your merge file · 1 duplicate left out",
+      note: "1 duplicate line was left out. The problem list shows it.",
+    },
+    3: {
+      off: "3 ready for LightBurn · 3 duplicates left out",
+      on: "3 in your merge file · 3 duplicates left out",
+      note: "3 duplicate lines were left out. The problem list shows it.",
+    },
+  };
+  for (const d of [1, 3]) {
+    const text = dupOnlyFile(d);
+    for (const incl of [false, true]) {
+      const res = emProcess(text, { settings: { includeFlagged: incl }, explicit: ["includeFlagged"] });
+      assert.equal(res.problems.length, d);
+      assert.ok(res.problems.every((p) => p.dup));
+      assert.equal(res.stats.held_items + res.stats.flagged_in_merge_items, 0, "no real problems");
+      const v = summaryView(res, incl);
+      assert.equal(v.countLine, incl ? expected[d].on : expected[d].off);
+      assert.equal(v.note, expected[d].note);
+      assert.equal(v.warning, null);
+      assert.equal(v.showProblems, true);
+      assert.equal(v.problems.length, d);
+    }
+  }
+});
+
+test("Sweep: no count line reads 0 while the on-screen table has rows (all cases, both modes, every listing pick)", () => {
+  const inputs = [
+    ...cases.map((c) => ({ name: c.name, text: read(c.fixture), c })),
+    { name: "dup_only_1", text: dupOnlyFile(1), c: {} },
+    { name: "dup_only_3", text: dupOnlyFile(3), c: {} },
+  ];
+  // The problem side of the count line (after "·") must never be 0 next to a table with rows.
+  // A 0 on the ready side ("0 ready for LightBurn · 6 need a look") is a true count and allowed.
+  const zero = /· 0 /;
+  let readyZero = 0;
+  let checked = 0;
+  for (const { name, text, c } of inputs) {
+    const recipe = c.recipe ? JSON.parse(read(c.recipe)) : null;
+    const glyphCheck = c.charset ? charsetCheck(read(c.charset)) : null;
+    const base = { ...(c.config || {}) };
+    delete base.listing;
+    const settings = Object.fromEntries(Object.entries(base).map(([k, v]) => [CFG_MAP[k], v]));
+    const lids = [null, ...emProcess(text).listings.map((l) => l.lid)];
+    for (const incl of [false, true]) {
+      for (const listing of lids) {
+        const st = { ...settings, includeFlagged: incl };
+        const res = emProcess(text, { settings: st, explicit: Object.keys(st), recipe, glyphCheck, listing });
+        const v = summaryView(res, incl);
+        if (v.problems.length > 0) {
+          assert.ok(!zero.test(v.countLine), `${name} incl=${incl} pick=${listing}: "${v.countLine}" next to ${v.problems.length} rows`);
+          assert.notEqual(v.note, "Everything is ready.");
+          if (/^0 /.test(v.countLine)) readyZero++;
+        } else {
+          assert.equal(v.showProblems, false);
+        }
+        checked++;
+      }
+    }
+  }
+  console.log(`# no-zero sweep: ${checked} views checked; ${readyZero} with 0 on the ready side (allowed)`);
 });
 
 test("AT-02 Sold Orders file → WRONG_FILE, no outputs", () => {

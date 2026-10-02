@@ -60,6 +60,12 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
      `{inFile} in your merge file · {n} with problems` (n = items with problems), and when n > 0 the warning
      "{n} of these have problems. Check the problem list before you engrave." (n = 1: "1 of these has a problem. …").
      "Everything is ready." only when the problem list is empty, in either mode.
+     Duplicate-only (no real problems, d ≥ 1 duplicate lines in the table): the count line never shows a 0 next to the table:
+     OFF `{ready} ready for LightBurn · 1 duplicate left out` / `· {d} duplicates left out`;
+     ON  `{inFile} in your merge file · 1 duplicate left out` / `· {d} duplicates left out`;
+     note under it (both modes): "1 duplicate line was left out. The problem list shows it." /
+     "{d} duplicate lines were left out. The problem list shows it." Blank quantity on screen: "Blank, counted as 1".
+     Same rule per "Which items" pick, using the rows the table shows.
    • on-screen problem list (whenever exception_count > 0): Item · How many · Problem. How many = raw Quantity,
      "0, counted as 1" for an unreadable quantity, "Duplicate, left out" for a duplicate (on screen only; the file keeps raw Quantity)
      With one listing picked under "Which items", the on-screen table shows only that listing's rows (by Listing ID,
