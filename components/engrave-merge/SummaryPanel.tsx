@@ -17,6 +17,8 @@ export interface SummaryPanelProps {
   onListing: (lid: string) => void;
   onProblems: () => void;
   onPrint: () => void;
+  /** Turns on "Include orders already shipped" (same as the Settings toggle; no event). */
+  onIncludeShipped?: () => void;
 }
 
 /**
@@ -26,16 +28,17 @@ export interface SummaryPanelProps {
  * for All items, any pick, and while "Updated" shows.
  */
 export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function SummaryPanel(
-  { view, updated = false, listings, listing, onListing, onProblems, onPrint },
+  { view, updated = false, listings, listing, onListing, onProblems, onPrint, onIncludeShipped = () => {} },
   ref,
 ) {
   return (
     <section ref={ref} aria-label="Summary" className="mt-6 scroll-mt-4 space-y-3">
+      {!view.bothZero && (
       <label className="flex min-w-0 flex-col gap-1">
         <span className="text-base font-medium">{COPY.whichItems}</span>
         <select
           data-which-items
-          className={`${fieldClass} w-full min-w-0 truncate`}
+          className={`${fieldClass} w-full min-w-0 whitespace-normal`}
           value={listing}
           onChange={(e) => onListing(e.target.value)}
         >
@@ -47,14 +50,47 @@ export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function 
           ))}
         </select>
       </label>
+      )}
       <div>
-        <p data-count-line className="h-6 truncate whitespace-nowrap text-base font-semibold leading-6">
-          {view.countLine}
-        </p>
+        {view.bothZero ? (
+          // Both-zero: no count line (never "0 ready"); this block sits in its spot.
+          <div data-both-zero role="status" className="space-y-2">
+            <p className="text-base font-semibold leading-6">{view.countLine}</p>
+            {view.note && (
+              <p data-note-line className={`text-base leading-6 ${muted}`}>
+                {view.note}
+              </p>
+            )}
+            {view.showIncludeShipped && (
+              <button
+                type="button"
+                data-include-shipped
+                className={secondaryBtn}
+                onClick={(e) => {
+                  const section = e?.currentTarget?.closest("section");
+                  onIncludeShipped();
+                  // the count line comes back after the re-run; then focus moves to it
+                  setTimeout(() => section?.querySelector<HTMLElement>("[data-count-line]")?.focus(), 0);
+                }}
+              >
+                {COPY.includeShippedButton}
+              </button>
+            )}
+          </div>
+        ) : (
+          <p
+            data-count-line
+            tabIndex={-1}
+            className="h-6 truncate whitespace-nowrap text-base font-semibold leading-6 outline-none focus-visible:ring-2 focus-visible:ring-[var(--cb-ink)]"
+          >
+            {view.countLine}
+          </p>
+        )}
         <p data-updated aria-live="polite" className={`h-5 text-base leading-5 ${muted}`}>
           {updated ? COPY.updated : ""}
         </p>
       </div>
+      {!view.bothZero && (
       <div data-actions className="flex flex-wrap gap-2">
         {view.showDownload && (
           <button type="button" data-download-problems className={secondaryBtn} onClick={onProblems}>
@@ -65,7 +101,8 @@ export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function 
           {COPY.printCutsheet}
         </button>
       </div>
-      {(view.warning || view.note || view.showAllButton) && (
+      )}
+      {!view.bothZero && (view.warning || view.note || view.showAllButton) && (
         <div className="space-y-2">
           {(view.warning || view.note) && (
             <p className="text-base leading-6">

@@ -40,6 +40,8 @@ export function fileRef(fingerprint: string, orderCount: number): EventProps {
 
 /** Fire-and-forget; failures are silent and never block the tool. */
 export function sendEvent(iid: string, event: EventName, props: EventProps = {}) {
+  // Guard: a merge file with 0 rows is not a real download; never count it.
+  if (event === "merge_downloaded" && !(Number(props.merge_row_count) > 0)) return;
   try {
     const body = JSON.stringify({ v: 1, event, iid, dogfood: iid.startsWith("dog-"), props });
     const blob = new Blob([body], { type: "application/json" });

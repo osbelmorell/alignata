@@ -20,6 +20,14 @@ export interface SummaryView {
   showDownload: boolean;
   /** "Show all items" (resets the picker): a clean pick while the rest of the file has problems. */
   showAllButton: boolean;
+  /** "Include shipped orders": nothing to engrave and the shipped-orders setting hid rows. */
+  showIncludeShipped: boolean;
+  /**
+   * Both-zero: 0 ready rows AND 0 problem rows in the file (only when the shipped filter hides
+   * everything). The page then hides the picker, Make merge file, Print cut sheet and
+   * "Everything is ready.", and shows only the count line + shipped line + button.
+   */
+  bothZero: boolean;
   /**
    * On-screen table rows: the rows for the "Which items" pick (all rows for "All items").
    * A row belongs to a pick by its Listing ID (duplicates included); rows with a blank
@@ -47,7 +55,9 @@ export function summaryView(ok: Pick<ProcessOk, "stats" | "problems">, includeFl
   const parts = [s.ready_items > 0 ? left(s.ready_items) : null, rightN > 0 ? right(rightN) : null].filter(
     (x): x is string => x !== null,
   );
-  const countLine = parts.length ? parts.join(" · ") : COPY.countNothing;
+  const bothZero = s.ready_items === 0 && ok.problems.length === 0 && s.exception_count === 0;
+  const nothing = bothZero || parts.length === 0;
+  const countLine = nothing ? COPY.countNothing : parts.join(" · ");
   const warning = includeFlagged && n > 0 ? COPY.summaryIncludedWarning(n) : null;
   const others = ok.problems.filter((p) => !p.inScope);
   const otherItems = others.reduce((sum, p) => sum + p.counted, 0); // items, like "need a look" (duplicates count 0)
@@ -61,13 +71,17 @@ export function summaryView(ok: Pick<ProcessOk, "stats" | "problems">, includeFl
     note = otherItems > 0 ? COPY.summaryPickReadyOthers(otherItems) : COPY.summaryDuplicatesOnly(otherDupLines);
   else if (duplicatesOnly) note = COPY.summaryDuplicatesOnly(dupLines);
   else if (!warning) note = COPY.summaryHeldNote;
+  // Nothing to engrave: never "Everything is ready."; if the shipped-orders setting hid rows, say so.
+  if (nothing) note = s.hidden_shipped > 0 ? COPY.countShippedHidden : note === COPY.summaryAllReady ? null : note;
   return {
     countLine,
     note,
     warning,
     showProblems: hasProblems,
-    showDownload: fileHasProblems,
-    showAllButton: cleanPick,
+    showDownload: fileHasProblems && !bothZero,
+    showAllButton: cleanPick && !nothing,
+    showIncludeShipped: bothZero && s.hidden_shipped > 0,
+    bothZero,
     problems: shown,
   };
 }

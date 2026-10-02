@@ -12,6 +12,9 @@
     {"name": "fx05_exceptions__ascii_font", "fixture": "fx05_exceptions.csv", "charset": "font_charset_ascii.txt"},
     {"name": "fx05_exceptions__include_flagged", "fixture": "fx05_exceptions.csv", "config": {"include_flagged": true}},
     {"name": "fx06_multifield_GUESS", "fixture": "fx06_multifield_GUESS.csv"},
-    {"name": "fx06_multifield_GUESS__recipe", "fixture": "fx06_multifield_GUESS.csv", "recipe": "recipe_fx06.json"}
+    {"name": "fx06_multifield_GUESS__recipe", "fixture": "fx06_multifield_GUESS.csv", "recipe": "recipe_fx06.json"},
+    {"name": "fx08-all-shipped", "fixture": "fx08-all-shipped.csv"},
+    {"name": "fx08-all-shipped__include_shipped", "fixture": "fx08-all-shipped.csv", "config": {"include_shipped": true}},
+    {"name": "fx09-no-engravable", "fixture": "fx09-no-engravable.csv"}
   ]
 }

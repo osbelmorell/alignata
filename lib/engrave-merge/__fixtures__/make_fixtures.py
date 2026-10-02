@@ -58,6 +58,7 @@ ORN = ("3000000005", "Engraved Wooden Ornament", "EM-TEST-ORN")
 COAST = ("3000000006", "Blank Coaster Set", "EM-TEST-COASTER")
 GIFTBOARD = ("3000000007", "Engraved Cutting Board Gift", "EM-TEST-GIFT")
 PLAQUE = ("3000000008", "Engraved Birth Announcement Plaque", "EM-TEST-PLAQUE")
+TRAY = ("3000000009", "Plain Wooden Serving Tray", "EM-TEST-TRAY")
 
 def L(x):  # listing tuple -> kwargs
     return dict(listing=x[0], item=x[1], sku=x[2])
@@ -112,6 +113,27 @@ FIXTURES = {
         row("1000000601", "2000000601", variations="Color:Natural,Personalization 1:Emma Fakename,Personalization 2:03.14.2026,Personalization 3:7 lb 2 oz, 20 in", buyer="testy", price="42.00", **L(PLAQUE)),
         row("1000000602", "2000000602", variations="Color:Walnut,Baby name:Ima Fakename,Birth date:01.02.2026,Weight:6 lb 15 oz", buyer="ima", price="42.00", **L(PLAQUE)),
         row("1000000603", "2000000603", variations="Color:Natural,Personalization:Name: Emma\nDate: 03.14.2026", buyer="sample", price="42.00", **L(PLAQUE)),
+    ],
+    # 8. ALL SHIPPED: every row has Date Shipped (the only field the shipped filter reads,
+    #    SPEC 5.2). 4 distinct Order IDs (not a small file). Default settings -> 0 ready,
+    #    0 need a look (everything hidden). Include shipped -> 6 clean ready rows
+    #    (one Quantity 2, one two-item order).
+    "fx08-all-shipped.csv": [
+        row("1000000801", "2000000801", variations="Size:12 x 9 inches,Wood type:Walnut,Personalization:The Shippedsons", buyer="testy", price="45.00", shipped="09/25/2026", sale="09/19/26", paid="09/19/2026", **L(BOARD)),
+        row("1000000802", "2000000802", variations="Style:Round,Personalization:Ima", buyer="ima", qty="2", price="12.00", shipped="09/26/2026", sale="09/20/26", paid="09/20/2026", **L(KEY)),
+        row("1000000803", "2000000803", variations="Glass type:Wine,Personalization:Mr.", buyer="sample", price="18.00", shipped="09/27/2026", sale="09/21/26", paid="09/21/2026", **L(GLASS)),
+        row("1000000803", "2000000804", variations="Glass type:Wine,Personalization:Mrs.", buyer="sample", price="18.00", shipped="09/27/2026", sale="09/21/26", paid="09/21/2026", **L(GLASS)),
+        row("1000000804", "2000000805", variations="Style:Star,Personalization:Bo", buyer="faux", price="15.00", shipped="09/28/2026", sale="09/22/26", paid="09/22/2026", **L(ORN)),
+    ],
+    # 9. NO ENGRAVING TEXT: unshipped, readable rows with no personalization label or text
+    #    on listings that never have text (so no BLANK_TEXT). 3 distinct Order IDs.
+    #    By the app's real rules (SPEC 5.4.1 / 5.7, same as the fx05 Blank Coaster Set)
+    #    these are READY rows with blank text, NOT "need a look" and NOT zero.
+    "fx09-no-engravable.csv": [
+        row("1000000901", "2000000901", variations="Color:Natural", buyer="testy", qty="2", price="20.00", **L(COAST)),
+        row("1000000902", "2000000902", variations="Color:Gray", buyer="ima", price="20.00", **L(COAST)),
+        row("1000000903", "2000000903", variations="Size:Large,Finish:Oiled", buyer="dummy", price="35.00", **L(TRAY)),
+        row("1000000903", "2000000904", variations="", buyer="dummy", price="35.00", **L(TRAY)),
     ],
 }
 

@@ -90,7 +90,7 @@ test("Summary + on-screen problem list reconcile for every case", () => {
     assert.equal(sum((p) => p.held && p.inScope), stats.held_items, `${c.name}: How many (held rows) adds up to held`);
     assert.equal(sum((p) => !p.held && p.inScope), stats.flagged_in_merge_items, `${c.name}: How many (in-file rows) adds up to warning n`);
     assert.equal(v.showProblems, stats.exception_count > 0, `${c.name}: list + button follow exception_count`);
-    assert.equal(v.note === "Everything is ready.", stats.exception_count === 0, `${c.name}: "Everything is ready." only with zero problems`);
+    assert.equal(v.note === "Everything is ready.", stats.exception_count === 0 && !v.bothZero, `${c.name}: "Everything is ready." only with zero problems (never on both-zero)`);
     assert.equal(v.warning !== null, incl && stats.flagged_in_merge_items > 0, `${c.name}: warning when problem items are in the file`);
     if (stats.exception_count > 0) assert.notEqual(v.note, "Everything is ready.", `${c.name}: never "Everything is ready." with problems`);
     for (const p of problems) if (p.dup) assert.equal(p.counted, 0);
@@ -275,9 +275,12 @@ test("fx03_multiline_commas__no_split, Keychain picked: download shows, no \"Eve
       .replace(/ selected=""/g, "")
       .replace(/>[^<]*</g, "><");
   assert.equal(skeleton(htmlAll), skeleton(htmlKey), "identical structure above Download problem list (All items vs Keychain)");
-  assert.match(htmlAll, /data-count-line="true" class="h-6 truncate whitespace-nowrap/, "count line: one fixed line");
+  assert.match(htmlAll, /data-count-line="true" tabindex="-1" class="h-6 truncate whitespace-nowrap/, "count line: one fixed line");
   assert.match(htmlAll, /data-updated="true" aria-live="polite" class="h-5 /, "Updated: fixed 20px, always reserved");
   assert.match(htmlAll, /<label class="flex min-w-0 flex-col/, "picker label can shrink (min-w-0)");
+  const selectTag = htmlAll.match(/<select[^>]*>/)[0];
+  assert.match(selectTag, /w-full min-w-0 whitespace-normal/, "picker: w-full min-w-0 whitespace-normal");
+  assert.ok(!/truncate|nowrap|text-ellipsis|overflow-ellipsis/.test(selectTag + htmlAll.match(/<select[\s\S]*?<\/select>/)[0]), "no truncate / nowrap / ellipsis on the picker or its options");
   assert.ok(htmlAll.includes("data-problem-list") && !htmlKey.includes("data-problem-list"));
   assert.ok(htmlKey.includes(">Show all items<") && !htmlAll.includes(">Show all items<"));
   // Updated on/off does not change the structure above the buttons either.
@@ -372,7 +375,7 @@ test("Sweep: no count line reads 0 while the on-screen table has rows (all cases
           assert.equal(v.showProblems, false);
         }
         assert.equal(v.showDownload, res.stats.exception_count > 0, `${name} pick=${listing}: download follows the whole file`);
-        assert.equal(v.note === "Everything is ready.", res.stats.exception_count === 0, `${name} pick=${listing}: "Everything is ready." only for a clean file`);
+        assert.equal(v.note === "Everything is ready.", res.stats.exception_count === 0 && !v.bothZero, `${name} pick=${listing}: "Everything is ready." only for a clean file (never on both-zero)`);
         checked++;
       }
     }
@@ -540,7 +543,7 @@ test("A settings re-run sends no event; only page open, file load, downloads, pr
   const calls = [...deskSrc.matchAll(/sendEvent\(iidRef\.current, "([a-z_]+)"/g)].map((m) => m[1]).sort();
   assert.deepEqual(calls, ["cutsheet_printed", "exceptions_downloaded", "file_processed", "merge_downloaded", "page_open", "pro_interest_tap"]);
   // The re-run path: setters, font, settings file, Updated flash, picker, Start over → no event.
-  for (const h of ["markUpdated", "setS", "setL", "toggleText", "onFont", "onLoadRecipe", "onStartOver"])
+  for (const h of ["markUpdated", "setS", "setL", "toggleText", "onFont", "onLoadRecipe", "onStartOver", "onIncludeShipped"])
     assert.ok(!handlerBody(h).includes("sendEvent"), `${h} sends no event`);
   // The results are derived (useMemo) from process(); neither process nor summary can reach the tracker.
   for (const f of ["lib/engrave-merge/process.ts", "lib/engrave-merge/summary.ts"])
@@ -707,4 +710,140 @@ test("Picker label cut and Settings row length", async () => {
   assert.equal(COPY.settingsRow(0), "Settings · Standard");
   assert.equal(COPY.settingsRow(3), "Settings · 3 changed");
   for (const n of [0, 1, 9, 12, 99]) assert.ok(COPY.settingsRow(n).length <= 35);
+});
+
+test("Nothing to engrave: with and without hidden shipped orders", () => {
+  const raw = read("fx01_simple.csv");
+  const { header, rows } = readCsv(raw);
+  const q = (v) => (/[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
+  const line = (r) => header.map((h) => q(r[h] ?? "")).join(",");
+  const allShipped = [header.map(q).join(","), ...rows.map((r) => line({ ...r, "Date Shipped": "09/30/2026" }))].join("\n") + "\n";
+  // shipped-orders setting OFF (default): every row hidden → both lines
+  const hid = emProcess(allShipped);
+  assert.equal(hid.stats.hidden_shipped, rows.length);
+  const v1 = summaryView(hid, false);
+  assert.equal(v1.countLine, "Nothing to engrave in this file.");
+  assert.equal(v1.note, "Orders already shipped are hidden.");
+  assert.equal(v1.showIncludeShipped, true, "button shown when shipped rows are hidden");
+  assert.equal(v1.showAllButton, false);
+  // the panel: outlined 44px button like Show all items (not the black pill); tap → onIncludeShipped
+  const panel = (view, extra = {}) => ({ view, listings: hid.listings, listing: "", onListing: () => {}, onProblems: () => {}, onPrint: () => {}, ...extra });
+  const html = renderToStaticMarkup(createElement(SummaryPanel, panel(v1)));
+  const btnTag = html.match(/<button[^>]*data-include-shipped[^>]*>/)[0];
+  assert.match(btnTag, /min-h-\[44px\][^"]*rounded-xl border/, "outlined 44px, same class as Show all items");
+  assert.ok(!/radius-pill|bg-\[var\(--cb-ink\)\]/.test(btnTag), "not a black pill");
+  assert.match(html, />Include shipped orders</);
+  assert.ok(!html.includes("data-count-line"), "both-zero: no count line");
+  const normal = renderToStaticMarkup(createElement(SummaryPanel, panel(summaryView(emProcess(read("fx01_simple.csv")), false))));
+  assert.match(normal, /data-count-line="true" tabindex="-1"/, "count line focusable (tabIndex -1) for the focus after the tap");
+  let flipped = 0;
+  const tree = SummaryPanel.render(panel(v1, { onIncludeShipped: () => flipped++ }), null);
+  const find = (n) => {
+    if (!n || typeof n !== "object") return null;
+    if (Array.isArray(n)) { for (const c of n) { const f = find(c); if (f) return f; } return null; }
+    if (n.props?.["data-include-shipped"] !== undefined) return n;
+    return find(n.props?.children);
+  };
+  find(tree).props.onClick();
+  assert.equal(flipped, 1, "tap calls onIncludeShipped once");
+  assert.equal(summaryView(hid, true).countLine, "Nothing to engrave in this file.");
+  // setting ON: the same rows are kept and ready
+  const shown = emProcess(allShipped, { settings: { includeShipped: true }, explicit: ["includeShipped"] });
+  assert.equal(summaryView(shown, false).countLine, `${rows.length} ready for LightBurn`);
+  // no rows hidden (header only): first line only, never "Everything is ready."
+  const empty = emProcess(header.map(q).join(",") + "\n");
+  assert.ok(!empty.error, "header-only file still loads");
+  assert.equal(empty.stats.hidden_shipped, 0);
+  const v2 = summaryView(empty, false);
+  assert.equal(v2.countLine, "Nothing to engrave in this file.");
+  assert.equal(v2.note, null);
+  assert.equal(v2.showIncludeShipped, false, "no button when nothing is hidden");
+  assert.ok(!renderToStaticMarkup(createElement(SummaryPanel, { view: v2, listings: [], listing: "", onListing() {}, onProblems() {}, onPrint() {} })).includes("data-include-shipped"));
+  // files with items never show it, even with hidden shipped rows
+  const mixed = emProcess(read("fx04_mixed_shipped.csv"));
+  if (mixed.stats.hidden_shipped > 0) assert.equal(summaryView(mixed, false).showIncludeShipped, false);
+  // the desk wires the button to the Settings toggle itself: setS("includeShipped", true), no event
+  const body = handlerBody("onIncludeShipped");
+  assert.ok(body.includes('setS("includeShipped", true)') && !body.includes("sendEvent"));
+});
+
+test("EXCLUDED_IIDS includes Product's no-flag test visit → x-em-store: skipped-filter", async () => {
+  const product = "55ac19e0-0d84-445a-8b0f-d4d4357bd965";
+  assert.ok(EXCLUDED_IIDS.includes(product));
+  const realLog = console.log;
+  console.log = () => {};
+  try {
+    const r = await handleEvent(
+      new Request("https://alignata.com/api/engrave-merge/e", {
+        method: "POST",
+        body: JSON.stringify({ v: 1, event: "page_open", iid: product, dogfood: false, props: {} }),
+      }),
+    ); // default list, no override
+    assert.equal(r.status, 204);
+    assert.equal(r.headers.get("x-em-store"), "skipped-filter");
+  } finally {
+    console.log = realLog;
+  }
+});
+
+test("Both-zero (fx08: every order shipped) vs fx09 (5 ready rows with blank text) vs fx04", () => {
+  const fx08 = emProcess(read("fx08-all-shipped.csv"));
+  const v = summaryView(fx08, false);
+  assert.equal(v.bothZero, true);
+  assert.equal(v.countLine, "Nothing to engrave in this file.");
+  assert.equal(v.note, "Orders already shipped are hidden.");
+  assert.equal(v.showIncludeShipped, true);
+  assert.equal(v.showDownload, false);
+  assert.equal(v.showAllButton, false);
+  assert.equal(v.warning, null);
+  assert.equal(summaryView(fx08, true).bothZero, true, "include-anyway ON: still both-zero");
+  const html = renderToStaticMarkup(createElement(SummaryPanel, { view: v, listings: fx08.listings, listing: "", onListing() {}, onProblems() {}, onPrint() {} }));
+  assert.ok(!html.includes("<select"), "picker hidden");
+  assert.ok(!html.includes("data-actions") && !html.includes("Print cut sheet") && !html.includes("Download problem list"), "no Print cut sheet / downloads");
+  assert.ok(!html.includes("Everything is ready."));
+  assert.match(html, /<div data-both-zero="true" role="status"[^>]*>[\s\S]*Nothing to engrave in this file\.[\s\S]*Orders already shipped are hidden\.[\s\S]*Include shipped orders[\s\S]*<\/div>/, "role=status block in the count line's spot");
+  assert.ok(!html.includes("data-count-line"), "count line hidden (never 0 ready)");
+  assert.ok(html.indexOf("data-both-zero") < html.indexOf("data-updated"), "20px Updated slot kept, under the block");
+  assert.equal((html.match(/data-include-shipped/g) || []).length, 1);
+  assert.match(deskSrc, /const bothZeroHint = !!view\?\.bothZero && status\.text === COPY\.statusReady;/, "hint hidden on both-zero");
+  assert.match(deskSrc, /\{bothZeroHint \? "" : status\.text\}/);
+  // the desk hides Make merge file in this state and never downloads/counts a 0-row merge file
+  assert.match(deskSrc, /\{!view\?\.bothZero && \(\s*<button type="button" data-primary/, "Make merge file hidden on both-zero");
+  // include shipped → 6 ready, back to normal
+  const on = emProcess(read("fx08-all-shipped.csv"), { settings: { includeShipped: true }, explicit: ["includeShipped"] });
+  const von = summaryView(on, false);
+  assert.equal(von.bothZero, false);
+  assert.equal(von.countLine, "6 ready for LightBurn");
+  assert.equal(von.note, "Everything is ready.");
+  assert.equal(von.showIncludeShipped, false);
+  // fx09: NOT both-zero (blank-text rows are ready rows, like fx05's Blank Coaster Set)
+  const v9 = summaryView(emProcess(read("fx09-no-engravable.csv")), false);
+  assert.equal(v9.bothZero, false);
+  assert.equal(v9.countLine, "5 ready for LightBurn");
+  assert.equal(v9.note, "Everything is ready.");
+  assert.equal(v9.showIncludeShipped, false);
+  // fx04 (some shipped, some not): never both-zero, no button
+  const v4 = summaryView(emProcess(read("fx04_mixed_shipped.csv")), false);
+  assert.equal(v4.bothZero, false);
+  assert.equal(v4.showIncludeShipped, false);
+  assert.notEqual(v4.countLine, "Nothing to engrave in this file.");
+});
+
+test("merge_downloaded never fires with 0 rows (sendEvent guard)", async () => {
+  const { sendEvent } = await import("../lib/engrave-merge/track.ts");
+  const sent = [];
+  const saved = { nav: globalThis.navigator, fetch: globalThis.fetch };
+  Object.defineProperty(globalThis, "navigator", { value: { sendBeacon: (u) => (sent.push(u), true) }, configurable: true, writable: true });
+  globalThis.fetch = async (u) => (sent.push(u), new Response(null, { status: 204 }));
+  try {
+    sendEvent("dog-" + iid, "merge_downloaded", { file_fingerprint: fp, merge_row_count: 0 });
+    sendEvent("dog-" + iid, "merge_downloaded", { file_fingerprint: fp });
+    assert.equal(sent.length, 0, "0 rows (or missing) → nothing sent");
+    sendEvent("dog-" + iid, "merge_downloaded", { file_fingerprint: fp, merge_row_count: 6 });
+    sendEvent("dog-" + iid, "page_open");
+    assert.equal(sent.length, 2, "real downloads and other events still go out");
+  } finally {
+    Object.defineProperty(globalThis, "navigator", { value: saved.nav, configurable: true, writable: true });
+    globalThis.fetch = saved.fetch;
+  }
 });

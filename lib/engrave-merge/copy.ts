@@ -51,8 +51,12 @@ export const COPY = {
   countNeedLook: (n: number) => `${n} need a look`,
   countWithProblems: (n: number) => `${n} with problems`,
   countDupLeftOut: (d: number) => (d === 1 ? "1 duplicate left out" : `${d} duplicates left out`),
-  /** Both parts would be 0 (e.g. every order already shipped). [Improvised: no Copy string for this yet.] */
-  countNothing: "No items to engrave.",
+  /** Both parts would be 0. */
+  countNothing: "Nothing to engrave in this file.",
+  /** Second line under countNothing when the shipped-orders setting hid rows (stats.hidden_shipped > 0). */
+  countShippedHidden: "Orders already shipped are hidden.",
+  /** Outlined 44px button under that line: turns on "Include orders already shipped". */
+  includeShippedButton: "Include shipped orders",
   /** "Include anyway" ON and some items in the file have problems. n = items. */
   summaryIncludedWarning: (n: number) =>
     n === 1

@@ -97,11 +97,23 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
      same position for All items, any pick and while "Updated" shows (Playwright: same page y across All items → clean
      pick → Show all items). After "Show all items", focus moves to the picker.
      No 0 anywhere in the count line: a part whose number is 0 is left out (clean pick: "{ready} ready for LightBurn" /
-     "{inFile} in your merge file"; nothing ready: "{held} need a look"). Both parts 0: "No items to engrave."
-     [improvised; no Copy string yet]. Worst case "999 ready for LightBurn · 99 duplicates left out" = 334 px of 358 px.
-     Picker: the label is `flex min-w-0 flex-col`, the select `w-full min-w-0` with ellipsis; option text over ~40
-     characters is cut at a word break, then "… (listing ID)". Gate: 140-character title, WebKit at 390 →
-     scrollWidth == clientWidth.
+     "{inFile} in your merge file"; nothing ready: "{held} need a look"). Both parts 0: "Nothing to engrave in this file."
+     Both-zero = 0 ready rows AND 0 problem rows in the file; it only happens when the shipped filter hides everything
+     (fixture fx08). Blank-text unshipped items are still ready rows (fx09: "5 ready for LightBurn", NOT both-zero).
+     Both-zero screen (Product Experience, final): STAYS header, drop zone, Settings row, Start over. HIDDEN: Which items,
+     the count line, "Everything is ready.", Make merge file (the 620 px primary rule does not apply to this one state),
+     the "File loaded. Tap Make merge file…" hint, Print cut sheet. SHOWN in the count line's spot, wrapper
+     role="status": "Nothing to engrave in this file." / "Orders already shipped are hidden." / outlined 44px "Include
+     shipped orders"; the 20px "Updated" slot stays reserved. After the tap everything comes back and focus lands on the
+     count line. No event fires. merge_downloaded is never sent with 0 rows (guard in sendEvent, unit-tested).
+     If the shipped-orders setting hid rows (stats.hidden_shipped > 0): second line "Orders already shipped are hidden."
+     and an outlined 44px "Include shipped orders" button (styled like Show all items, not a pill). One tap turns on
+     "Include orders already shipped" exactly like the toggle: re-runs in place, no event, focus moves to the count line
+     (tabIndex -1), Settings row reads "Settings · 1 changed". No button when nothing is hidden. Worst case "999 ready for LightBurn · 99 duplicates left out" = 334 px of 358 px.
+     Picker: the label is `flex min-w-0 flex-col`, the select `w-full min-w-0 whitespace-normal` (no truncate, nowrap or
+     ellipsis on it or its options: WebKit widened the page to 407 px / 1226 px with them). Option text over ~40
+     characters is cut at a word break, then "… (listing ID)". Gate (WebKit, 390): fx01 Cutting Board picked and a
+     152-character title picked → document scrollWidth == 390, select ≈ 358 px wide.
    • secondary buttons: Download problem list (shown whenever exception_count > 0)  [COPY: Print cut sheet]
    • "Which items" select: All items / one per listing (exports that listing only, rows renumbered from 1)
    • ▸ [COPY: How to use this in LightBurn] (§7.4 guide, collapsed)
@@ -298,7 +310,8 @@ Envelope: `{ v: 1, event, iid, dogfood: boolean, props }`. The server adds `ts` 
 1. Opening the page with `?dogfood=1` rewrites `em_iid` to `dog-<new uuid>` (still just a random id, so the localStorage rule holds). `?dogfood=0` gives a fresh non-dog id. Events from `dog-` ids get `dogfood: true`.
 2. The server drops fingerprints listed in `fixture_fingerprints.json` (the sample-file button uses a fixture, so it's excluded automatically). Ship the list as ONE constant in `lib/engrave-merge/fixtures.ts`; the server event filter and `npm run engrave:kpis` both import it (no duplicate lists).
 3. Analysis counts only `host === "alignata.com"`, which excludes previews and localhost.
-3a. Backstop for owner/test devices: `EXCLUDED_IIDS` (next to the fixture list in `lib/engrave-merge/fixtures.ts`).
+3a. Backstop for owner/test devices: `EXCLUDED_IIDS` (next to the fixture list in `lib/engrave-merge/fixtures.ts`;
+    today: Product's no-flag test visit 55ac19e0-0d84-445a-8b0f-d4d4357bd965).
     The server drops events from those em_iid values (204, nothing stored) and `npm run engrave:kpis` ignores them.
 4. Osbel and Eng Ops dogfood **only** with `?dogfood=1`.
 
@@ -332,7 +345,7 @@ Caveat: an install id is a browser, not a seller. Cleared storage or a second de
 ## 9. Acceptance tests (Eng Ops must pass all before handing back)
 
 **Parsing (golden)**
-- AT-01: `scripts/assert-engrave-merge.mjs` (node:test, like `assert-stripe-cleaver.mjs`) runs `lib/engrave-merge` over **every case in `cases.json`** and compares merge and problem-list bytes with `expected/<case>/`. All 12 cases must match. Copy `fixtures/` into the repo (e.g. `public/fixtures/engrave-merge/`; all synthetic).
+- AT-01: `scripts/assert-engrave-merge.mjs` (node:test, like `assert-stripe-cleaver.mjs`) runs `lib/engrave-merge` over **every case in `cases.json`** and compares merge and problem-list bytes with `expected/<case>/`. All 15 cases must match (12 original + fx08 default, fx08 include-shipped, fx09). Copy `fixtures/` into the repo (e.g. `public/fixtures/engrave-merge/`; all synthetic).
 - AT-02: `fx07_wrong_file_SoldOrders.csv` → wrong-file message, no download offered.
 - AT-03: A fixture saved with a UTF-8 BOM and with LF-only endings gives identical outputs.
 - AT-04: The fingerprint of each fixture equals `fixture_fingerprints.json`.
