@@ -121,17 +121,19 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
      screen. No black pill. No 20px "Updated" slot on this screen (both-zero and every other screen keep it). Download
      problem list behaves as on a clean pick (shown when the file has problems; tapping it is a real download and sends
      exceptions_downloaded, like everywhere).
-     A11y: role="status" on the both-zero block, the all-shipped-pick block, and on each 0-ready line (count line and its
-     note, kept in their usual places so the downloads row does not move). Include shipped orders →
+     A11y: role="status" wraps ONLY text: on both-zero and the all-shipped pick, an inner block with just the two status
+     lines (the buttons and the "{n} other items" note are siblings after it, same 8px stack); on the 0-ready pick, the
+     count line and its note each (kept in their usual places so the downloads row does not move). No button or other
+     interactive element inside any role="status" region (unit-tested). Include shipped orders →
      re-runs, focus to the count line ("2 ready for LightBurn" + the clean-pick note), "Settings · 1 changed". Show all
      items → All items, focus on the picker.
      Both-zero = 0 ready rows AND 0 problem rows in the file; it only happens when the shipped filter hides everything
      (fixture fx08). Blank-text unshipped items are still ready rows (fx09: "5 ready for LightBurn", NOT both-zero).
      Both-zero screen (Product Experience, final): STAYS header, drop zone, Settings row, Start over. HIDDEN: Which items,
      the count line, "Everything is ready.", Make merge file (the 620 px primary rule does not apply to this one state),
-     the "File loaded. Tap Make merge file…" hint, Print cut sheet. SHOWN in the count line's spot, wrapper
-     role="status": "Nothing to engrave in this file." / "Orders already shipped are hidden." / outlined 44px "Include
-     shipped orders"; the 20px "Updated" slot stays reserved. After the tap everything comes back and focus lands on the
+     the "File loaded. Tap Make merge file…" hint, Print cut sheet. SHOWN in the count line's spot: role="status"
+     "Nothing to engrave in this file." / "Orders already shipped are hidden.", then (outside the status) outlined 44px
+     "Include shipped orders"; the 20px "Updated" slot stays reserved. After the tap everything comes back and focus lands on the
      count line. No event fires. merge_downloaded is never sent with 0 rows (guard in sendEvent, unit-tested).
      If the shipped-orders setting hid rows (stats.hidden_shipped > 0): second line "Orders already shipped are hidden."
      and an outlined 44px "Include shipped orders" button (styled like Show all items, not a pill). One tap turns on

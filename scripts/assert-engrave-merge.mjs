@@ -813,7 +813,7 @@ test("Both-zero (fx08: every order shipped) vs fx09 (5 ready rows with blank tex
   assert.ok(!html.includes("<select"), "picker hidden");
   assert.ok(!html.includes("data-actions") && !html.includes("Print cut sheet") && !html.includes("Download problem list"), "no Print cut sheet / downloads");
   assert.ok(!html.includes("Everything is ready."));
-  assert.match(html, /<div data-both-zero="true" role="status"[^>]*>[\s\S]*Nothing to engrave in this file\.[\s\S]*Orders already shipped are hidden\.[\s\S]*Include shipped orders[\s\S]*<\/div>/, "role=status block in the count line's spot");
+  assert.match(html, /<div data-both-zero="true"[^>]*><div data-status-lines="true" role="status"[^>]*><p[^>]*>Nothing to engrave in this file\.<\/p><p[^>]*>Orders already shipped are hidden\.<\/p><\/div><button[^>]*data-include-shipped/, "role=status (2 lines only) in the count line's spot, Include shipped orders after it");
   assert.ok(!html.includes("data-count-line"), "count line hidden (never 0 ready)");
   assert.ok(html.indexOf("data-both-zero") < html.indexOf("data-updated"), "20px Updated slot kept, under the block");
   assert.equal((html.match(/data-include-shipped/g) || []).length, 1);
@@ -1077,7 +1077,7 @@ test("fx11 shipped listing pick (3000000012): Nothing to engrave in this listing
   assert.equal(vin.shippedPick, true);
   assert.equal(vin.countLine, "Nothing to engrave in this listing.");
   const html = renderToStaticMarkup(createElement(SummaryPanel, { view: v, listings: res.listings, listing: "3000000012", onListing() {}, onProblems() {}, onPrint() {} }));
-  const order = ["data-which-items", 'data-shipped-pick="true" role="status"', "Nothing to engrave in this listing.", "Orders already shipped are hidden.", "data-include-shipped", "data-others-note", "data-show-all", "data-download-problems"].map((k) => html.indexOf(k));
+  const order = ["data-which-items", 'data-shipped-pick="true"', 'data-status-lines="true" role="status"', "Nothing to engrave in this listing.", "Orders already shipped are hidden.", "data-include-shipped", "data-others-note", "data-show-all", "data-download-problems"].map((k) => html.indexOf(k));
   assert.ok(order.every((i) => i >= 0), `all present: ${order}`);
   assert.deepEqual([...order].sort((a, b) => a - b), order, "picker → 2 status lines → Include shipped orders → note → Show all items → Download problem list");
   assert.ok(!html.includes("data-updated"), "no Updated slot on this screen");
@@ -1142,12 +1142,12 @@ test('role="status": both-zero (fx08), all-shipped listing pick (fx11), 0-ready 
   const statusTexts = (html) => [...html.matchAll(/<(\w+)[^>]*role="status"[^>]*>([\s\S]*?)<\/\1>/g)].map((m) => m[2].replace(/<[^>]+>/g, "|"));
   const bz = render("fx08-all-shipped");
   assert.equal(bz.v.bothZero, true);
-  assert.match(bz.html, /<div data-both-zero="true" role="status"/);
+  assert.match(bz.html, /<div data-both-zero="true" class="[^"]*"><div data-status-lines="true" role="status"/);
   assert.ok(statusTexts(bz.html).some((t) => t.includes("Nothing to engrave in this file.") && t.includes("Orders already shipped are hidden.")));
   assert.match(bz.html, /data-updated/, "both-zero keeps its 20px Updated slot");
   const sp = render("fx11_shipped_listing_pick__shipped_listing");
   assert.equal(sp.v.shippedPick, true);
-  assert.match(sp.html, /<div data-shipped-pick="true" role="status"/);
+  assert.match(sp.html, /<div data-shipped-pick="true" class="[^"]*"><div data-status-lines="true" role="status"/);
   assert.ok(statusTexts(sp.html).some((t) => t.includes("Nothing to engrave in this listing.") && t.includes("Orders already shipped are hidden.")));
   const nr = render("fx10_zero_ready_listing__listing_b");
   assert.equal(nr.v.noReady, true);
@@ -1163,4 +1163,58 @@ test('role="status": both-zero (fx08), all-shipped listing pick (fx11), 0-ready 
     assert.match(o.html, /data-actions/, `${name}: usual downloads row`);
     assert.match(o.html, /data-updated/, `${name}: Updated slot`);
   }
+});
+
+/** Every role="status" element in static markup, with its balanced inner HTML. */
+function statusRegions(html) {
+  const out = [];
+  for (const m of html.matchAll(/<(\w+)\b[^>]*\brole="status"[^>]*>/g)) {
+    const tag = m[1];
+    const re = new RegExp(`<${tag}\\b[^>]*>|</${tag}>`, "g");
+    re.lastIndex = m.index + m[0].length;
+    let depth = 1, end = -1, t;
+    while ((t = re.exec(html))) {
+      depth += t[0].startsWith("</") ? -1 : 1;
+      if (depth === 0) { end = t.index; break; }
+    }
+    assert.ok(end > 0, `unclosed <${tag} role="status">`);
+    const inner = html.slice(m.index + m[0].length, end);
+    out.push({ open: m[0], inner, text: inner.replace(/<[^>]+>/g, "|").replace(/\|+/g, "|").replace(/^\||\|$/g, "") });
+  }
+  return out;
+}
+const INTERACTIVE = /<(button|a|input|select|textarea|option|details|summary|label)\b|\b(tabindex|href|contenteditable|onclick)=|\brole="(button|link|checkbox|switch|menuitem|tab|textbox|combobox|option)"/i;
+
+test('role="status" regions hold only text: no button or other interactive element inside (fx08, fx11 pick, fx10 Recipe Box)', () => {
+  const render = (name, incl = false) => {
+    const c = cases.find((x) => x.name === name);
+    const res = runCase(c);
+    const v = summaryView(res, incl);
+    return renderToStaticMarkup(createElement(SummaryPanel, { view: v, listings: res.listings, listing: c.config?.listing ?? "", onListing() {}, onProblems() {}, onPrint() {} }));
+  };
+  const want = {
+    "fx08-all-shipped": [["Nothing to engrave in this file.|Orders already shipped are hidden."], "data-include-shipped"],
+    fx11_shipped_listing_pick__shipped_listing: [["Nothing to engrave in this listing.|Orders already shipped are hidden."], "data-show-all"],
+    fx10_zero_ready_listing__listing_b: [["5 items need a look", "Nothing is ready to engrave yet. The problem list says why."], "data-download-problems"],
+  };
+  for (const [name, [texts, btn]] of Object.entries(want)) {
+    for (const incl of [false, true]) {
+      if (incl && name.startsWith("fx10")) continue; // include-anyway ON is a different (non 0-ready) screen
+      const html = render(name, incl);
+      const regions = statusRegions(html);
+      assert.deepEqual(regions.map((r) => r.text), texts, `${name} incl=${incl}: status text`);
+      for (const r of regions) {
+        assert.ok(!INTERACTIVE.test(r.inner), `${name}: interactive element inside role=status: ${r.inner}`);
+        // the region element itself is not a control (count line is only a programmatic focus target, tabindex -1)
+        assert.ok(!/<(button|a|input|select|textarea)\b/.test(r.open) && !/tabindex="(?!-1")/.test(r.open), `${name}: region is not a control`);
+      }
+      assert.ok(html.includes(btn), `${name}: ${btn} still rendered (outside the status region)`);
+    }
+  }
+  // fx11 pick: Include shipped orders, the note, Show all items and Download problem list are siblings after the status block
+  const sp = render("fx11_shipped_listing_pick__shipped_listing");
+  const kids = sp.match(/<div data-shipped-pick="true"[^>]*>([\s\S]*)$/)[1];
+  assert.match(kids, /^<div data-status-lines="true" role="status"[^>]*>(?:<p[^>]*>[^<]*<\/p>){2}<\/div><button[^>]*data-include-shipped[^>]*>Include shipped orders<\/button><p data-others-note[^>]*>2 other items need a look\.<\/p><button[^>]*data-show-all[^>]*>Show all items<\/button><button[^>]*data-download-problems[^>]*>Download problem list<\/button><\/div>/);
+  // the helper itself catches a button inside a status region
+  assert.ok(INTERACTIVE.test(statusRegions('<div role="status"><p>x</p><button>y</button></div>')[0].inner));
 });

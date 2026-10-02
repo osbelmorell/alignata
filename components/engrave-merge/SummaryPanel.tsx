@@ -65,13 +65,17 @@ export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function 
       <div>
         {view.bothZero || view.shippedPick ? (
           // Both-zero / all-shipped listing pick: no count line (never "0 ready"); this block sits in its spot.
-          <div {...(view.bothZero ? { "data-both-zero": true } : { "data-shipped-pick": true })} role="status" className="space-y-2">
-            <p className="text-base font-semibold leading-6">{view.countLine}</p>
-            {view.note && (
-              <p data-note-line className={`text-base leading-6 ${muted}`}>
-                {view.note}
-              </p>
-            )}
+          // role="status" wraps ONLY the two text lines; the buttons and the note are siblings after it
+          // (same 8px stack, so nothing moves).
+          <div {...(view.bothZero ? { "data-both-zero": true } : { "data-shipped-pick": true })} className="space-y-2">
+            <div data-status-lines role="status" className="space-y-2">
+              <p className="text-base font-semibold leading-6">{view.countLine}</p>
+              {view.note && (
+                <p data-note-line className={`text-base leading-6 ${muted}`}>
+                  {view.note}
+                </p>
+              )}
+            </div>
             {view.showIncludeShipped && (
               <button
                 type="button"
