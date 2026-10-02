@@ -173,6 +173,13 @@
         "Read pass or fail and any copyleft hits.",
         "Download the list if you need it in a thread."
       ]
+    },
+    {
+      "id": "engrave-merge",
+      "name": "Engrave Merge",
+      "url": "/engrave-merge",
+      "blurb": "Turn Etsy orders into a LightBurn file, ready to engrave.",
+      "status": "live"
     }
   ]
 }
