@@ -9,7 +9,7 @@ function isHubRelative(url: string) {
   return url.startsWith("/") && !url.startsWith("//");
 }
 
-function AppCard({ app }: { app: HubApp }) {
+function AppCard({ app, position }: { app: HubApp; position: number }) {
   const [aboutOpen, setAboutOpen] = useState(false);
   const hasDetail = Boolean(
     app.pitch || app.what || app.why || (app.how && app.how.length),
@@ -29,6 +29,8 @@ function AppCard({ app }: { app: HubApp }) {
       <a
         href={app.url}
         {...linkProps}
+        data-tool-slug={app.id}
+        data-tool-pos={position}
         aria-label={`Open ${app.name}`}
         className="absolute inset-0 z-0 rounded-[var(--cb-radius-squircle)]"
       />
@@ -109,6 +111,8 @@ function AppCard({ app }: { app: HubApp }) {
         <a
           href={app.url}
           {...linkProps}
+          data-tool-slug={app.id}
+          data-tool-pos={position}
           className="cb-open-pill pointer-events-auto relative z-20 mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-[var(--cb-radius-pill)] bg-[var(--cb-ink)] px-4 py-3.5 text-base font-semibold text-white transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cb-ink)] sm:py-3 sm:text-sm"
         >
           {hubRelative ? "Open" : "Open ↗"}
@@ -191,8 +195,8 @@ export function AppHub({ apps }: { apps: HubApp[] }) {
         </p>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((app) => (
-            <AppCard key={app.id} app={app} />
+          {filtered.map((app, i) => (
+            <AppCard key={app.id} app={app} position={i + 1} />
           ))}
         </ul>
       )}

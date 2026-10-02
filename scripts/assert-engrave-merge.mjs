@@ -617,6 +617,12 @@ test("Redis keys: every key Engrave Merge writes or reads starts with the em: pr
   // The prefix comes from the one constant, and nothing else in the repo talks to a Redis/KV store.
   assert.ok(readFileSync(join(root, "lib/engrave-merge/store.ts"), "utf8").includes("${EM_KEY_PREFIX}ev:"));
   const allowed = new Set(["lib/engrave-merge/store.ts", "scripts/engrave-merge-kpis.mjs", "scripts/assert-engrave-merge.mjs"]);
+  // The site tracker's reader (site:ev:* only, never em:*) is the one other client; its own tests check its keys.
+  for (const f of ["scripts/site-baseline.mjs", "scripts/assert-site.mjs"]) {
+    const src = readFileSync(join(root, f), "utf8");
+    assert.ok(src.includes("site:ev:") && !/["'`]em:/.test(src), `${f} uses only site:ev: keys`);
+    allowed.add(f);
+  }
   const hits = [];
   const walk = (dir) => {
     for (const e of readdirSync(join(root, dir), { withFileTypes: true })) {

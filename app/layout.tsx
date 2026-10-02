@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HubChrome } from "@/components/HubChrome";
+import { SiteTracker } from "@/components/site/SiteTracker";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -55,6 +56,7 @@ export default function RootLayout({
         </header>
         <HubChrome />
         {children}
+        <SiteTracker />
       </body>
     </html>
   );
