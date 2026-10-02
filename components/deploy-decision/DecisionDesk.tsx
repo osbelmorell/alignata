@@ -171,7 +171,7 @@ export function DecisionDesk() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-3 py-3 sm:px-4 sm:py-5">
+      <div className="mx-auto w-full max-w-6xl flex-1 px-3 py-3 sm:px-4 sm:py-5">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_1fr] xl:grid-cols-[minmax(0,24rem)_1fr]">
           <OpportunityForm
             key={formNonce}
@@ -202,7 +202,7 @@ export function DecisionDesk() {
         <div className="mt-4">
           <AboutPanel />
         </div>
-      </main>
+      </div>
 
       <KillBar log={state.log} asOfMs={asOfMs} />
 

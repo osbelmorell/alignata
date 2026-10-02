@@ -83,7 +83,7 @@ a.fx-pill:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 
 /* Daily Digest index (SPEC §7, frozen reference daily-digest.html) */
 .fx-posts { margin-top: 48px; display: grid; grid-template-columns: 1fr; row-gap: 48px; }
-.fx-post .fx-art { aspect-ratio: 4 / 3; } /* card crop (1200×900), Brand Creator art Oct 2 */
+.fx-post .fx-art { aspect-ratio: 16 / 9; } /* SPEC §7: 16:9 card art (the 1600×900 hero), CEO call Oct 2 */
 .fx-post .fx-meta { margin-top: 16px; }
 .fx-post h2, .fx-post h3 { margin-top: 8px; font-family: var(--display); font-weight: 600; font-size: 22px; line-height: 1.25;
   letter-spacing: -0.01em; }
@@ -156,10 +156,10 @@ a.fx-pill:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
   text-decoration: underline; text-underline-offset: 5px; }
 .fx-all-link:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
 
-/* Homepage (SPEC §5a v1.5, reference home.html): display line 32/1.05 on phone (no max-width), 80/0.95 on desktop;
+/* Homepage (SPEC §5a v1.5, reference home.html): display line 31/1.05 on phone (3 lines in both engines at 390) (no max-width), 80/0.95 on desktop;
    two pills (black Tools = the one primary, outlined Daily Digest), 48px tall, 120px+ wide. No fade-in on the top. */
 .fx-home-head { padding-top: 24px; }
-.fx-home-head .fx-display { font-size: 32px; line-height: 1.05; max-width: none; }
+.fx-home-head .fx-display { font-size: 31px; line-height: 1.05; max-width: none; }
 .fx-home-cta { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 12px; }
 .fx-home-cta a.fx-pill { width: auto; min-width: 120px; padding: 0 28px; }
 a.fx-pill.fx-pill-outline, a.fx-pill.fx-pill-outline:visited, a.fx-pill.fx-pill-outline:hover { background: transparent; color: var(--ink);

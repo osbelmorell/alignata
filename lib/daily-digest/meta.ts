@@ -28,10 +28,8 @@ export function heroImage(post: Post): ArtImage {
   return { src: `/art/${h.image}-1280.webp`, srcSet: `/art/${h.image}-640.webp 640w, /art/${h.image}-1280.webp 1280w`, width: 1280, height: 720, alt: h.alt };
 }
 
-/** Card art, shown 4:3: the 1200×900 centre-safe crop, or the legacy 16:9 pair cropped by object-fit. */
+/** Card art, shown 16:9 (SPEC §7, CEO call Oct 2): the 1600×900 hero, or the legacy 16:9 pair. The 4:3 cardSrc crops stay on disk, unused. */
 export function cardImage(post: Post): ArtImage {
-  const h = postHero(post);
-  if ("src" in h) return { src: h.cardSrc, width: 1200, height: 900, alt: h.alt };
   return { ...heroImage(post) };
 }
 

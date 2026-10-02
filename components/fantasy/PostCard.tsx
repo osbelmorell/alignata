@@ -3,7 +3,7 @@ import type { Post } from "@/content/posts";
 import { cardImage, postCardDek, postMeta } from "@/lib/daily-digest/meta";
 
 /**
- * Daily Digest card (SPEC §7, frozen reference daily-digest.html): art (4:3 card crop), meta (tag · date · read time),
+ * Daily Digest card (SPEC §7, frozen reference daily-digest.html): art (16:9, the hero image), meta (tag · date · read time),
  * title, one-line dek. No Open pill: the title is the link and its ::after covers the whole card (48px+ tap area).
  * Card art is decorative (alt=""), because the title next to it names the card; the article hero carries the alt.
  */

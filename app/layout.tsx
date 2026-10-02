@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     default: "Alignata",
     template: "%s · Alignata",
   },
-  description: "Build tools for busy humans",
+  description: "Small tools for busy people, and AI techniques in plain English.",
   metadataBase: new URL("https://alignata.com"),
   ...(isPreview ? { robots: { index: false, follow: false } } : {}),
 };

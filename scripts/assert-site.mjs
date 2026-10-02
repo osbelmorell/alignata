@@ -294,7 +294,7 @@ test("Daily Digest (v1.4): tags, real read time, hero art + alt, verbatim pull q
       for (const f of [hero.src, hero.cardSrc]) assert.ok(existsSync(`public${f}`), `${p.slug}: ${f}`);
       assert.equal(hero.src, `/art/digest/${p.slug}.webp`);
       assert.equal(hero.cardSrc, `/art/digest/${p.slug}-card.webp`);
-      assert.deepEqual([meta.heroImage(p).width, meta.heroImage(p).height, meta.cardImage(p).width, meta.cardImage(p).height], [1600, 900, 1200, 900]);
+      assert.deepEqual([meta.heroImage(p).width, meta.heroImage(p).height, meta.cardImage(p).width, meta.cardImage(p).height], [1600, 900, 1600, 900]);
     } else {
       for (const size of [640, 1280]) assert.ok(existsSync(`public/art/${hero.image}-${size}.webp`), `${p.slug}: ${hero.image}-${size}.webp`);
     }
@@ -338,6 +338,8 @@ test("Daily Digest pages render: index cards (feature first, one lime dot, no Op
   assert.equal((eb.match(/data-pullquote/g) || []).length, 1);
   assert.match(eb, /design the locks\. And not just design them[^<]*<\/p><figure class="fx-pullquote" data-pullquote="true" aria-hidden="true">/);
   assert.match(eb, /<p class="fx-byline">— Osbel Morell<\/p><\/div>$/);
+});
+
 test("home_click: only allow-listed targets validate; extra or missing props are rejected", () => {
   for (const t of ["Tools-pill", "tools", "tool:", "tool:Engrave", "article:a b", "nav:", "https://evil.com", "tool:x?y=1", "nav:" + "a".repeat(41), "x".repeat(300)]) {
     const v = validateSiteEvent(env("home_click", { target: t }));

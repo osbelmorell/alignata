@@ -191,6 +191,7 @@ export function OpportunityForm({
                 <input
                   id={`check-${item.id}`}
                   type="checkbox"
+                  aria-label={item.label.trim() ? `Done: ${item.label.trim()}` : `Checklist item ${idx + 1} done`}
                   checked={item.checked}
                   onChange={(e) => {
                     const checklist = card.checklist.map((c) =>
