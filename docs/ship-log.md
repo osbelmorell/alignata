@@ -27,3 +27,21 @@
   views per route, /apps sessions, sessions with ≥1 tool_open, /apps → tool_open conversion, tool_open per card
   slug, weekly distinct Daily Digest readers, second-article rate. Dogfood and non-alignata.com hosts excluded.
 - Engrave Merge KPIs stay on `em:*` (`npm run engrave:kpis`), unchanged.
+
+## Redesign live (fantasy.co style, SPEC v1.4)
+
+- **Baseline condition dropped:** the board dropped the 7-day before-baseline at 6:54 PM ET on Fri Oct 2, 2026, and
+  ordered the redesign shipped that night, gated only on QA's Safari pass. Before-numbers therefore cover step 0
+  (de2ef93, prod READY 3:25:35 PM ET) through the restyle below, about 3 hours 53 minutes, not 7 days.
+- **Gates:** QA Safari PASS and Product Copy PASS on `da4eaef` (about 7:08 PM ET); Osbel's go in the GitHub 1:1.
+- **Restyle live:** `main` fast-forwarded `63a78f8` → `da4eaef` at 7:18:08 PM ET. Production deploy
+  `dpl_5U6DKupUuDgscox3nekELfi7L8aa` READY at **7:18:28 PM ET, Fri Oct 2, 2026**, on alignata.com and www.alignata.com.
+  This is the restyle marker: every event before it is the old look, every event at or after it is the new look.
+- **Kill clocks it lands inside** (the clocks keep running; the restyle date is logged so a read-back can split
+  each window before/after this marker):
+  - **Stripe Cleaver:** 14 days after ship. Kill if under 8 real import attempts or median time-to-download over 60s.
+  - **License Gate:** its 14-day window from its soft-ship, as tracked by Product.
+  - **Engrave Merge:** T0 = first real `file_processed` (SPEC §8.6), window [T0, T0 + 14 days). Listed on /apps
+    since 1:21:04 PM ET Oct 2, so the whole restyle happens early in its window.
+- **Tracking:** site events (`page_view`, `apps_view`, `tool_open`, `article_view`, `home_click`) and Engrave Merge's
+  `em:*` events are unchanged by the restyle and now carry the after-numbers for the Monday read-back.
