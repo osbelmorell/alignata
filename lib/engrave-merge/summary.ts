@@ -18,6 +18,8 @@ export interface SummaryView {
   showProblems: boolean;
   /** "Download problem list": whenever the WHOLE file has problems, regardless of pick (download is unfiltered). */
   showDownload: boolean;
+  /** "Show all items" (resets the picker): a clean pick while the rest of the file has problems. */
+  showAllButton: boolean;
   /**
    * On-screen table rows: the rows for the "Which items" pick (all rows for "All items").
    * A row belongs to a pick by its Listing ID (duplicates included); rows with a blank
@@ -46,12 +48,25 @@ export function summaryView(ok: Pick<ProcessOk, "stats" | "problems">, includeFl
       ? COPY.summaryCountsIncluded(s.ready_items, n)
       : COPY.summaryCounts(s.ready_items, s.held_items);
   const warning = includeFlagged && n > 0 ? COPY.summaryIncludedWarning(n) : null;
-  const otherLines = ok.problems.length - shown.length;
+  const others = ok.problems.filter((p) => !p.inScope);
+  const otherItems = others.reduce((sum, p) => sum + p.counted, 0); // items, like "need a look" (duplicates count 0)
+  const otherDupLines = others.filter((p) => p.dup).length;
   const fileHasProblems = ok.problems.length > 0 || s.exception_count > 0;
+  const cleanPick = fileHasProblems && !hasProblems;
   let note: string | null = null;
   if (!fileHasProblems) note = COPY.summaryAllReady; // the whole file has zero problems
-  else if (!hasProblems) note = COPY.summaryPickReadyOthers(otherLines); // this pick is clean, others are not
+  else if (cleanPick)
+    // this pick is clean; other items need a look (or, if the rest are only duplicates, say that)
+    note = otherItems > 0 ? COPY.summaryPickReadyOthers(otherItems) : COPY.summaryDuplicatesOnly(otherDupLines);
   else if (duplicatesOnly) note = COPY.summaryDuplicatesOnly(dupLines);
   else if (!warning) note = COPY.summaryHeldNote;
-  return { countLine, note, warning, showProblems: hasProblems, showDownload: fileHasProblems, problems: shown };
+  return {
+    countLine,
+    note,
+    warning,
+    showProblems: hasProblems,
+    showDownload: fileHasProblems,
+    showAllButton: cleanPick,
+    problems: shown,
+  };
 }

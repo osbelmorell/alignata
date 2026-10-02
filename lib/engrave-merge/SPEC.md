@@ -72,9 +72,13 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
      duplicates included; rows with a blank Listing ID show only under "All items"), so it adds up to the count.
      No rows for the pick → table hidden on screen. "Download problem list" shows whenever the WHOLE file has problems,
      regardless of pick; the downloaded problem list is never filtered. If the pick has 0 problems but the file has some,
-     the note reads "This item is ready. {n} other lines in your file have problems. Pick All items to see them."
-     (n = 1: "This item is ready. 1 other line in your file has a problem. Pick All items to see them."), n = problem lines
-     outside the pick. "Everything is ready." shows only when the whole file has 0 problems.
+     the note reads "Everything you picked is ready. {n} other items in your file need a look." (n = 1: "Everything you
+     picked is ready. 1 other item in your file needs a look."), n = items (same counting as "need a look"), same text in
+     both include-anyway modes, followed by a "Show all items" button (≥ 44px) that resets the picker to All items.
+     (If the other problems are only duplicates, the duplicate note is shown instead.)
+     "Everything is ready." shows only when the whole file has 0 problems.
+     Summary order (fixed so nothing jumps when the pick changes): [Download problem list] [Print cut sheet] → Which items →
+     count line / note / Show all items → problem table.
    • secondary buttons: Download problem list (shown whenever exception_count > 0)  [COPY: Print cut sheet]
    • "Which items" select: All items / one per listing (exports that listing only, rows renumbered from 1)
    • ▸ [COPY: Settings]  (disclosure, closed by default)

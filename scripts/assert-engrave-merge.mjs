@@ -18,6 +18,9 @@ import { handleEvent } from "../lib/engrave-merge/handler.ts";
 import { DEFAULT_SETTINGS } from "../lib/engrave-merge/types.ts";
 import { howManyLabel, summaryView } from "../lib/engrave-merge/summary.ts";
 import { readCsv } from "../lib/engrave-merge/csv.ts";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { SummaryPanel } from "../components/engrave-merge/SummaryPanel.tsx";
 import { computeKpis, parseLog } from "./engrave-merge-kpis.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -212,9 +215,14 @@ test('"Which items" pick: on-screen table rows reconcile with the count (fx05, e
   assert.equal(empty.showProblems, false);
   assert.equal(empty.showDownload, true);
   assert.equal(empty.problems.length, 0);
-  assert.equal(empty.note, "This item is ready. 2 other lines in your file have problems. Pick All items to see them.");
-  const one = summaryView({ stats: { ...stats, exception_count: 1 }, problems: [other] }, true);
-  assert.equal(one.note, "This item is ready. 1 other line in your file has a problem. Pick All items to see them.");
+  // other rows: 1 real item + 1 duplicate → counted by item: 1
+  assert.equal(empty.note, "Everything you picked is ready. 1 other item in your file needs a look.");
+  assert.equal(empty.showAllButton, true);
+  const two = summaryView({ stats, problems: [other, { ...other, counted: 3 }] }, true);
+  assert.equal(two.note, "Everything you picked is ready. 4 other items in your file need a look.");
+  const dupOnlyElsewhere = summaryView({ stats, problems: [{ ...other, dup: true, counted: 0 }] }, false);
+  assert.equal(dupOnlyElsewhere.note, "1 duplicate line was left out. The problem list shows it.");
+  assert.notEqual(dupOnlyElsewhere.note, "Everything is ready.");
   // whole file clean → the only time "Everything is ready." shows
   const clean = summaryView({ stats: { ...stats, exception_count: 0 }, problems: [] }, false);
   assert.equal(clean.note, "Everything is ready.");
@@ -235,10 +243,44 @@ test("fx03_multiline_commas__no_split, Keychain picked: download shows, no \"Eve
     assert.equal(v.showProblems, false, "empty table hidden");
     assert.equal(v.showDownload, true, "Download problem list still shown");
     assert.notEqual(v.note, "Everything is ready.");
-    assert.equal(v.note, "This item is ready. 2 other lines in your file have problems. Pick All items to see them.");
+    assert.equal(v.note, "Everything you picked is ready. 2 other items in your file need a look.");
+    assert.equal(v.showAllButton, true);
     assert.equal(exceptionsCsv(res), read("expected/fx03_multiline_commas__no_split/expected_exceptions.csv"), "download unfiltered");
     console.log(`# fx03 no_split Keychain incl=${incl}: ${v.countLine} | ${v.note}`);
   }
+
+  // Structure (no browser harness in the repo, so react-dom/server + the element tree):
+  const st = { splitLines: false };
+  const allRes = emProcess(text, { settings: st, explicit: ["splitLines"] });
+  const keyRes = emProcess(text, { settings: st, explicit: ["splitLines"], listing: key.lid });
+  const props = (res, lid) => ({ view: summaryView(res, false), listings: all.listings, listing: lid, onListing: () => {}, onProblems: () => {}, onPrint: () => {} });
+  const htmlAll = renderToStaticMarkup(createElement(SummaryPanel, props(allRes, "")));
+  const htmlKey = renderToStaticMarkup(createElement(SummaryPanel, props(keyRes, key.lid)));
+  // 1) Download sits above everything that depends on the pick, with identical markup before it → same position.
+  for (const h of [htmlAll, htmlKey]) {
+    const dl = h.indexOf("data-download-problems");
+    assert.ok(dl > 0, "download button rendered");
+    assert.ok(dl < h.indexOf("data-count-line"), "download above the count line");
+    if (h.includes("data-problem-list")) assert.ok(dl < h.indexOf("data-problem-list"), "download above the table");
+  }
+  const pre = (h) => h.slice(0, h.indexOf("<select"));
+  assert.equal(pre(htmlAll), pre(htmlKey), "markup up to the picker (incl. Download problem list) identical for All items and Keychain");
+  assert.ok(htmlAll.includes("data-problem-list") && !htmlKey.includes("data-problem-list"));
+  assert.ok(htmlKey.includes(">Show all items<") && !htmlAll.includes(">Show all items<"));
+  // 2) "Show all items" resets the picker to All items ("").
+  let picked = null;
+  const tree = SummaryPanel.render({ ...props(keyRes, key.lid), onListing: (v) => { picked = v; } }, null);
+  const find = (n) => {
+    if (!n || typeof n !== "object") return null;
+    if (Array.isArray(n)) { for (const c of n) { const f = find(c); if (f) return f; } return null; }
+    if (n.props?.["data-show-all"] !== undefined) return n;
+    return find(n.props?.children);
+  };
+  const btn = find(tree);
+  assert.ok(btn, "Show all items button");
+  assert.match(btn.props.className, /min-h-\[44px\]/, "≥ 44px tap target");
+  btn.props.onClick();
+  assert.equal(picked, "", "picker reset to All items");
 });
 
 // Synthetic duplicate-only files built from fx01 (no real problems): d = 1 and d = 3.

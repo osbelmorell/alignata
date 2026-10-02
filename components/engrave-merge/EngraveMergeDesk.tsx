@@ -13,7 +13,8 @@ import {
   mergeFileName,
 } from "@/lib/engrave-merge/outputs";
 import { process as runProcess } from "@/lib/engrave-merge/process";
-import { howManyLabel, summaryView } from "@/lib/engrave-merge/summary";
+import { summaryView } from "@/lib/engrave-merge/summary";
+import { SummaryPanel } from "@/components/engrave-merge/SummaryPanel";
 import { RECIPE_FILE_NAME, buildRecipe, parseRecipe } from "@/lib/engrave-merge/recipe";
 import { fileRef, initInstallId, sendEvent } from "@/lib/engrave-merge/track";
 import {
@@ -53,7 +54,7 @@ interface FileState {
 export function EngraveMergeDesk() {
   const iidRef = useRef<string>("");
   const fileInput = useRef<HTMLInputElement>(null);
-  const summaryRef = useRef<HTMLDivElement>(null);
+  const summaryRef = useRef<HTMLElement>(null);
   const [file, setFile] = useState<FileState | null>(null);
   const [status, setStatus] = useState<Status>({ kind: "idle", text: COPY.statusIdle });
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
@@ -287,74 +288,15 @@ export function EngraveMergeDesk() {
       {ok?.garbled && <p className="mt-1 text-base font-semibold text-[#8a1c1c]">{COPY.garbled}</p>}
 
       {ok && view && (
-        <section ref={summaryRef} aria-label="Summary" className="mt-6 scroll-mt-4 space-y-4">
-          <p className="text-base leading-6">
-            <span data-count-line className="font-semibold">
-              {view.countLine}
-            </span>
-            {view.warning && (
-              <span data-warning-line className="block font-semibold text-[#8a1c1c]">
-                {view.warning}
-              </span>
-            )}
-            {view.note && (
-              <span data-note-line className={`block ${muted}`}>
-                {view.note}
-              </span>
-            )}
-          </p>
-          {view.showProblems && (
-            <div className="space-y-2">
-              <h2 className="text-base font-semibold">{COPY.problemListTitle}</h2>
-              <div className="overflow-x-auto rounded-xl border border-[var(--cb-line)] bg-[var(--cb-surface)]">
-                <table data-problem-list className="w-full border-collapse text-left text-base leading-6">
-                  <thead>
-                    <tr className="border-b border-[var(--cb-line)]">
-                      <th scope="col" className="px-3 py-2 font-semibold">{COPY.problemColItem}</th>
-                      <th scope="col" className="px-3 py-2 text-right font-semibold whitespace-nowrap">
-                        {COPY.problemColHowMany}
-                      </th>
-                      <th scope="col" className="px-3 py-2 font-semibold">{COPY.problemColProblem}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {view.problems.map((p, i) => (
-                      <tr key={i} className="border-b border-[var(--cb-line)] align-top last:border-b-0">
-                        <td className="px-3 py-2">
-                          {p.item}
-                          <span className={`block ${muted}`}>{COPY.problemOrder(p.order, p.fn)}</span>
-                        </td>
-                        <td className="px-3 py-2 text-right tabular-nums">{howManyLabel(p)}</td>
-                        <td className="px-3 py-2">{p.problems.join(" · ")}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-          <div className="flex flex-wrap gap-2">
-            {view.showDownload && (
-              <button type="button" className={secondaryBtn} onClick={onProblems}>
-                {COPY.downloadProblems}
-              </button>
-            )}
-            <button type="button" className={secondaryBtn} onClick={onPrint}>
-              {COPY.printCutsheet}
-            </button>
-          </div>
-          <label className="flex flex-col gap-1">
-            <span className="text-base font-medium">{COPY.whichItems}</span>
-            <select className={fieldClass} value={listing} onChange={(e) => setListing(e.target.value)}>
-              <option value="">{COPY.whichAll}</option>
-              {ok.listings.map((l) => (
-                <option key={l.lid} value={l.lid}>
-                  {COPY.whichOne(l.itemName, l.lid)}
-                </option>
-              ))}
-            </select>
-          </label>
-        </section>
+        <SummaryPanel
+          ref={summaryRef}
+          view={view}
+          listings={ok.listings}
+          listing={listing}
+          onListing={setListing}
+          onProblems={onProblems}
+          onPrint={onPrint}
+        />
       )}
 
       <details className="mt-6 rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[var(--cb-surface)] px-4">
