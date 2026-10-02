@@ -179,7 +179,7 @@ export function EngraveMergeDesk() {
       fileInput.current?.click();
       return;
     }
-    if (ok.stats.merge_row_count === 0 && view?.bothZero) return; // nothing to make (button is hidden anyway)
+    if (ok.stats.merge_row_count === 0) return; // nothing to make: never a header-only file (button is hidden anyway)
     downloadText(mergeFileName(), mergeCsv(ok));
     sendEvent(iidRef.current, "merge_downloaded", { ...fileProps(), merge_row_count: ok.stats.merge_row_count });
     setStatus({ kind: "info", text: COPY.statusDownloaded(ok.stats.ready_items) });
@@ -295,8 +295,10 @@ export function EngraveMergeDesk() {
   /** "Include shipped orders" button: exactly the Settings toggle (re-runs in place, flashes Updated, no event). */
   const onIncludeShipped = () => setS("includeShipped", true);
 
-  /** Both-zero: the "Tap Make merge file" hint is hidden (and its empty line takes no space). */
-  const bothZeroHint = !!view?.bothZero && status.text === COPY.statusReady;
+  /** Nothing to make (both-zero, or 0 ready rows for this pick): Make merge file is hidden, so is its hint. */
+  const nothingToMake = !!view && (view.bothZero || view.noReady);
+  /** ...and the hint's empty line takes no space. */
+  const hideHint = nothingToMake && status.text === COPY.statusReady;
 
   // Settings changed from the standard ones: each main setting, the font file, extra labels and each item set up.
   const changedCount =
@@ -506,8 +508,8 @@ export function EngraveMergeDesk() {
         </div>
       </details>
 
-      {/* Both-zero (everything hidden by the shipped filter): nothing to make, so no Make merge file. */}
-      {!view?.bothZero && (
+      {/* Nothing to make (both-zero, or 0 ready rows for this pick): no Make merge file. */}
+      {!nothingToMake && (
         <button type="button" data-primary className={`mt-4 ${primaryBtn}`} onClick={onPrimary}>
           {COPY.primary}
         </button>
@@ -515,10 +517,10 @@ export function EngraveMergeDesk() {
       <p
         aria-live="polite"
         role="status"
-        className={`mt-2 text-base leading-6 ${bothZeroHint ? "" : "min-h-6"} ${status.kind === "error" ? "font-semibold text-[#8a1c1c]" : ""}`}
+        className={`mt-2 text-base leading-6 ${hideHint ? "" : "min-h-6"} ${status.kind === "error" ? "font-semibold text-[#8a1c1c]" : ""}`}
       >
         {/* Both-zero hides Make merge file, so don't tell the seller to tap it. */}
-        {bothZeroHint ? "" : status.text}
+        {hideHint ? "" : status.text}
       </p>
       {ok?.garbled && <p className="mt-1 text-base font-semibold text-[#8a1c1c]">{COPY.garbled}</p>}
 

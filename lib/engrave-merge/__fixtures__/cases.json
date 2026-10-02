@@ -15,6 +15,10 @@
     {"name": "fx06_multifield_GUESS__recipe", "fixture": "fx06_multifield_GUESS.csv", "recipe": "recipe_fx06.json"},
     {"name": "fx08-all-shipped", "fixture": "fx08-all-shipped.csv"},
     {"name": "fx08-all-shipped__include_shipped", "fixture": "fx08-all-shipped.csv", "config": {"include_shipped": true}},
-    {"name": "fx09-no-engravable", "fixture": "fx09-no-engravable.csv"}
+    {"name": "fx09-no-engravable", "fixture": "fx09-no-engravable.csv"},
+    {"name": "fx10_zero_ready_listing", "fixture": "fx10_zero_ready_listing.csv"},
+    {"name": "fx10_zero_ready_listing__listing_b", "fixture": "fx10_zero_ready_listing.csv", "config": {"listing": "3000000011"}},
+    {"name": "fx10_zero_ready_listing__listing_a", "fixture": "fx10_zero_ready_listing.csv", "config": {"listing": "3000000010"}},
+    {"name": "fx10_zero_ready_listing__listing_b_include_flagged", "fixture": "fx10_zero_ready_listing.csv", "config": {"listing": "3000000011", "include_flagged": true}}
   ]
 }

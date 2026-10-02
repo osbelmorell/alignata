@@ -72,7 +72,7 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
      changed from the standard ones + font file + extra labels + each item with item settings.
      Font check: full-width 44px outlined button "Check my font (optional)"; shows the font file's name once picked.
    below the fold (after a file is loaded):
-   • summary (the ONLY count on screen): `{ready} ready for LightBurn · {held} need a look`, then
+   • summary (the ONLY count on screen): `{ready} ready for LightBurn · {held} need a look` (held = 1: "· 1 needs a look"), then
      "Items that need a look are left out of the merge file. The problem list says why." (or "Everything is ready." when held = 0).
      Unit = physical items, one per merge row (Quantity 3 = 3). ready = items in the merge file; held = items held out;
      ready + held = total items to make (duplicates dropped; "Which items" filter applied).
@@ -103,7 +103,12 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
      same position for All items, any pick and while "Updated" shows (Playwright: same page y across All items → clean
      pick → Show all items). After "Show all items", focus moves to the picker.
      No 0 anywhere in the count line: a part whose number is 0 is left out (clean pick: "{ready} ready for LightBurn" /
-     "{inFile} in your merge file"; nothing ready: "{held} need a look"). Both parts 0: "Nothing to engrave in this file."
+     "{inFile} in your merge file"). Both parts 0: "Nothing to engrave in this file."
+     0 ready rows for the pick while it has problems (include-anyway OFF; fixture fx10, Recipe Box 3000000011: "5 items
+     need a look"; NOT the both-zero screen): the count
+     line reads "{n} items need a look" (n = 1: "1 item needs a look"), and under it "Nothing is ready to engrave yet. The
+     problem list says why." (Copy, final). Make merge file, its "File loaded. Tap Make merge file…" hint and Print cut
+     sheet are hidden; Download problem list and the table stay. No event fires. Make merge file never builds a 0-row file.
      Both-zero = 0 ready rows AND 0 problem rows in the file; it only happens when the shipped filter hides everything
      (fixture fx08). Blank-text unshipped items are still ready rows (fx09: "5 ready for LightBurn", NOT both-zero).
      Both-zero screen (Product Experience, final): STAYS header, drop zone, Settings row, Start over. HIDDEN: Which items,
@@ -117,9 +122,13 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
      "Include orders already shipped" exactly like the toggle: re-runs in place, no event, focus moves to the count line
      (tabIndex -1), Settings row reads "Settings · 1 changed". No button when nothing is hidden. Worst case "999 ready for LightBurn · 99 duplicates left out" = 334 px of 358 px.
      Picker: the label is `flex min-w-0 flex-col`, the select `w-full min-w-0 whitespace-normal` (no truncate, nowrap or
-     ellipsis on it or its options: WebKit widened the page to 407 px / 1226 px with them). Option text over ~40
-     characters is cut at a word break, then "… (listing ID)". Gate (WebKit, 390): fx01 Cutting Board picked and a
-     152-character title picked → document scrollWidth == 390, select ≈ 358 px wide.
+     ellipsis on it or its options: WebKit widened the page to 407 px / 1226 px with them). Option text is capped to ONE
+     line in code (WebKit wraps option text and grows the select; Chromium clips it): "Title (listing ID)" if it fits 300 px
+     of 16px text (WebKit wraps past ~305 px) AND the whole label is ≤ 40 characters, else the title cut at a word break
+     + "… (listing ID)" with the whole label still within both (fx10: "Personalized Engraved… (3000000011)"), widths from a measured
+     glyph table (`PICKER_LABEL_PX`, `labelWidthPx` in copy.ts). fx01: "Personalized Cutting… (3000000001)". The full title
+     stays on the option's title + aria-label and the select's title. Gate (WebKit + Chromium, 390): fx01 Cutting Board
+     and a 152-character title picked → select 358 × 44, document scrollWidth == 390.
    • secondary buttons: Download problem list (shown whenever exception_count > 0)  [COPY: Print cut sheet]
    • "Which items" select: All items / one per listing (exports that listing only, rows renumbered from 1)
    • ▸ [COPY: How to use this in LightBurn] (§7.4 guide, collapsed)
@@ -351,7 +360,8 @@ Caveat: an install id is a browser, not a seller. Cleared storage or a second de
 ## 9. Acceptance tests (Eng Ops must pass all before handing back)
 
 **Parsing (golden)**
-- AT-01: `scripts/assert-engrave-merge.mjs` (node:test, like `assert-stripe-cleaver.mjs`) runs `lib/engrave-merge` over **every case in `cases.json`** and compares merge and problem-list bytes with `expected/<case>/`. All 15 cases must match (12 original + fx08 default, fx08 include-shipped, fx09). Copy `fixtures/` into the repo (e.g. `public/fixtures/engrave-merge/`; all synthetic).
+- AT-01: `scripts/assert-engrave-merge.mjs` (node:test, like `assert-stripe-cleaver.mjs`) runs `lib/engrave-merge` over **every case in `cases.json`** and compares merge and problem-list bytes with `expected/<case>/`. All 19 cases must match (12 original + fx08 default, fx08 include-shipped, fx09, and fx10 all / Pet ID Tag /
+Recipe Box / Recipe Box include-anyway). Copy `fixtures/` into the repo (e.g. `public/fixtures/engrave-merge/`; all synthetic).
 - AT-02: `fx07_wrong_file_SoldOrders.csv` → wrong-file message, no download offered.
 - AT-03: A fixture saved with a UTF-8 BOM and with LF-only endings gives identical outputs.
 - AT-04: The fingerprint of each fixture equals `fixture_fingerprints.json`.

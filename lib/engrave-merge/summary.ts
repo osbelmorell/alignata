@@ -29,6 +29,11 @@ export interface SummaryView {
    */
   bothZero: boolean;
   /**
+   * 0 ready rows (nothing goes in the merge file for this pick) while the file still has problems. The page
+   * hides Make merge file, its "Tap Make merge file" hint and Print cut sheet, and the note points to the problem list.
+   */
+  noReady: boolean;
+  /**
    * On-screen table rows: the rows for the "Which items" pick (all rows for "All items").
    * A row belongs to a pick by its Listing ID (duplicates included); rows with a blank
    * Listing ID only show under "All items". The downloaded problem list is never filtered.
@@ -57,7 +62,9 @@ export function summaryView(ok: Pick<ProcessOk, "stats" | "problems">, includeFl
   );
   const bothZero = s.ready_items === 0 && ok.problems.length === 0 && s.exception_count === 0;
   const nothing = bothZero || parts.length === 0;
-  const countLine = nothing ? COPY.countNothing : parts.join(" · ");
+  // 0 ready rows for this pick but it has problems: nothing to make here; the line points to the problem list.
+  const noReady = !bothZero && s.ready_items === 0 && hasProblems && rightN > 0 && !includeFlagged;
+  const countLine = noReady ? COPY.countNoReady(rightN) : nothing ? COPY.countNothing : parts.join(" · ");
   const warning = includeFlagged && n > 0 ? COPY.summaryIncludedWarning(n) : null;
   const others = ok.problems.filter((p) => !p.inScope);
   const otherItems = others.reduce((sum, p) => sum + p.counted, 0); // items, like "need a look" (duplicates count 0)
@@ -73,6 +80,7 @@ export function summaryView(ok: Pick<ProcessOk, "stats" | "problems">, includeFl
   else if (!warning) note = COPY.summaryHeldNote;
   // Nothing to engrave: never "Everything is ready."; if the shipped-orders setting hid rows, say so.
   if (nothing) note = s.hidden_shipped > 0 ? COPY.countShippedHidden : note === COPY.summaryAllReady ? null : note;
+  if (noReady) note = COPY.noReadyNote;
   return {
     countLine,
     note,
@@ -82,6 +90,7 @@ export function summaryView(ok: Pick<ProcessOk, "stats" | "problems">, includeFl
     showAllButton: cleanPick && !nothing,
     showIncludeShipped: bothZero && s.hidden_shipped > 0,
     bothZero,
+    noReady,
     problems: shown,
   };
 }

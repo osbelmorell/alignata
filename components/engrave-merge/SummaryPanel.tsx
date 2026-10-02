@@ -31,6 +31,9 @@ export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function 
   { view, updated = false, listings, listing, onListing, onProblems, onPrint, onIncludeShipped = () => {} },
   ref,
 ) {
+  const picked = listings.find((l) => l.lid === listing);
+  // full title of the current pick (option text is capped to one line)
+  const selectedTitle = picked ? COPY.whichOne(picked.itemName, picked.lid) : COPY.whichAll;
   return (
     <section ref={ref} aria-label="Summary" className="mt-6 scroll-mt-4 space-y-3">
       {!view.bothZero && (
@@ -40,11 +43,12 @@ export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function 
           data-which-items
           className={`${fieldClass} w-full min-w-0 whitespace-normal`}
           value={listing}
+          title={selectedTitle}
           onChange={(e) => onListing(e.target.value)}
         >
           <option value="">{COPY.whichAll}</option>
           {listings.map((l) => (
-            <option key={l.lid} value={l.lid}>
+            <option key={l.lid} value={l.lid} title={COPY.whichOne(l.itemName, l.lid)} aria-label={COPY.whichOne(l.itemName, l.lid)}>
               {COPY.whichOneShort(l.itemName, l.lid)}
             </option>
           ))}
@@ -97,9 +101,11 @@ export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function 
             {COPY.downloadProblems}
           </button>
         )}
-        <button type="button" className={secondaryBtn} onClick={onPrint}>
-          {COPY.printCutsheet}
-        </button>
+        {!view.noReady && (
+          <button type="button" className={secondaryBtn} onClick={onPrint}>
+            {COPY.printCutsheet}
+          </button>
+        )}
       </div>
       )}
       {!view.bothZero && (view.warning || view.note || view.showAllButton) && (

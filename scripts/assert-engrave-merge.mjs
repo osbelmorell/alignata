@@ -89,7 +89,9 @@ test("Summary + on-screen problem list reconcile for every case", () => {
     const sum = (f) => problems.filter(f).reduce((n, p) => n + p.counted, 0);
     assert.equal(sum((p) => p.held && p.inScope), stats.held_items, `${c.name}: How many (held rows) adds up to held`);
     assert.equal(sum((p) => !p.held && p.inScope), stats.flagged_in_merge_items, `${c.name}: How many (in-file rows) adds up to warning n`);
-    assert.equal(v.showProblems, stats.exception_count > 0, `${c.name}: list + button follow exception_count`);
+    assert.equal(v.showDownload, stats.exception_count > 0 && !v.bothZero, `${c.name}: Download problem list follows the whole file's exception_count`);
+    assert.equal(v.showProblems, problems.some((p) => p.inScope), `${c.name}: on-screen table follows this pick's rows`);
+    if (!c.config?.listing) assert.equal(v.showProblems, stats.exception_count > 0, `${c.name}: All items: list + button follow exception_count`);
     assert.equal(v.note === "Everything is ready.", stats.exception_count === 0 && !v.bothZero, `${c.name}: "Everything is ready." only with zero problems (never on both-zero)`);
     assert.equal(v.warning !== null, incl && stats.flagged_in_merge_items > 0, `${c.name}: warning when problem items are in the file`);
     if (stats.exception_count > 0) assert.notEqual(v.note, "Everything is ready.", `${c.name}: never "Everything is ready." with problems`);
@@ -192,7 +194,7 @@ test('"Which items" pick: on-screen table rows reconcile with the count (fx05, e
   const all = emProcess(text);
   const expected = {
     "3000000005": { countLine: "1 ready for LightBurn · 5 need a look", rows: 6, labels: ["1", "1", "1", "1", "1", "Duplicate, left out"] },
-    "3000000006": { countLine: "2 ready for LightBurn · 1 need a look", rows: 1, labels: ["0, counted as 1"] },
+    "3000000006": { countLine: "2 ready for LightBurn · 1 needs a look", rows: 1, labels: ["0, counted as 1"] },
   };
   for (const { lid } of all.listings) {
     for (const incl of [false, true]) {
@@ -273,6 +275,7 @@ test("fx03_multiline_commas__no_split, Keychain picked: download shows, no \"Eve
     h
       .slice(0, h.indexOf("data-download-problems"))
       .replace(/ selected=""/g, "")
+      .replace(/(<select[^>]*) title="[^"]*"/, "$1") // the select's title = the current pick's full title
       .replace(/>[^<]*</g, "><");
   assert.equal(skeleton(htmlAll), skeleton(htmlKey), "identical structure above Download problem list (All items vs Keychain)");
   assert.match(htmlAll, /data-count-line="true" tabindex="-1" class="h-6 truncate whitespace-nowrap/, "count line: one fixed line");
@@ -701,11 +704,20 @@ test("Picker label cut and Settings row length", async () => {
   const long = "Personalized Engraved Wooden Cutting Board with Custom Family Name and Established Date, Walnut Maple or Cherry, Gift for Mom";
   const title140 = (long + " Housewarming Wedding").slice(0, 140);
   assert.equal(title140.length, 140);
+  const { PICKER_LABEL_PX, labelWidthPx } = await import("../lib/engrave-merge/copy.ts");
   const opt = COPY.whichOneShort(title140, "3000000001");
   assert.match(opt, /… \(3000000001\)$/, "ends with … (listing ID)");
   const cut = opt.replace(/… \(3000000001\)$/, "");
-  assert.ok(cut.length <= 40 && cut.length >= 30, `about 40 characters: ${cut.length}`);
-  assert.ok(title140.startsWith(cut) && /\s/.test(title140[cut.length] ?? " ") , "cut at a word break");
+  assert.ok(title140.startsWith(cut) && /\s/.test(title140[cut.length] ?? " "), "cut at a word break");
+  // one line in the 358px select at 390 (WebKit wraps past ~305px of text)
+  const titles = [title140, "Personalized Cutting Board - Custom Engraved Family Name", "PERSONALIZED CUTTING BOARD CUSTOM ENGRAVED FAMILY NAME WALNUT", "WWWW MMMM WWWW MMMM WWWW MMMM WWWW", "Supercalifragilisticexpialidociousnameboardsignwood", "Tabla de cortar grabada personalizada con nombre de familia y fecha"];
+  for (const t of titles) {
+    const l = COPY.whichOneShort(t, "3000000001");
+    assert.ok(labelWidthPx(l) <= PICKER_LABEL_PX, `${l}: ${labelWidthPx(l)}px fits one line`);
+    assert.match(l, /\(3000000001\)$/);
+  }
+  assert.equal(COPY.whichOneShort("Personalized Cutting Board - Custom Engraved Family Name", "3000000001"), "Personalized Cutting… (3000000001)", "fx01 Cutting Board");
+  assert.equal(COPY.whichOneShort("Supercalifragilisticexpialidociousnameboardsignwood", "3000000001").endsWith("… (3000000001)"), true, "one very long word is cut by letters");
   assert.equal(COPY.whichOneShort("Custom Engraved Keychain", "3000000002"), "Custom Engraved Keychain (3000000002)", "short titles unchanged");
   assert.equal(COPY.settingsRow(0), "Settings · Standard");
   assert.equal(COPY.settingsRow(3), "Settings · 3 changed");
@@ -805,10 +817,11 @@ test("Both-zero (fx08: every order shipped) vs fx09 (5 ready rows with blank tex
   assert.ok(!html.includes("data-count-line"), "count line hidden (never 0 ready)");
   assert.ok(html.indexOf("data-both-zero") < html.indexOf("data-updated"), "20px Updated slot kept, under the block");
   assert.equal((html.match(/data-include-shipped/g) || []).length, 1);
-  assert.match(deskSrc, /const bothZeroHint = !!view\?\.bothZero && status\.text === COPY\.statusReady;/, "hint hidden on both-zero");
-  assert.match(deskSrc, /\{bothZeroHint \? "" : status\.text\}/);
+  assert.match(deskSrc, /const nothingToMake = !!view && \(view\.bothZero \|\| view\.noReady\);/);
+  assert.match(deskSrc, /const hideHint = nothingToMake && status\.text === COPY\.statusReady;/, "hint hidden on both-zero");
+  assert.match(deskSrc, /\{hideHint \? "" : status\.text\}/);
   // the desk hides Make merge file in this state and never downloads/counts a 0-row merge file
-  assert.match(deskSrc, /\{!view\?\.bothZero && \(\s*<button type="button" data-primary/, "Make merge file hidden on both-zero");
+  assert.match(deskSrc, /\{!nothingToMake && \(\s*<button type="button" data-primary/, "Make merge file hidden on both-zero");
   // include shipped → 6 ready, back to normal
   const on = emProcess(read("fx08-all-shipped.csv"), { settings: { includeShipped: true }, explicit: ["includeShipped"] });
   const von = summaryView(on, false);
@@ -868,4 +881,158 @@ test("Re-list: Engrave Merge card has the About fields; robots + sitemap list on
   for (const p of posts) assert.ok(urls.includes(`https://alignata.com/daily-digest/${p.slug}`));
   assert.ok(!urls.some((u) => /\/(blog|llm-digest)(\/|$)/.test(u)), "no redirect-only paths");
   for (const u of urls) assert.match(u, /^https:\/\/alignata\.com(\/[a-z0-9-]+)*$/, "kebab paths on alignata.com");
+});
+
+
+function caseInput(c) {
+  const settings = {};
+  for (const [k, v] of Object.entries(c.config || {})) if (k !== "listing") settings[CFG_MAP[k]] = v;
+  return { text: read(c.fixture), settings };
+}
+
+// Synthetic two-listing file: A (3000000001) has 2 good orders; B (3000000002) only has Quantity-0 orders (held).
+function synthNoReady(bRows) {
+  const raw = read("fx01_simple.csv");
+  const nl = raw.includes("\r\n") ? "\r\n" : "\n";
+  const head = raw.split(nl)[0].split(",").map((h) => h.replace(/^"|"$/g, ""));
+  const row = (o, lid, name, qty) =>
+    head.map((h) => ({ "Order ID": o, "Transaction ID": `2${o}`, "Listing ID": lid, "Item Name": name, Quantity: qty, Variations: `Personalization:${o}`, "Sale Date": "09/20/26" })[h] ?? "")
+      .map((v) => `"${v}"`).join(",");
+  const rows = [row("100001", "3000000001", "Cutting Board", "1"), row("100002", "3000000001", "Cutting Board", "1")];
+  for (let i = 0; i < bRows; i++) rows.push(row(`10010${i}`, "3000000002", "Keychain", "0"));
+  return head.map((h) => `"${h}"`).join(",") + nl + rows.join(nl) + nl;
+}
+
+test('Grammar: "1 needs a look" (singular) and "{n} need a look" (plural), count line and clean-pick line', async () => {
+  const { COPY } = await import("../lib/engrave-merge/copy.ts");
+  assert.equal(COPY.countNeedLook(1), "1 needs a look");
+  assert.equal(COPY.countNeedLook(2), "2 need a look");
+  assert.equal(COPY.summaryPickReadyOthers(1), "Everything you picked is ready. 1 other item in your file needs a look.");
+  assert.equal(COPY.summaryPickReadyOthers(2), "Everything you picked is ready. 2 other items in your file need a look.");
+  // fx05 Blank Coaster pick (3000000006) and fx06 (all items + its one listing): n = 1
+  const fx05 = read("fx05_exceptions.csv");
+  assert.equal(summaryView(emProcess(fx05, { listing: "3000000006" }), false).countLine, "2 ready for LightBurn · 1 needs a look");
+  const fx06 = read("fx06_multifield_GUESS.csv");
+  assert.equal(summaryView(emProcess(fx06), false).countLine, "2 ready for LightBurn · 1 needs a look");
+  assert.equal(summaryView(emProcess(fx06, { listing: "3000000008" }), false).countLine, "2 ready for LightBurn · 1 needs a look");
+  // synthetic n = 1 and n = 2
+  assert.equal(summaryView(emProcess(synthNoReady(1)), false).countLine, "2 ready for LightBurn · 1 needs a look");
+  assert.equal(summaryView(emProcess(synthNoReady(2)), false).countLine, "2 ready for LightBurn · 2 need a look");
+  // clean pick, others need a look: n = 1 and n = 2
+  assert.equal(summaryView(emProcess(synthNoReady(1), { listing: "3000000001" }), false).note, "Everything you picked is ready. 1 other item in your file needs a look.");
+  assert.equal(summaryView(emProcess(synthNoReady(2), { listing: "3000000001" }), false).note, "Everything you picked is ready. 2 other items in your file need a look.");
+  // sweep: never "1 need a look" / "1 other items" anywhere
+  for (const c of cases) {
+    const { text, settings } = caseInput(c);
+    const base = emProcess(text, { settings, explicit: Object.keys(settings) });
+    if (!base.listings) continue; // fx07 wrong file
+    for (const lid of [undefined, ...base.listings.map((l) => l.lid)]) {
+      for (const incl of [false, true]) {
+        const v = summaryView(emProcess(text, { listing: lid, settings: { ...settings, includeFlagged: incl }, explicit: [...Object.keys(settings), "includeFlagged"] }), incl);
+        assert.doesNotMatch(`${v.countLine} ${v.note ?? ""}`, /\b1 need a look|\b1 other items/, `${c.name} ${lid} ${incl}`);
+      }
+    }
+  }
+});
+
+test("0 ready rows for a pick while problems remain: no Make merge file / hint / Print cut sheet; note points to the problem list", () => {
+  for (const b of [1, 2]) {
+    const res = emProcess(synthNoReady(b), { listing: "3000000002" });
+    assert.equal(res.stats.ready_items, 0);
+    assert.equal(res.stats.merge_row_count, 0);
+    const v = summaryView(res, false);
+    assert.equal(v.noReady, true);
+    assert.equal(v.bothZero, false);
+    assert.equal(v.countLine, b === 1 ? "1 item needs a look" : "2 items need a look", "Copy's line; no 0 in the count line");
+    assert.equal(v.note, "Nothing is ready to engrave yet. The problem list says why.");
+    assert.equal(v.warning, null);
+    assert.equal(v.showAllButton, false);
+    assert.equal(v.showProblems, true);
+    assert.equal(v.showDownload, true, "Download problem list stays (the line points to it)");
+    assert.equal(v.problems.length, b);
+    const html = renderToStaticMarkup(createElement(SummaryPanel, { view: v, listings: res.listings, listing: "3000000002", onListing() {}, onProblems() {}, onPrint() {} }));
+    assert.ok(!html.includes("Print cut sheet"), "Print cut sheet hidden");
+    assert.match(html, /data-download-problems/);
+    assert.match(html, /data-count-line="true"[^>]*>(1 item needs a look|2 items need a look)<\/p>/, "count line in its usual spot");
+    assert.ok(html.includes("Nothing is ready to engrave yet. The problem list says why."), "the line is shown");
+    assert.ok(html.indexOf("data-count-line") < html.indexOf("Nothing is ready to engrave yet"), "line under the count");
+  }
+  // other picks / All items keep everything
+  for (const lid of [undefined, "3000000001"]) assert.equal(summaryView(emProcess(synthNoReady(1), { listing: lid }), false).noReady, false);
+  // include-anyway ON: the flagged items go in the merge file, so there is something to make
+  assert.equal(summaryView(emProcess(synthNoReady(1), { listing: "3000000002", settings: { includeFlagged: true }, explicit: ["includeFlagged"] }), true).noReady, false);
+  // only fx10's Recipe Box pick (include-anyway OFF) is 0-ready; fx08 both-zero is its own state
+  for (const c of cases) {
+    const res = runCase(c);
+    if (!res.listings) continue; // fx07 wrong file
+    assert.equal(summaryView(res, !!caseInput(c).settings.includeFlagged).noReady, c.name === "fx10_zero_ready_listing__listing_b", c.name);
+  }
+  // desk: hidden primary + hint, and Make merge file never makes a 0-row file
+  assert.match(deskSrc, /\{!nothingToMake && \(\s*<button type="button" data-primary/);
+  assert.match(deskSrc, /if \(ok\.stats\.merge_row_count === 0\) return;/);
+});
+
+test("Copy: no placeholder text ships", async () => {
+  const { COPY } = await import("../lib/engrave-merge/copy.ts");
+  const call = (f) => { for (const args of [[1, "x"], [["x"]], ["x", 1]]) { try { return [String(f(...args))]; } catch { /* other signature */ } } return []; };
+  const strings = Object.values(COPY).flatMap((v) => (typeof v === "string" ? [v] : Array.isArray(v) ? v : typeof v === "function" ? [...call(v), String(v)] : []));
+  for (const t of strings) assert.doesNotMatch(String(t), /PENDING|placeholder|TODO|\[COPY/i, t);
+});
+
+
+test("fx10 Recipe Box (3000000011): 0 ready, 5 need a look → the 0-ready lines, NOT the both-zero screen", () => {
+  const c = cases.find((x) => x.name === "fx10_zero_ready_listing__listing_b");
+  const res = runCase(c);
+  assert.equal(res.stats.ready_items, 0);
+  assert.equal(res.stats.merge_row_count, 0);
+  assert.equal(mergeCsv(res), read("expected/fx10_zero_ready_listing__listing_b/expected_merge.csv"), "header-only golden");
+  const v = summaryView(res, false);
+  assert.equal(v.noReady, true);
+  assert.equal(v.bothZero, false, "not the empty-file screen");
+  assert.equal(v.countLine, "5 items need a look");
+  assert.equal(v.note, "Nothing is ready to engrave yet. The problem list says why.");
+  assert.equal(v.showIncludeShipped, false);
+  assert.equal(v.showDownload, true);
+  assert.equal(v.problems.length, 5);
+  assert.equal(v.problems.reduce((n, p) => n + p.counted, 0), 5, "table adds up to 5");
+  const html = renderToStaticMarkup(createElement(SummaryPanel, { view: v, listings: res.listings, listing: "3000000011", onListing() {}, onProblems() {}, onPrint() {} }));
+  assert.ok(!html.includes("data-both-zero") && !html.includes("Nothing to engrave in this file."), "no both-zero block");
+  assert.ok(!html.includes("Print cut sheet"));
+  assert.match(html, /data-count-line="true"[^>]*>5 items need a look<\/p>/);
+  assert.ok(html.includes("Nothing is ready to engrave yet. The problem list says why."));
+  assert.match(html, /data-download-problems/);
+  assert.match(html, /data-which-items/, "picker stays (to pick something else)");
+  // All items, Pet Tag pick and include-anyway are normal
+  const all = summaryView(runCase(cases.find((x) => x.name === "fx10_zero_ready_listing")), false);
+  assert.equal(all.noReady, false);
+  assert.equal(all.countLine, "3 ready for LightBurn · 5 need a look");
+  const a = summaryView(runCase(cases.find((x) => x.name === "fx10_zero_ready_listing__listing_a")), false);
+  assert.equal(a.noReady, false);
+  assert.equal(a.countLine, "3 ready for LightBurn");
+  assert.equal(a.note, "Everything you picked is ready. 5 other items in your file need a look.");
+  const inc = summaryView(runCase(cases.find((x) => x.name === "fx10_zero_ready_listing__listing_b_include_flagged")), true);
+  assert.equal(inc.noReady, false, "include-anyway ON: 5 in the merge file");
+  assert.equal(inc.countLine, "5 in your merge file · 5 with problems");
+});
+
+test("Picker labels: whole label (with … (id)) ≤ 40 characters and ≤ one line, for every listing in every fixture", async () => {
+  const { COPY, PICKER_LABEL_PX, PICKER_LABEL_CHARS, labelWidthPx } = await import("../lib/engrave-merge/copy.ts");
+  assert.equal(PICKER_LABEL_CHARS, 40);
+  let n = 0;
+  for (const f of readdirSync(FX).filter((x) => x.endsWith(".csv"))) {
+    const res = emProcess(read(f));
+    for (const l of res.listings || []) {
+      const label = COPY.whichOneShort(l.itemName, l.lid);
+      assert.ok(label.length <= 40, `${f} ${l.lid}: "${label}" = ${label.length} chars`);
+      assert.ok(labelWidthPx(label) <= PICKER_LABEL_PX, `${label}: one line`);
+      assert.ok(label.endsWith(`(${l.lid})`));
+      if (label !== COPY.whichOne(l.itemName, l.lid)) {
+        const cut = label.replace(` (${l.lid})`, "").replace(/…$/, "");
+        assert.ok(l.itemName.startsWith(cut) && /\s/.test(l.itemName[cut.length] ?? " "), `${label}: cut at a word break`);
+      }
+      n++;
+    }
+  }
+  assert.ok(n >= 15, `${n} labels checked`);
+  assert.equal(COPY.whichOneShort("Personalized Engraved Wooden Recipe Box with Family Name - Fake Test Item", "3000000011"), "Personalized Engraved… (3000000011)");
 });

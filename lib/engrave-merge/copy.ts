@@ -37,6 +37,12 @@ export const COPY = {
     n === 1
       ? "Everything you picked is ready. 1 other item in your file needs a look."
       : `Everything you picked is ready. ${n} other items in your file need a look.`,
+  /**
+   * 0 ready rows for the current pick while problems remain (Make merge file, its hint and Print cut sheet are hidden).
+   * Count line (in its usual spot) + the line under it, pointing to the problem list. n = items, as in "need a look".
+   */
+  countNoReady: (n: number) => (n === 1 ? "1 item needs a look" : `${n} items need a look`),
+  noReadyNote: "Nothing is ready to engrave yet. The problem list says why.",
   showAllItems: "Show all items",
   /** The ONLY problems are duplicates (either include-anyway mode). n = duplicate lines. */
   summaryDuplicatesOnly: (n: number) =>
@@ -48,7 +54,7 @@ export const COPY = {
    */
   countReady: (n: number) => `${n} ready for LightBurn`,
   countInFile: (n: number) => `${n} in your merge file`,
-  countNeedLook: (n: number) => `${n} need a look`,
+  countNeedLook: (n: number) => (n === 1 ? "1 needs a look" : `${n} need a look`),
   countWithProblems: (n: number) => `${n} with problems`,
   countDupLeftOut: (d: number) => (d === 1 ? "1 duplicate left out" : `${d} duplicates left out`),
   /** Both parts would be 0. */
@@ -77,13 +83,13 @@ export const COPY = {
   whichItems: "Which items",
   whichAll: "All items",
   whichOne: (name: string, lid: string) => `${name} (${lid})`,
-  /** Picker option: titles over ~40 characters are cut at a word break, then "… (listing ID)". */
-  whichOneShort: (name: string, lid: string) => {
-    const t = name.trim();
-    if (t.length <= 40) return `${t} (${lid})`;
-    const cut = t.slice(0, 41).replace(/\s+\S*$/, "") || t.slice(0, 40);
-    return `${cut.replace(/[\s,.;:–-]+$/, "")}… (${lid})`;
-  },
+  /**
+   * Picker option label, capped to ONE line in the 358px select at 390 (WebKit wraps option text, Chromium clips it):
+   * the whole "Title (listing ID)" if it fits PICKER_LABEL_PX and 40 characters, else the title cut at a word break
+   * + "… (listing ID)", the whole label still within both.
+   * The full title stays on the option/select title attribute and the option's aria-label.
+   */
+  whichOneShort: (name: string, lid: string) => shortListingLabel(name, lid),
 
   settings: "Settings",
   /** Settings row (collapsed), ≤ 35 characters. n = settings changed from the standard ones. */
@@ -140,3 +146,36 @@ export const COPY = {
   proThanks: "Thanks, noted. No sign-up needed.",
   sample: "Try it with a sample file",
 } as const;
+
+/**
+ * One-line budget for a picker label, in px of 16px system-ui text. Measured in WebKit at 390: a label wraps
+ * once its text passes ~305px (358px select minus 12px padding each side and the arrow). 300 keeps a small margin.
+ */
+export const PICKER_LABEL_PX = 300;
+/** ...and at most 40 characters for the WHOLE label, "… (listing ID)" included (Product). */
+export const PICKER_LABEL_CHARS = 40;
+const fitsLabel = (t: string) => labelWidthPx(t) <= PICKER_LABEL_PX && [...t].length <= PICKER_LABEL_CHARS;
+// Glyph widths (px, 16px system-ui in WebKit) for ASCII 32..126; anything else counts as 10 (CJK/emoji as 16).
+const ASCII_PX = [4.38,4.55,6.27,9.45,8.63,13.09,12.8,3.68,4.83,4.83,6.67,10.95,3.47,6.4,3.47,6.23,8.63,8.63,8.63,8.63,8.63,8.63,8.63,8.63,8.63,8.63,3.47,3.47,10.95,10.95,10.95,7.17,15.28,10.32,9.17,9.91,11.22,8.09,7.81,10.98,11.36,4.26,5.71,9.28,7.53,14.37,11.97,12.06,8.96,12.06,9.57,8.5,8.38,10.99,9.94,14.95,9.44,8.84,9.13,4.83,6.06,4.83,10.95,6.64,4.29,8.14,9.41,7.39,9.42,8.37,5.01,9.42,9.05,3.88,3.88,7.95,3.88,13.78,9.05,9.38,9.41,9.42,5.56,6.79,5.42,9.05,7.66,11.56,7.34,7.74,7.23,4.83,3.83,4.83,10.95];
+export function labelWidthPx(text: string): number {
+  let w = 0;
+  for (const ch of text) {
+    const c = ch.codePointAt(0) ?? 0;
+    w += c >= 32 && c < 127 ? ASCII_PX[c - 32] : ch === "\u2026" ? 11.73 : c >= 0x2e80 ? 16 : 10;
+  }
+  return w;
+}
+function shortListingLabel(name: string, lid: string): string {
+  const t = name.trim().replace(/\s+/g, " ");
+  const full = `${t} (${lid})`;
+  if (fitsLabel(full)) return full;
+  const suffix = `\u2026 (${lid})`;
+  let cut = "";
+  for (const word of t.split(" ")) {
+    const next = cut ? `${cut} ${word}` : word;
+    if (!fitsLabel(next + suffix)) break;
+    cut = next;
+  }
+  if (!cut) for (const ch of t) { if (!fitsLabel(cut + ch + suffix)) break; cut += ch; } // one very long first word
+  return `${cut.replace(/[\s,.;:\u2013-]+$/, "")}${suffix}`;
+}

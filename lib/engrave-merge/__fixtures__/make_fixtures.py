@@ -59,6 +59,8 @@ COAST = ("3000000006", "Blank Coaster Set", "EM-TEST-COASTER")
 GIFTBOARD = ("3000000007", "Engraved Cutting Board Gift", "EM-TEST-GIFT")
 PLAQUE = ("3000000008", "Engraved Birth Announcement Plaque", "EM-TEST-PLAQUE")
 TRAY = ("3000000009", "Plain Wooden Serving Tray", "EM-TEST-TRAY")
+PETTAG = ("3000000010", "Engraved Pet ID Tag", "EM-TEST-PETTAG")
+RECIPE = ("3000000011", "Personalized Engraved Wooden Recipe Box with Family Name - Fake Test Item", "EM-TEST-RECIPE")
 
 def L(x):  # listing tuple -> kwargs
     return dict(listing=x[0], item=x[1], sku=x[2])
@@ -134,6 +136,20 @@ FIXTURES = {
         row("1000000902", "2000000902", variations="Color:Gray", buyer="ima", price="20.00", **L(COAST)),
         row("1000000903", "2000000903", variations="Size:Large,Finish:Oiled", buyer="dummy", price="35.00", **L(TRAY)),
         row("1000000903", "2000000904", variations="", buyer="dummy", price="35.00", **L(TRAY)),
+    ],
+    # 10. ZERO-READY LISTING: listing 3000000010 (Pet ID Tag) is all clean/ready; EVERY item of
+    #     listing 3000000011 (Recipe Box, long title) needs a look with DEFAULT settings, one
+    #     problem each, 4 kinds: EMOJI, BLANK_TEXT (placeholder), BLANK_TEXT (empty box),
+    #     TOO_MANY_LINES (7 lines > 6 columns), BAD_QUANTITY. No shipped rows (never both-zero).
+    #     Picking 3000000011 -> header-only merge + full problem list; include-anyway -> rows.
+    "fx10_zero_ready_listing.csv": [
+        row("1000001001", "2000001001", variations="Shape:Bone,Color:Silver,Personalization:Biscuit", buyer="testy", qty="2", price="14.00", **L(PETTAG)),
+        row("1000001002", "2000001002", variations="Shape:Round,Color:Gold,Personalization:Mochi", buyer="ima", price="14.00", **L(PETTAG)),
+        row("1000001002", "2000001003", variations="Wood type:Walnut,Personalization:The Fakenames \U0001F43E", buyer="ima", price="48.00", **L(RECIPE)),
+        row("1000001003", "2000001004", variations="Wood type:Cherry,Personalization:Not requested on this item.", buyer="sample", price="48.00", **L(RECIPE)),
+        row("1000001004", "2000001005", variations="Wood type:Maple,Personalization:", buyer="faux", price="48.00", **L(RECIPE)),
+        row("1000001005", "2000001006", variations="Wood type:Walnut,Personalization:Grandma\nRose\nFake\nKitchen\nEst\n1970\nYum", buyer="dummy", price="48.00", **L(RECIPE)),
+        row("1000001006", "2000001007", variations="Wood type:Cherry,Personalization:The Testersons", buyer="gift", qty="0", price="48.00", **L(RECIPE)),
     ],
 }
 
