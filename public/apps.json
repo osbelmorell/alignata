@@ -145,7 +145,7 @@
       "id": "stripe-cleaver",
       "name": "Stripe\u2192Books Cleaver",
       "url": "/stripe-cleaver",
-      "blurb": "Turn Stripe payout CSV into QuickBooks or Xero rows.",
+      "blurb": "Turn a Stripe payout file into a QuickBooks or Xero import.",
       "status": "live",
       "pitch": "Drop a Stripe payout or balance CSV and download QuickBooks- or Xero-ready rows \u2014 fees as negatives, dates YYYY-MM-DD, junk stripped. Browser-local only.",
       "what": "Stripe exports don't import cleanly into books. Fees hide in columns, dates are messy, and summary rows break bank imports.",

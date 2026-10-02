@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { AppHub } from "@/components/AppHub";
-import { getApps } from "@/lib/apps";
+import { ToolsPage } from "@/components/fantasy/ToolsPage";
+import { getApps, toolsOrder } from "@/lib/apps";
 
 export const metadata: Metadata = {
-  title: "Apps",
-  description: "Launcher for all Build apps — scorecards, digests, decision cards, and more.",
+  title: "Tools",
+  description: "Small tools that each do one job.",
 };
 
 export default function AppsPage() {
-  const apps = getApps();
-  return <AppHub apps={apps} />;
+  return <ToolsPage apps={toolsOrder(getApps())} />;
 }

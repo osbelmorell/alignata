@@ -237,3 +237,29 @@ test("baseline reader: only SCAN MATCH site:ev:* and LRANGE site:ev:<day>; never
   assert.deepEqual(sent, [["SCAN", "0", "MATCH", "site:ev:*", "COUNT", "1000"], ["LRANGE", "site:ev:2026-10-02", "0", "-1"]]);
   await assert.rejects(readStore({}), /No event store configured/);
 });
+
+test("/apps (v1.4): 11 tools, Cleaver 01 and License Gate 02 with custom art, the rest A–Z; tracking attrs = shown position", async () => {
+  const { getApps, toolsOrder, toolArt } = await import("../lib/apps.ts");
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { ToolsPage } = await import("../components/fantasy/ToolsPage.tsx");
+  const order = toolsOrder(getApps());
+  assert.deepEqual(order.map((a) => a.name), [
+    "Stripe→Books Cleaver", "License Risk Gate", "Agent Bundle Tag", "Agent Eval Go/No-Go", "Deploy Decision Card", "Engrave Merge",
+    "Enterprise Scorecard", "Env Diff Snapshot", "Hobby Deploy Burn Digest", "LLM Feature-Cost Tag", "What-Changed Card",
+  ]);
+  assert.equal(order.find((a) => a.id === "stripe-cleaver").blurb, "Turn a Stripe payout file into a QuickBooks or Xero import.", "locked Cleaver line");
+  assert.deepEqual(order.map((a) => toolArt(a.id).file), ["stripe-cleaver", "license-gate", ...Array(9).fill("fallback-tile")]);
+  const html = renderToStaticMarkup(createElement(ToolsPage, { apps: order }));
+  const attrs = [...html.matchAll(/<a class="(fx-stretch|fx-pill)" href="([^"]+)" data-tool-slug="([^"]+)" data-tool-pos="(\d+)"/g)].map((m) => [m[1], m[3], +m[4]]);
+  assert.equal(attrs.length, 22, "card link + Open on every card");
+  order.forEach((a, i) => {
+    assert.deepEqual(attrs[2 * i], ["fx-stretch", a.id, i + 1]);
+    assert.deepEqual(attrs[2 * i + 1], ["fx-pill", a.id, i + 1]);
+    assert.ok(SLUG_RE_OK(a.id), `${a.id} passes the tool_open slug check`);
+  });
+  assert.equal((html.match(/fx-dot/g) || []).length, 1, "lime once: the dot before 01 /");
+  assert.equal((html.match(/>Open<\/a>/g) || []).length, 11, "every card has a visible Open");
+  for (let i = 1; i <= 11; i++) assert.ok(html.includes(`${String(i).padStart(2, "0")} /`), `number ${i}`);
+});
+const SLUG_RE_OK = (s) => validateSiteEvent({ v: 1, event: "tool_open", sid: SID, vid: VID, dogfood: false, props: { slug: s, position: 1 } }).ok;
