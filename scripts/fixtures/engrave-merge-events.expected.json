@@ -1,0 +1,16 @@
+{
+  "t0": "2026-10-05T14:00:00.000Z",
+  "distinctRealFiles": 5,
+  "returningInstalls": 2,
+  "proInterestTaps": 1,
+  "installsBackOnAnotherDay": 3,
+  "weeklyEngaged": {
+    "2026-10-05": 2,
+    "2026-10-12": 1
+  },
+  "excluded": {
+    "dogfood": 2,
+    "nonProdHost": 1,
+    "fixture": 1
+  }
+}

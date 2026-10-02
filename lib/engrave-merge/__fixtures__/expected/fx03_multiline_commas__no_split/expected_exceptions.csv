@@ -1,0 +1,3 @@
+Order ID,Transaction ID,Listing ID,Item,First name,Quantity,Problem,Problem code,Details,Personalization,Variations
+1000000301,2000000301,3000000004,Custom Family Sign,Testy,1,Text is longer than your limit,TOO_LONG,Text is 48 characters (limit 40),"1. Mom 2. Dad, love you 3. Sam: always & forever","Size:8 x 10 inches, framed,Style:Style 6,Personalization:1. Mom / 2. Dad, love you / 3. Sam: always & forever"
+1000000302,2000000302,3000000004,Custom Family Sign,Ima,1,Text is longer than your limit,TOO_LONG,Text is 43 characters (limit 40),"1. Nana 2. Papa, est. 1970 3. Kids: Ann, Bo","Size:5 x 7 inches,Style:Style 2,Personalization:1. Nana 2. Papa, est. 1970 3. Kids: Ann, Bo"

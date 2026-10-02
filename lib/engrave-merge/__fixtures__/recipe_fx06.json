@@ -1,0 +1,25 @@
+{
+  "tool": "engrave-merge",
+  "recipeVersion": 1,
+  "savedAt": "2026-10-02",
+  "settings": {
+    "includeShipped": false,
+    "includeFlagged": false,
+    "splitLines": true,
+    "lineColumns": 6,
+    "charLimit": 40,
+    "stripNumbers": true
+  },
+  "extraLabels": [],
+  "listings": {
+    "3000000008": {
+      "itemName": "Engraved Birth Announcement Plaque",
+      "option1": "Color",
+      "option2": null,
+      "option3": null,
+      "textFields": ["Baby name", "Birth date", "Weight"],
+      "requiresPersonalization": true,
+      "charLimit": 24
+    }
+  }
+}

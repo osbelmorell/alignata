@@ -1,0 +1,9 @@
+Order ID,Transaction ID,Listing ID,Item,First name,Quantity,Problem,Problem code,Details,Personalization,Variations
+1000000508,2000000508,3000000006,Blank Coaster Set,Dummy,0,Quantity looks wrong,BAD_QUANTITY,"Quantity is ""0""",,Color:Gray
+1000000501,2000000501,3000000005,Engraved Wooden Ornament,Faux,1,Has an emoji your laser may not engrave,EMOJI,Emoji found: ❤,Grandpa ❤️,"Style:Star,Personalization:Grandpa ❤️"
+1000000502,2000000502,3000000005,Engraved Wooden Ornament,Dummy,1,No personalization text,BLANK_TEXT,Etsy says personalization was not requested,,"Style:Bell,Personalization:Not requested on this item."
+1000000503,2000000503,3000000005,Engraved Wooden Ornament,Sample,1,No personalization text,BLANK_TEXT,Most orders for this item have text; this one has none,,Style:Star
+1000000504,2000000504,3000000005,Engraved Wooden Ornament,Testy,1,Text is longer than your limit,TOO_LONG,Line 1 is 59 characters (limit 40),Merry Christmas to the whole Fakename family from all of us,"Style:Bell,Personalization:Merry Christmas to the whole Fakename family from all of us"
+1000000506,2000000506,3000000005,Engraved Wooden Ornament,Ima,1,Couldn't read the options for this item,UNREADABLE_OPTIONS,Options don't start with a label like Size:,,free text the buyer typed with no label
+1000000507,2000000507,3000000005,Engraved Wooden Ornament,Zoë,1,Your font is missing some letters,MISSING_GLYPH,Missing from your font: ë,Zoë,"Style:Star,Personalization:Zoë"
+1000000507,2000000507,3000000005,Engraved Wooden Ornament,Zoë,1,Same item appears twice in the file,DUPLICATE,Transaction ID 2000000507 appears more than once; kept the first,Zoë,"Style:Star,Personalization:Zoë"
