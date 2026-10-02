@@ -253,6 +253,7 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
   const cut: CutItem[] = [];
   let totalItems = 0;
   let heldItems = 0;
+  let flaggedInMerge = 0;
   for (const it of items) {
     const r = it.r;
     const itemName = itemNameOf(r);
@@ -268,14 +269,19 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
     }
     const flagged = it.codes.length > 0;
     const held = it.dup || (flagged && !cfg.includeFlagged);
+    const copies = it.qty || 1;
+    const inScope = !opts.listing || it.lid === opts.listing;
     if (flagged) {
-      problems.push({ order: orderId, item: itemName, fn, qty: it.qRaw, problems: sortedCodes.map(([c]) => PROBLEMS[c]), held });
+      problems.push({
+        order: orderId, item: itemName, fn, qty: it.qRaw, problems: sortedCodes.map(([c]) => PROBLEMS[c]), held,
+        dup: it.dup, badQty: it.qty === null, counted: it.dup ? 0 : copies, inScope,
+      });
     }
     if (it.dup) continue;
-    const copies = it.qty || 1;
-    if (!opts.listing || it.lid === opts.listing) {
+    if (inScope) {
       totalItems += copies;
       if (held) heldItems += copies;
+      else if (flagged) flaggedInMerge += copies;
     }
     const lr = it.lr;
     const slots = ["", "", ""];
@@ -357,6 +363,7 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
       total_items: totalItems,
       ready_items: mergeRows.length,
       held_items: heldItems,
+      flagged_in_merge_items: flaggedInMerge,
     },
   };
 }

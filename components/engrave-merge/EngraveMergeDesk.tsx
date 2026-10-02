@@ -13,6 +13,7 @@ import {
   mergeFileName,
 } from "@/lib/engrave-merge/outputs";
 import { process as runProcess } from "@/lib/engrave-merge/process";
+import { howManyLabel, summaryView } from "@/lib/engrave-merge/summary";
 import { RECIPE_FILE_NAME, buildRecipe, parseRecipe } from "@/lib/engrave-merge/recipe";
 import { fileRef, initInstallId, sendEvent } from "@/lib/engrave-merge/track";
 import {
@@ -88,6 +89,7 @@ export function EngraveMergeDesk() {
   }, [file, settings, recipe, font, listing]);
 
   const ok: ProcessOk | null = result && !result.error ? result : null;
+  const view = ok ? summaryView(ok, settings.includeFlagged) : null;
 
   const missingLetters = useMemo(() => {
     if (!ok) return 0;
@@ -284,16 +286,24 @@ export function EngraveMergeDesk() {
       </p>
       {ok?.garbled && <p className="mt-1 text-base font-semibold text-[#8a1c1c]">{COPY.garbled}</p>}
 
-      {ok && (
+      {ok && view && (
         <section ref={summaryRef} aria-label="Summary" className="mt-6 scroll-mt-4 space-y-4">
           <p className="text-base leading-6">
             <span data-count-line className="font-semibold">
-              {COPY.summaryCounts(ok.stats.ready_items, ok.stats.held_items)}
+              {view.countLine}
             </span>
-            <br />
-            <span className={muted}>{ok.stats.held_items > 0 ? COPY.summaryHeldNote : COPY.summaryAllReady}</span>
+            {view.warning && (
+              <span data-warning-line className="block font-semibold text-[#8a1c1c]">
+                {view.warning}
+              </span>
+            )}
+            {view.note && (
+              <span data-note-line className={`block ${muted}`}>
+                {view.note}
+              </span>
+            )}
           </p>
-          {ok.stats.held_items > 0 && (
+          {view.showProblems && (
             <div className="space-y-2">
               <h2 className="text-base font-semibold">{COPY.problemListTitle}</h2>
               <div className="overflow-x-auto rounded-xl border border-[var(--cb-line)] bg-[var(--cb-surface)]">
@@ -314,7 +324,7 @@ export function EngraveMergeDesk() {
                           {p.item}
                           <span className={`block ${muted}`}>{COPY.problemOrder(p.order, p.fn)}</span>
                         </td>
-                        <td className="px-3 py-2 text-right tabular-nums">{p.qty}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{howManyLabel(p)}</td>
                         <td className="px-3 py-2">{p.problems.join(" · ")}</td>
                       </tr>
                     ))}
@@ -324,7 +334,7 @@ export function EngraveMergeDesk() {
             </div>
           )}
           <div className="flex flex-wrap gap-2">
-            {ok.stats.held_items > 0 && (
+            {view.showProblems && (
               <button type="button" className={secondaryBtn} onClick={onProblems}>
                 {COPY.downloadProblems}
               </button>

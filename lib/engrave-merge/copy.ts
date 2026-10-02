@@ -34,11 +34,20 @@ export const COPY = {
   summaryCounts: (ready: number, held: number) => `${ready} ready for LightBurn · ${held} need a look`,
   summaryHeldNote: "Items that need a look are left out of the merge file. The problem list says why.",
   summaryAllReady: "Everything is ready.",
+  /** "Put items that need a look in the merge file anyway" ON: count line. n = items with problems (same unit). */
+  summaryCountsIncluded: (inFile: number, n: number) => `${inFile} in your merge file · ${n} with problems`,
+  /** "Include anyway" ON and some items in the file have problems. n = items. */
+  summaryIncludedWarning: (n: number) =>
+    n === 1
+      ? "1 of these has a problem. Check the problem list before you engrave."
+      : `${n} of these have problems. Check the problem list before you engrave.`,
 
   problemListTitle: "Problem list",
   problemColItem: "Item",
   problemColHowMany: "How many",
   problemColProblem: "Problem",
+  howManyDuplicate: "Duplicate, left out",
+  howManyBadQty: (raw: string) => `${raw === "" ? "blank" : raw}, counted as 1`,
   problemOrder: (order: string, name: string) => (name ? `Order ${order} · ${name}` : `Order ${order}`),
   downloadProblems: "Download problem list",
   printCutsheet: "Print cut sheet",
@@ -83,7 +92,7 @@ export const COPY = {
     "In LightBurn, add a text box and type %11 (whole text) or %12, %13 … (one line each).",
     "Set the text box's mode to Merge/CSV in the text toolbar.",
     "Open Window → Variable Text (it opens as a tab behind Cuts / Layers), click Browse and pick your Engrave Merge file.",
-    "Set Start = 1 (row 0 is the header), End = the last Row number on your cut sheet, then press Reset.",
+    "Set Start = 1 (row 0 is the header), End = the last Merge row number on your cut sheet, then press Reset.",
     "One item per run: Advance By = 1 and turn on Auto-Advance. Each Start moves to the next item.",
     "Several items per bed: lay them out with Grid Array with Auto-Increment Variable Text on (offsets 0, 1, 2, …), and set Advance By to how many fit (e.g. 4).",
     "Press Test or use Preview to check names before burning. Set Max Width in the Shape Properties window so long names shrink to fit.",

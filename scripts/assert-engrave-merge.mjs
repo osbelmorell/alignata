@@ -16,6 +16,7 @@ import { buildRecipe, parseRecipe } from "../lib/engrave-merge/recipe.ts";
 import { validateEvent } from "../lib/engrave-merge/events.ts";
 import { handleEvent } from "../lib/engrave-merge/handler.ts";
 import { DEFAULT_SETTINGS } from "../lib/engrave-merge/types.ts";
+import { howManyLabel, summaryView } from "../lib/engrave-merge/summary.ts";
 import { computeKpis, parseLog } from "./engrave-merge-kpis.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -70,6 +71,78 @@ test("Counts: ready + held = total items for every case (one per merge row)", ()
     }
     console.log(`# ${c.name}: ${stats.ready_items} ready for LightBurn · ${stats.held_items} need a look (total ${stats.total_items})`);
   }
+});
+
+test("Summary + on-screen problem list reconcile for every case", () => {
+  for (const c of cases) {
+    const res = runCase(c);
+    const { stats, problems } = res;
+    const incl = !!c.config?.include_flagged;
+    const v = summaryView(res, incl);
+    const sum = (f) => problems.filter(f).reduce((n, p) => n + p.counted, 0);
+    assert.equal(sum((p) => p.held && p.inScope), stats.held_items, `${c.name}: How many (held rows) adds up to held`);
+    assert.equal(sum((p) => !p.held && p.inScope), stats.flagged_in_merge_items, `${c.name}: How many (in-file rows) adds up to warning n`);
+    assert.equal(v.showProblems, stats.exception_count > 0, `${c.name}: list + button follow exception_count`);
+    assert.equal(v.note === "Everything is ready.", stats.exception_count === 0, `${c.name}: "Everything is ready." only with zero problems`);
+    assert.equal(v.warning !== null, incl && stats.flagged_in_merge_items > 0, `${c.name}: warning when problem items are in the file`);
+    if (stats.exception_count > 0) assert.notEqual(v.note, "Everything is ready.", `${c.name}: never "Everything is ready." with problems`);
+    for (const p of problems) if (p.dup) assert.equal(p.counted, 0);
+  }
+});
+
+test("fx05_exceptions: How many column reads 0 (counted as 1) / dropped (duplicate) and adds up to 6 held", () => {
+  const res = runCase(cases.find((c) => c.name === "fx05_exceptions"));
+  assert.equal(res.problems.length, 7, "7 problem rows");
+  assert.deepEqual(res.problems.map(howManyLabel), ["0, counted as 1", "1", "1", "1", "1", "1", "Duplicate, left out"]);
+  assert.equal(res.problems.reduce((n, p) => n + p.counted, 0), 6);
+  assert.deepEqual(summaryView(res, false), {
+    countLine: "3 ready for LightBurn · 6 need a look",
+    note: "Items that need a look are left out of the merge file. The problem list says why.",
+    warning: null,
+    showProblems: true,
+  });
+});
+
+test("fx05_exceptions__include_flagged: problem list + button visible and warning shown", () => {
+  const res = runCase(cases.find((c) => c.name === "fx05_exceptions__include_flagged"));
+  assert.equal(res.stats.exception_count, 7);
+  assert.equal(res.stats.flagged_in_merge_items, 6);
+  const v = summaryView(res, true);
+  assert.equal(v.countLine, "9 in your merge file · 6 with problems");
+  assert.equal(v.warning, "6 of these have problems. Check the problem list before you engrave.");
+  assert.equal(v.showProblems, true, "problem list + Download problem list button visible");
+  assert.equal(v.note, null, "no \"Everything is ready.\"");
+});
+
+test("Include-anyway warning: singular when exactly 1 item has a problem", () => {
+  const stats = { exception_count: 1, ready_items: 3, held_items: 0, flagged_in_merge_items: 1 };
+  const v = summaryView({ stats }, true);
+  assert.equal(v.countLine, "3 in your merge file · 1 with problems");
+  assert.equal(v.warning, "1 of these has a problem. Check the problem list before you engrave.");
+  assert.equal(v.showProblems, true);
+  // OFF mode, zero problems → the only time "Everything is ready." shows
+  assert.equal(summaryView({ stats: { ...stats, exception_count: 0, flagged_in_merge_items: 0 } }, false).note, "Everything is ready.");
+});
+
+test("Duplicate-only file: problem list shows, nothing held, no warning", () => {
+  const raw = read("fx01_simple.csv");
+  const nl = raw.includes("\r\n") ? "\r\n" : "\n";
+  const [head, ...rest] = raw.split(nl);
+  const body = rest.join(nl).replace(/(\r?\n)+$/, "");
+  const res = emProcess(head + nl + body + nl + body + nl);
+  const base = emProcess(raw);
+  assert.equal(base.stats.exception_count, 0, "fx01 has no problems on its own");
+  assert.ok(res.problems.length > 0 && res.problems.every((p) => p.dup), "only duplicates");
+  const v = summaryView(res, false);
+  assert.equal(res.stats.held_items, 0);
+  assert.equal(res.stats.ready_items, base.stats.ready_items);
+  assert.equal(v.showProblems, true);
+  assert.equal(v.warning, null);
+  assert.equal(v.note, "Items that need a look are left out of the merge file. The problem list says why.");
+  assert.ok(res.problems.every((p) => howManyLabel(p) === "Duplicate, left out"));
+  const on = summaryView(emProcess(head + nl + body + nl + body + nl, { settings: { includeFlagged: true }, explicit: ["includeFlagged"] }), true);
+  assert.equal(on.showProblems, true);
+  assert.notEqual(on.note, "Everything is ready.");
 });
 
 test("AT-02 Sold Orders file → WRONG_FILE, no outputs", () => {

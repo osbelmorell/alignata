@@ -72,6 +72,8 @@ export interface Stats {
   ready_items: number;
   /** Physical items held out of the merge file (problem list). ready_items + held_items = total_items. */
   held_items: number;
+  /** Physical items that have problems but are in the merge file ("include anyway" on). */
+  flagged_in_merge_items: number;
 }
 
 /** One on-screen problem-list row per source row that has problems. */
@@ -84,6 +86,14 @@ export interface ProblemItem {
   problems: string[];
   /** true = left out of the merge file. */
   held: boolean;
+  /** Same Transaction ID seen earlier: dropped, not an item to make. */
+  dup: boolean;
+  /** Quantity unreadable (BAD_QUANTITY): counted as 1 item. */
+  badQty: boolean;
+  /** Items this row adds to the counts (0 for a duplicate; Quantity, or 1 if unreadable). */
+  counted: number;
+  /** Inside the "Which items" selection (always true when all items are shown). */
+  inScope: boolean;
 }
 
 export interface ProcessOk {

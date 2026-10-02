@@ -56,8 +56,13 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
      "Items that need a look are left out of the merge file. The problem list says why." (or "Everything is ready." when held = 0).
      Unit = physical items, one per merge row (Quantity 3 = 3). ready = items in the merge file; held = items held out;
      ready + held = total items to make (duplicates dropped; "Which items" filter applied).
-   • on-screen problem list (when held > 0): Item · How many (raw Quantity) · Problem
-   • secondary buttons: Download problem list (hidden when held = 0)  [COPY: Print cut sheet]
+     With "Put items that need a look in the merge file anyway" ON the count line is
+     `{inFile} in your merge file · {n} with problems` (n = items with problems), and when n > 0 the warning
+     "{n} of these have problems. Check the problem list before you engrave." (n = 1: "1 of these has a problem. …").
+     "Everything is ready." only when the problem list is empty, in either mode.
+   • on-screen problem list (whenever exception_count > 0): Item · How many · Problem. How many = raw Quantity,
+     "0, counted as 1" for an unreadable quantity, "Duplicate, left out" for a duplicate (on screen only; the file keeps raw Quantity)
+   • secondary buttons: Download problem list (shown whenever exception_count > 0)  [COPY: Print cut sheet]
    • "Which items" select: All items / one per listing (exports that listing only, rows renumbered from 1)
    • ▸ [COPY: Settings]  (disclosure, closed by default)
        - [COPY: Include orders already shipped]                 toggle, off
@@ -219,7 +224,7 @@ How multi-line quoted cells render (we avoid them), and whether a BOM would leak
 1. [COPY] In LightBurn, add a text box and type `%11` (whole text) or `%12`, `%13` … (one line each).
 2. Set the text box's mode to **Merge/CSV** in the text toolbar.
 3. Open **Window → Variable Text** (it opens as a tab behind Cuts / Layers), click **Browse** and pick your Engrave Merge file.
-4. Set **Start = 1** (row 0 is the header), **End** = the last Row number on your cut sheet, then press **Reset**.
+4. Set **Start = 1** (row 0 is the header), **End** = the last **Merge row** number on your cut sheet, then press **Reset**.
 5. One item per run: **Advance By = 1** and turn on **Auto-Advance**. Each Start moves to the next item.
 6. Several items per bed: lay them out with **Grid Array** with **Auto-Increment Variable Text** on (offsets 0, 1, 2, …), and set **Advance By** to how many fit (e.g. 4).
 7. Press **Test** or use Preview to check names before burning. Set **Max Width** in the **Shape Properties** window so long names shrink to fit.
