@@ -13,12 +13,15 @@ export function PostCard({
   dot = false,
   heading: H = "h2",
   eager = false,
+  homeTarget = false,
 }: {
   post: Post;
   feature?: boolean;
   dot?: boolean;
   heading?: "h2" | "h3";
   eager?: boolean;
+  /** Homepage only: data-home-target="article:<slug>" for home_click. */
+  homeTarget?: boolean;
 }) {
   const art = postHero(post);
   return (
@@ -42,7 +45,11 @@ export function PostCard({
           {postMeta(post)}
         </p>
         <H>
-          <Link className="fx-stretch" href={`/daily-digest/${post.slug}`}>
+          <Link
+            className="fx-stretch"
+            href={`/daily-digest/${post.slug}`}
+            {...(homeTarget ? { "data-home-target": `article:${post.slug}` } : {})}
+          >
             {post.title}
           </Link>
         </H>

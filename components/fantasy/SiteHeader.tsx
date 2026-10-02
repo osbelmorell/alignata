@@ -11,14 +11,14 @@ export function SiteHeader() {
   return (
     <header className="fx-header">
       <div className="fx-wrap">
-        <Link href="/" className="fx-wordmark">
+        <Link href="/" className="fx-wordmark" data-home-target="nav:wordmark">
           Alignata
         </Link>
         <nav className="fx-nav" aria-label="Main">
-          <Link href="/apps" {...current("/apps")}>
+          <Link href="/apps" data-home-target="nav:apps" {...current("/apps")}>
             Tools
           </Link>
-          <Link href="/daily-digest" {...current("/daily-digest")}>
+          <Link href="/daily-digest" data-home-target="nav:daily-digest" {...current("/daily-digest")}>
             Daily Digest
           </Link>
         </nav>

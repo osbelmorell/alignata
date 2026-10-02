@@ -6,8 +6,12 @@ export function SiteFooter() {
       <div className="fx-wrap">
         <p>Alignata · Build tools for busy humans</p>
         <nav aria-label="Footer">
-          <Link href="/apps">Tools</Link>
-          <Link href="/daily-digest">Daily Digest</Link>
+          <Link href="/apps" data-home-target="nav:footer-tools">
+            Tools
+          </Link>
+          <Link href="/daily-digest" data-home-target="nav:footer-daily-digest">
+            Daily Digest
+          </Link>
         </nav>
       </div>
     </footer>
