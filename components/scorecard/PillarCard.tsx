@@ -1,6 +1,7 @@
 "use client";
 
 import { STATUS_META, type Pillar, type Status } from "@/lib/scorecard/types";
+import { formatScorecardDate } from "@/lib/scorecard/formatDate";
 
 interface PillarCardProps {
   pillar: Pillar;
@@ -45,10 +46,7 @@ export function PillarCard({
 
         <p className="mt-1 text-[10px] text-[var(--cb-ink-muted)] sm:mt-2 sm:text-[11px]">
           Updated{" "}
-          {new Date(pillar.updatedAt).toLocaleString(undefined, {
-            dateStyle: "medium",
-            timeStyle: "short",
-          })}
+          {formatScorecardDate(pillar.updatedAt)}
         </p>
       </article>
     );
@@ -121,10 +119,7 @@ export function PillarCard({
 
       <p className="mt-3 text-[11px] text-[var(--cb-ink-muted)]">
         Updated{" "}
-        {new Date(pillar.updatedAt).toLocaleString(undefined, {
-          dateStyle: "medium",
-          timeStyle: "short",
-        })}
+        {formatScorecardDate(pillar.updatedAt)}
       </p>
     </article>
   );

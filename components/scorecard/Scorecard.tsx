@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { AboutPanel } from "@/components/scorecard/AboutPanel";
 import { PillarCard } from "@/components/scorecard/PillarCard";
+import { formatScorecardDate } from "@/lib/scorecard/formatDate";
 import {
   exportScorecardJson,
   normalizeScorecard,
@@ -143,10 +144,7 @@ export function Scorecard() {
   };
 
   const updatedLabel = hydrated
-    ? new Date(data.updatedAt).toLocaleString(undefined, {
-        dateStyle: "full",
-        timeStyle: "short",
-      })
+    ? formatScorecardDate(data.updatedAt, "full")
     : "…";
 
   const secondaryBtn =
@@ -210,10 +208,7 @@ export function Scorecard() {
               <p className="mt-1 text-xs text-[var(--cb-ink-muted)]">
                 Source: /scorecard.json · updated{" "}
                 {hydrated
-                  ? new Date(data.updatedAt).toLocaleString(undefined, {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })
+                  ? formatScorecardDate(data.updatedAt)
                   : "…"}
                 {loadSource === "default" && hydrated
                   ? " · (fallback defaults)"
