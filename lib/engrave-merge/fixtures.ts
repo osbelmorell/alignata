@@ -26,6 +26,7 @@ export function isFixtureFingerprint(fp: string | undefined | null): boolean {
  */
 export const EXCLUDED_IIDS: readonly string[] = [
   "55ac19e0-0d84-445a-8b0f-d4d4357bd965", // Product's no-flag test visit (Oct 2)
+  "8196b7c3-2088-46e8-b9e6-9011338b9302", // QA's test device (Oct 2)
 ];
 
 export function isExcludedIid(iid: string | undefined | null, list: readonly string[] = EXCLUDED_IIDS): boolean {

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { AboutPanel } from "@/components/deploy-decision/AboutPanel";
 import { DecisionLog } from "@/components/deploy-decision/DecisionLog";
-import { KillBar } from "@/components/deploy-decision/KillBar";
 import { OpportunityForm } from "@/components/deploy-decision/OpportunityForm";
 import {
   cardSummaryText,
@@ -12,12 +11,9 @@ import {
   shareableText,
 } from "@/lib/deploy-decision/format";
 import {
-  getClientAsOf,
   getClientSnapshot,
-  getServerAsOf,
   getServerSnapshot,
   saveState,
-  subscribeAsOf,
   subscribeState,
 } from "@/lib/deploy-decision/storage";
 import {
@@ -37,11 +33,6 @@ export function DecisionDesk() {
     subscribeState,
     getClientSnapshot,
     getServerSnapshot,
-  );
-  const asOfMs = useSyncExternalStore(
-    subscribeAsOf,
-    getClientAsOf,
-    getServerAsOf,
   );
   const [lastState, setLastState] = useState<DecisionState | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -203,8 +194,6 @@ export function DecisionDesk() {
           <AboutPanel />
         </div>
       </div>
-
-      <KillBar log={state.log} asOfMs={asOfMs} />
 
       {toast ? (
         <div

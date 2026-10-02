@@ -206,7 +206,7 @@ export function Scorecard() {
             </p>
             {!editMode && (
               <p className="mt-1 text-base text-[var(--cb-ink-muted)]">
-                Source: /scorecard.json · updated{" "}
+                Updated{" "}
                 {hydrated
                   ? formatScorecardDate(data.updatedAt)
                   : "…"}
@@ -284,12 +284,6 @@ export function Scorecard() {
           </section>
         )}
       </div>
-
-      <footer className="mt-8 text-center text-sm text-[var(--cb-ink-muted)] sm:mt-10">
-        {editMode
-          ? "v0 · edit mode · local only — push public/scorecard.json for the board"
-          : "v0 · read-only board view · source: /scorecard.json"}
-      </footer>
 
       {toast && (
         <div
