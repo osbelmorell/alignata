@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { EngraveMergeDesk } from "@/components/engrave-merge/EngraveMergeDesk";
 
-// Listed in /apps (public/apps.json). Indexable.
+// PRIVATE dogfood tool: unlisted. Not in /apps, public/apps.json, nav or any sitemap.
 export const metadata: Metadata = {
   title: "Engrave Merge",
-  description: "Turn Etsy orders into a LightBurn file, ready to engrave.",
+  description: "Private test build.",
+  robots: { index: false, follow: false },
 };
 
 export default function Page() {

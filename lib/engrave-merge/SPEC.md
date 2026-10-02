@@ -20,10 +20,7 @@
 ## 2. Route, page shell, privacy posture
 
 - `app/engrave-merge/page.tsx` (server component, metadata) renders `components/engrave-merge/EngraveMergeDesk.tsx` (client). Logic lives in `lib/engrave-merge/` (`csv.ts`, `variations.ts`, `process.ts`, `outputs.ts`, `cutsheet.ts`, `recipe.ts`, `glyphs.ts`, `track.ts`). Follow the stripe-cleaver file layout.
-- Metadata: `title: "Engrave Merge"`, description = the card's purpose line; indexable (noindex dropped Oct 2 after a stored
-  event was confirmed, `x-em-store: stored`). Listed in `/apps` via `public/apps.json` like the other tools: title
-  "Engrave Merge", purpose "Turn Etsy orders into a LightBurn file, ready to engrave." (Copy, final). The site has no
-  sitemap or robots.txt, so there is nothing else to add.
+- Metadata: `title: "Engrave Merge"`, `robots: { index: false, follow: false }` (private dogfood). **Do not** add it to the public tool index, sitemap, or nav until the board approves launch. Whether to add an unlisted entry in `lib/apps.ts` is Eng Ops' call, as long as it isn't shown publicly.
 - Back link at the top: `← All tools` → `/apps`. It is the shared tool bar (`components/HubChrome.tsx`, tap target ≥ 44 px); the page has no back link of its own.
 - Read `node_modules/next/dist/docs/` first (repo AGENTS.md: "This is NOT the Next.js you know", Next 16.3.5 / React 19.2.8).
 - Dependencies: a CSV parser that handles **quoted multi-line cells** (about half the rows in a public sample have newlines inside `Variations`). Use either `papaparse` or an in-repo RFC 4180 parser; the stripe-cleaver line-split approach is **not** enough. `opentype.js`, loaded with dynamic `import()` only when the seller adds a font. Nothing loads from a CDN.
@@ -350,7 +347,7 @@ Caveat: an install id is a browser, not a seller. Cleared storage or a second de
 - AT-13: exactly one element matches `[data-primary]`. Its computed background is rgb(18,20,16) and its color is rgb(255,255,255).
 - AT-14: `← All tools` (shared tool bar) is present, links to `/apps`, and has a tap target ≥ 44 px.
 - AT-15: keyboard-only: Tab reaches the drop zone input, the primary button and the settings. The status line is `aria-live`.
-- AT-16: (after listing) no `robots` noindex meta; `/apps` shows the Engrave Merge card.
+- AT-16: `robots` meta = `noindex,nofollow`. The page is not linked from the public index or sitemap.
 
 **Privacy and tracking**
 - AT-20: Playwright records **every** request after page load while processing fx05, downloading all 3 outputs and tapping pro interest. Assert: (a) no request URL or body contains any of `Fakename`, `Placeholder`, `Buyerson`, `Nowhereville`, `Grandpa`, `Zoë`, `1000000501`, `2000000501`, `3000000005`, `EM-TEST`, `fx05`; (b) the only non-static request is `POST /api/engrave-merge/e` (prefetch GETs from the shared header are fine); (c) every body's keys ⊆ the §8.2 allow-list; (d) `file_processed.props.file_fingerprint` = the fx05 value.
