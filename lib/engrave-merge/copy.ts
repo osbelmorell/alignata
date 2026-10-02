@@ -82,12 +82,12 @@ export const COPY = {
   guideSteps: [
     "In LightBurn, add a text box and type %11 (whole text) or %12, %13 … (one line each).",
     "Set the text box's mode to Merge/CSV in the text toolbar.",
-    "Open Window → Variable Text, tap Browse and pick your Engrave Merge file.",
+    "Open Window → Variable Text (it opens as a tab behind Cuts / Layers), click Browse and pick your Engrave Merge file.",
     "Set Start = 1 (row 0 is the header), End = the last Row number on your cut sheet, then press Reset.",
     "One item per run: Advance By = 1 and turn on Auto-Advance. Each Start moves to the next item.",
-    "Several items per bed: lay them out with Grid Array with Offset auto-increment on (offsets 0, 1, 2, …), and set Advance By to how many fit (e.g. 4).",
-    "Press Test or use Preview to check names before burning. Set Max Width so long names shrink to fit.",
-    'Tick items off on the printed cut sheet. The "Merge row" number matches LightBurn\'s Current row.',
+    "Several items per bed: lay them out with Grid Array with Auto-Increment Variable Text on (offsets 0, 1, 2, …), and set Advance By to how many fit (e.g. 4).",
+    "Press Test or use Preview to check names before burning. Set Max Width in the Shape Properties window so long names shrink to fit.",
+    'Tick items off on the printed cut sheet. The "Merge row" number matches LightBurn\'s Current value.',
   ],
   cheatSheet: "%11 whole text · %12 line 1 · %13 line 2 · … · %2 first name · %7 option 1",
 
