@@ -97,21 +97,30 @@ export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function 
                 {COPY.showAllItems}
               </button>
             )}
+            {view.shippedPick && view.showDownload && (
+              // this screen only: Download problem list sits below Show all items
+              <button type="button" data-download-problems className={stackBtn} onClick={onProblems}>
+                {COPY.downloadProblems}
+              </button>
+            )}
           </div>
         ) : (
           <p
             data-count-line
+            {...(view.noReady ? { role: "status" } : {})}
             tabIndex={-1}
             className="h-6 truncate whitespace-nowrap text-base font-semibold leading-6 outline-none focus-visible:ring-2 focus-visible:ring-[var(--cb-ink)]"
           >
             {view.countLine}
           </p>
         )}
-        <p data-updated aria-live="polite" className={`h-5 text-base leading-5 ${muted}`}>
-          {updated ? COPY.updated : ""}
-        </p>
+        {!view.shippedPick && (
+          <p data-updated aria-live="polite" className={`h-5 text-base leading-5 ${muted}`}>
+            {updated ? COPY.updated : ""}
+          </p>
+        )}
       </div>
-      {!view.bothZero && (
+      {!view.bothZero && !view.shippedPick && (
       <div data-actions className="flex flex-wrap gap-2">
         {view.showDownload && (
           <button type="button" data-download-problems className={secondaryBtn} onClick={onProblems}>
@@ -135,7 +144,7 @@ export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function 
                 </span>
               )}
               {view.note && (
-                <span data-note-line className={`block ${muted}`}>
+                <span data-note-line {...(view.noReady ? { role: "status" } : {})} className={`block ${muted}`}>
                   {view.note}
                 </span>
               )}

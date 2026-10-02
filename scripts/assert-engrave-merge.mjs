@@ -1077,17 +1077,19 @@ test("fx11 shipped listing pick (3000000012): Nothing to engrave in this listing
   assert.equal(vin.shippedPick, true);
   assert.equal(vin.countLine, "Nothing to engrave in this listing.");
   const html = renderToStaticMarkup(createElement(SummaryPanel, { view: v, listings: res.listings, listing: "3000000012", onListing() {}, onProblems() {}, onPrint() {} }));
-  const order = ["data-which-items", 'data-shipped-pick="true" role="status"', "Nothing to engrave in this listing.", "Orders already shipped are hidden.", "data-include-shipped", "data-others-note", "data-show-all", "data-updated", "data-download-problems"].map((k) => html.indexOf(k));
+  const order = ["data-which-items", 'data-shipped-pick="true" role="status"', "Nothing to engrave in this listing.", "Orders already shipped are hidden.", "data-include-shipped", "data-others-note", "data-show-all", "data-download-problems"].map((k) => html.indexOf(k));
   assert.ok(order.every((i) => i >= 0), `all present: ${order}`);
-  assert.deepEqual([...order].sort((a, b) => a - b), order, "picker → status block (2 lines, Include shipped orders, note, Show all items) → Updated slot → Download problem list");
-  const block = html.slice(html.indexOf("data-shipped-pick"), html.indexOf("data-updated"));
+  assert.deepEqual([...order].sort((a, b) => a - b), order, "picker → 2 status lines → Include shipped orders → note → Show all items → Download problem list");
+  assert.ok(!html.includes("data-updated"), "no Updated slot on this screen");
+  assert.ok(!html.includes("data-actions"), "the usual downloads row is not used on this screen");
+  assert.equal((html.match(/data-download-problems/g) || []).length, 1);
+  const block = html.slice(html.indexOf("data-shipped-pick"), html.indexOf("</section>"));
   assert.match(block, /class="space-y-2"/, "stacked 8px apart");
-  for (const k of ["data-include-shipped", "data-show-all"]) assert.match(block, new RegExp(`<button type="button" ${k}="true" class="flex w-fit min-h-\\[44px\\][^"]*border border-\\[var\\(--cb-ink\\)\\] bg-\\[var\\(--cb-surface\\)\\]`), `${k}: outlined 44px, not a pill`);
+  for (const k of ["data-include-shipped", "data-show-all", "data-download-problems"]) assert.match(block, new RegExp(`<button type="button" ${k}="true" class="flex w-fit min-h-\\[44px\\][^"]*border border-\\[var\\(--cb-ink\\)\\] bg-\\[var\\(--cb-surface\\)\\]`), `${k}: outlined 44px, not a pill`);
   assert.ok(!html.includes("data-count-line"), "no count line");
   assert.ok(!html.includes("Print cut sheet"));
   assert.ok(!html.includes("data-both-zero"));
   assert.ok(!/rounded-full|bg-\[var\(--cb-ink\)\]/.test(html), "no black pill on the panel");
-  assert.match(html, /data-updated="true" aria-live="polite" class="h-5 /, "20px Updated slot kept");
   const visible = html.replace(/<select[\s\S]*?<\/select>/, "").replace(/<[^>]+>/g, " ");
   assert.doesNotMatch(visible, /(^|[^\d])0([^\d]|$)/, "no 0 count visible");
   assert.equal((html.match(/Everything you picked is ready/g) || []).length, 0, "the clean-pick line is not on this screen");
@@ -1126,5 +1128,39 @@ test("RULE: nothing to make → no Make merge file, no Print cut sheet (every ca
         assert.equal(html.includes("Print cut sheet"), r.stats.merge_row_count > 0, `${c.name} ${lid} ${incl}: Print cut sheet`);
       }
     }
+  }
+});
+
+
+test('role="status": both-zero (fx08), all-shipped listing pick (fx11), 0-ready pick (fx10); downloads row unchanged elsewhere', () => {
+  const render = (name, incl = false) => {
+    const c = cases.find((x) => x.name === name);
+    const res = runCase(c);
+    const v = summaryView(res, incl);
+    return { v, html: renderToStaticMarkup(createElement(SummaryPanel, { view: v, listings: res.listings, listing: c.config?.listing ?? "", onListing() {}, onProblems() {}, onPrint() {} })) };
+  };
+  const statusTexts = (html) => [...html.matchAll(/<(\w+)[^>]*role="status"[^>]*>([\s\S]*?)<\/\1>/g)].map((m) => m[2].replace(/<[^>]+>/g, "|"));
+  const bz = render("fx08-all-shipped");
+  assert.equal(bz.v.bothZero, true);
+  assert.match(bz.html, /<div data-both-zero="true" role="status"/);
+  assert.ok(statusTexts(bz.html).some((t) => t.includes("Nothing to engrave in this file.") && t.includes("Orders already shipped are hidden.")));
+  assert.match(bz.html, /data-updated/, "both-zero keeps its 20px Updated slot");
+  const sp = render("fx11_shipped_listing_pick__shipped_listing");
+  assert.equal(sp.v.shippedPick, true);
+  assert.match(sp.html, /<div data-shipped-pick="true" role="status"/);
+  assert.ok(statusTexts(sp.html).some((t) => t.includes("Nothing to engrave in this listing.") && t.includes("Orders already shipped are hidden.")));
+  const nr = render("fx10_zero_ready_listing__listing_b");
+  assert.equal(nr.v.noReady, true);
+  assert.match(nr.html, /<p data-count-line="true" role="status" tabindex="-1"[^>]*>5 items need a look<\/p>/, "count line is a status");
+  assert.match(nr.html, /<span data-note-line="true" role="status"[^>]*>Nothing is ready to engrave yet\. The problem list says why\.<\/span>/, "note is a status");
+  // fx10: downloads row stays in its usual place (count line → Updated → downloads → note)
+  const pos = ["data-count-line", "data-updated", "data-actions", "data-download-problems", "Nothing is ready to engrave yet"].map((k) => nr.html.indexOf(k));
+  assert.deepEqual([...pos].sort((a, b) => a - b), pos);
+  // other screens: no extra status roles, usual downloads row
+  for (const name of ["fx05_exceptions", "fx10_zero_ready_listing__listing_a", "fx11_shipped_listing_pick", "fx01_simple"]) {
+    const o = render(name);
+    assert.ok(!/role="status"/.test(o.html), `${name}: no status role`);
+    assert.match(o.html, /data-actions/, `${name}: usual downloads row`);
+    assert.match(o.html, /data-updated/, `${name}: Updated slot`);
   }
 });

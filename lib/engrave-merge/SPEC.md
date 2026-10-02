@@ -116,9 +116,13 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
      role="status": "Nothing to engrave in this listing." / "Orders already shipped are hidden."; under that, stacked 8 px
      apart: outlined 44px "Include shipped orders", then "{n} other items need a look." (n = 1: "1 other item needs a
      look."; this shorter note is ONLY for this screen, the clean-pick screen keeps its line; if the rest are only
-     duplicates, the duplicate note; nothing when nothing else needs a look), then outlined 44px "Show all items". No black
-     pill. The 20px "Updated" slot stays. Download problem list behaves as on a clean pick (shown when the file has
-     problems; tapping it is a real download and sends exceptions_downloaded, like everywhere). Include shipped orders →
+     duplicates, the duplicate note; nothing when nothing else needs a look), then outlined 44px "Show all items", then
+     (this screen only) "Download problem list" below it; the usual downloads row stays where it is on every other
+     screen. No black pill. No 20px "Updated" slot on this screen (both-zero and every other screen keep it). Download
+     problem list behaves as on a clean pick (shown when the file has problems; tapping it is a real download and sends
+     exceptions_downloaded, like everywhere).
+     A11y: role="status" on the both-zero block, the all-shipped-pick block, and on each 0-ready line (count line and its
+     note, kept in their usual places so the downloads row does not move). Include shipped orders →
      re-runs, focus to the count line ("2 ready for LightBurn" + the clean-pick note), "Settings · 1 changed". Show all
      items → All items, focus on the picker.
      Both-zero = 0 ready rows AND 0 problem rows in the file; it only happens when the shipped filter hides everything
