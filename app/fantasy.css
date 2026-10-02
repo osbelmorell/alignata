@@ -53,10 +53,9 @@ a.fx-pill:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 /* Tools list (SPEC §6) */
 .fx-tools { margin-top: 48px; display: grid; grid-template-columns: 1fr; gap: var(--gutter); }
 .fx-tool { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 16px; display: flex; flex-direction: column; }
-.fx-tool .fx-meta { margin-bottom: 8px; }
+.fx-tool .fx-meta { margin-bottom: 8px; font-size: 14px; } /* (0,2,0) beats `.fx-tool p` (0,1,1): the number stays 14px at every width (SPEC §6, Oct 2) */
 .fx-tool .fx-art { aspect-ratio: 16 / 9; }
 .fx-tool h2 { margin-top: 16px; font-family: var(--display); font-weight: 600; font-size: 22px; line-height: 1.25; letter-spacing: -0.01em; }
-/* As in the frozen reference, `.fx-tool p` also styles the card number ("01 /": 17px, 18px on desktop). */
 .fx-tool p { margin-top: 6px; color: var(--ink-2); font-size: 17px; line-height: 1.5; }
 .fx-tool .fx-pill { margin-top: 16px; align-self: flex-start; }
 @media (min-width: 900px) {
@@ -162,7 +161,8 @@ a.fx-pill:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 .fx-footer .fx-wrap { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; padding-top: 24px; padding-bottom: 32px; }
 .fx-footer p { margin: 0; font-size: 16px; color: var(--ink-2); }
 .fx-footer nav { display: flex; gap: 20px; }
-.fx-footer nav a { display: inline-flex; align-items: center; min-height: 48px; font-size: 16px; text-decoration: none; color: var(--ink); }
+.fx-footer nav a { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; min-width: 44px; font-size: 16px; text-decoration: none; color: var(--ink); }
+.fx-footer nav a:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
 
 /* Motion (SPEC §4): art only fades in and rises 8px once as it enters view; titles and Open are never hidden.
    Elements already on screen at load are left as they are. */
