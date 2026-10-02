@@ -41,14 +41,14 @@ export function OpportunityForm({
     <section className="overflow-hidden rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[var(--cb-surface)] shadow-[var(--cb-shadow)] sm:rounded-[var(--cb-radius-squircle)]">
       <div className="flex items-center justify-between gap-3 border-b border-[var(--cb-line)] px-4 py-2.5">
         <div>
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--cb-ink-muted)]">
+          <h2 className="text-sm font-semibold text-[var(--cb-ink-muted)]">
             Opportunity
           </h2>
           <p className="text-sm font-medium text-[var(--cb-ink)]">
             Decision card
           </p>
         </div>
-        <div className="text-right font-mono text-[11px] text-[var(--cb-ink-muted)]">
+        <div className="text-right font-mono text-sm text-[var(--cb-ink-muted)]">
           {checkedCount}/{card.checklist.length} checks
           {lastState ? (
             <span className={`ml-2 ${STATE_META[lastState].tone}`}>
@@ -60,7 +60,7 @@ export function OpportunityForm({
 
       <div className="grid gap-4 p-4">
         <label className="grid gap-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--cb-ink-muted)]">
+          <span className="text-sm font-semibold text-[var(--cb-ink-muted)]">
             Ticker / name
           </span>
           <input
@@ -69,26 +69,26 @@ export function OpportunityForm({
             placeholder="NVDA"
             autoComplete="off"
             spellCheck={false}
-            className={`${inputClass} font-mono tracking-wide`}
+            className={`${inputClass} font-mono`}
           />
         </label>
 
         <label className="grid gap-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--cb-ink-muted)]">
+          <span className="text-sm font-semibold text-[var(--cb-ink-muted)]">
             Short thesis
           </span>
           <textarea
             value={card.thesis}
             onChange={(e) => onChange({ ...card, thesis: e.target.value })}
-            rows={3}
+            rows={2}
             placeholder="Why this, why now, what kills it."
             className={`${inputClass} resize-y leading-relaxed`}
           />
         </label>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-2 items-end gap-3">
           <label className="grid gap-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--cb-ink-muted)]">
+            <span className="text-sm font-semibold text-[var(--cb-ink-muted)]">
               Deployable $ pasted
             </span>
             <input
@@ -106,7 +106,7 @@ export function OpportunityForm({
             />
           </label>
           <label className="grid gap-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--cb-ink-muted)]">
+            <span className="text-sm font-semibold text-[var(--cb-ink-muted)]">
               Suggested % of deployable
             </span>
             <input
@@ -125,7 +125,7 @@ export function OpportunityForm({
           </label>
         </div>
 
-        <p className="rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[var(--cb-bg)] px-3 py-2 font-mono text-xs tabular-nums text-[var(--cb-ink-muted)]">
+        <p className="rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[var(--cb-bg)] px-3 py-2 font-mono text-sm tabular-nums text-[var(--cb-ink-muted)]">
           Implied size{" "}
           <span className="text-[var(--cb-ink)]">{formatUsd(implied)}</span>
           <span className="text-[var(--cb-ink-muted)]">
@@ -136,8 +136,33 @@ export function OpportunityForm({
         </p>
 
         <div>
+          <p className="mb-2 text-sm font-semibold text-[var(--cb-ink-muted)]">
+            Decide
+          </p>
+          {/* Full-width stacked CTAs — no H-clip / horizontal scroll */}
+          <div className="flex w-full min-w-0 flex-col gap-2">
+            {DECISION_STATES.map((state) => {
+              const meta = STATE_META[state];
+              return (
+                <button
+                  key={state}
+                  type="button"
+                  onClick={() => onDecide(state)}
+                  className={`w-full min-h-11 min-w-0 rounded-[var(--cb-radius-pill)] border px-3 py-3.5 text-sm font-semibold ${meta.btn}`}
+                >
+                  {meta.label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-base text-[var(--cb-ink-muted)]">
+            Appends to the local decision log. Ticker required.
+          </p>
+        </div>
+
+        <div>
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--cb-ink-muted)]">
+            <span className="text-sm font-semibold text-[var(--cb-ink-muted)]">
               Checklist
             </span>
             <button
@@ -151,7 +176,7 @@ export function OpportunityForm({
                   ],
                 })
               }
-              className="text-[11px] font-medium text-[var(--cb-ink-muted)] hover:text-[var(--cb-ink)]"
+              className="text-sm font-medium text-[var(--cb-ink-muted)] hover:text-[var(--cb-ink)]"
             >
               + Add item
             </button>
@@ -160,8 +185,9 @@ export function OpportunityForm({
             {card.checklist.map((item, idx) => (
               <li
                 key={item.id}
-                className="flex items-center gap-2 rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[var(--cb-bg)] px-2 py-1.5"
+                className="flex items-center gap-1 rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[var(--cb-bg)] px-1 py-0"
               >
+                <label className="inline-flex size-11 shrink-0 items-center justify-center">
                 <input
                   id={`check-${item.id}`}
                   type="checkbox"
@@ -176,6 +202,7 @@ export function OpportunityForm({
                   }}
                   className="h-3.5 w-3.5 accent-[var(--cb-lime)]"
                 />
+                </label>
                 <input
                   value={item.label}
                   onChange={(e) => {
@@ -195,7 +222,7 @@ export function OpportunityForm({
                       checklist: card.checklist.filter((c) => c.id !== item.id),
                     })
                   }
-                  className="px-1 text-[11px] text-[var(--cb-ink-muted)] hover:text-[var(--cb-ink)]"
+                  className="min-w-11 px-1 text-sm text-[var(--cb-ink-muted)] hover:text-[var(--cb-ink)]"
                   aria-label={`Remove ${item.label}`}
                 >
                   ×
@@ -205,30 +232,6 @@ export function OpportunityForm({
           </ul>
         </div>
 
-        <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--cb-ink-muted)]">
-            Decide
-          </p>
-          {/* Full-width stacked CTAs — no H-clip / horizontal scroll */}
-          <div className="flex w-full min-w-0 flex-col gap-2">
-            {DECISION_STATES.map((state) => {
-              const meta = STATE_META[state];
-              return (
-                <button
-                  key={state}
-                  type="button"
-                  onClick={() => onDecide(state)}
-                  className={`w-full min-h-11 min-w-0 rounded-[var(--cb-radius-pill)] border px-3 py-3.5 text-sm font-semibold tracking-wide ${meta.btn}`}
-                >
-                  {meta.label}
-                </button>
-              );
-            })}
-          </div>
-          <p className="mt-2 text-[11px] text-[var(--cb-ink-muted)]">
-            Appends to the local decision log. Ticker required.
-          </p>
-        </div>
       </div>
     </section>
   );

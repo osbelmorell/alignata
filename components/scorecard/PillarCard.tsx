@@ -31,7 +31,7 @@ export function PillarCard({
             {pillar.name}
           </h2>
           <span
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-[var(--cb-radius-pill)] px-2.5 py-0.5 text-[11px] font-semibold sm:gap-2 sm:px-3 sm:py-1 sm:text-xs ${meta.bg} ${meta.text}`}
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-[var(--cb-radius-pill)] px-2.5 py-0.5 text-sm font-semibold sm:gap-2 sm:px-3 sm:py-1 sm:text-sm ${meta.bg} ${meta.text}`}
           >
             <span
               className={`h-2 w-2 rounded-full sm:h-2.5 sm:w-2.5 ${meta.dot}`}
@@ -40,11 +40,11 @@ export function PillarCard({
           </span>
         </div>
 
-        <p className="mt-1.5 line-clamp-1 text-sm leading-snug text-[var(--cb-ink)] sm:mt-2 sm:line-clamp-2 sm:leading-relaxed">
+        <p className="mt-1.5 line-clamp-1 text-base leading-snug text-[var(--cb-ink)] sm:mt-2 sm:line-clamp-2 sm:leading-relaxed">
           {pillar.lastOutcome}
         </p>
 
-        <p className="mt-1 text-[10px] text-[var(--cb-ink-muted)] sm:mt-2 sm:text-[11px]">
+        <p className="mt-1 text-sm text-[var(--cb-ink-muted)] sm:mt-2 sm:text-sm">
           Updated{" "}
           {formatScorecardDate(pillar.updatedAt)}
         </p>
@@ -59,7 +59,7 @@ export function PillarCard({
     >
       <div className="mb-5 flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--cb-ink-muted)]">
+          <p className="text-sm font-semibold text-[var(--cb-ink-muted)]">
             Pillar
           </p>
           <h2 className="mt-1 text-xl font-semibold tracking-tight text-[var(--cb-ink)]">
@@ -67,7 +67,7 @@ export function PillarCard({
           </h2>
         </div>
         <span
-          className={`inline-flex items-center gap-2 rounded-[var(--cb-radius-pill)] px-3 py-1 text-xs font-semibold ${meta.bg} ${meta.text}`}
+          className={`inline-flex items-center gap-2 rounded-[var(--cb-radius-pill)] px-3 py-1 text-sm font-semibold ${meta.bg} ${meta.text}`}
         >
           <span className={`h-2.5 w-2.5 rounded-full ${meta.dot}`} />
           {meta.label}
@@ -75,7 +75,7 @@ export function PillarCard({
       </div>
 
       <div className="mb-4">
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--cb-ink-muted)]">
+        <p className="mb-2 text-sm font-medium text-[var(--cb-ink-muted)]">
           Status
         </p>
         <div className="flex gap-2">
@@ -87,7 +87,7 @@ export function PillarCard({
                 key={status}
                 type="button"
                 onClick={() => onStatusChange?.(status)}
-                className={`flex-1 rounded-[var(--cb-radius-pill)] border px-2 py-2 text-xs font-semibold transition ${
+                className={`flex-1 rounded-[var(--cb-radius-pill)] border px-2 py-2 text-sm font-semibold transition ${
                   active
                     ? `${s.bg} ${s.text} border-transparent ring-2 ${s.ring}`
                     : "border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-bg)_70%,white)] text-[var(--cb-ink-muted)] hover:bg-[var(--cb-bg)]"
@@ -105,7 +105,7 @@ export function PillarCard({
       </div>
 
       <div className="flex flex-1 flex-col">
-        <span className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--cb-ink-muted)]">
+        <span className="mb-2 text-sm font-medium text-[var(--cb-ink-muted)]">
           Last outcome
         </span>
         <textarea
@@ -117,7 +117,7 @@ export function PillarCard({
         />
       </div>
 
-      <p className="mt-3 text-[11px] text-[var(--cb-ink-muted)]">
+      <p className="mt-3 text-sm text-[var(--cb-ink-muted)]">
         Updated{" "}
         {formatScorecardDate(pillar.updatedAt)}
       </p>

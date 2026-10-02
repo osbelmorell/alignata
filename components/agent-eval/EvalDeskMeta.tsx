@@ -37,7 +37,7 @@ export function EvalDeskMeta({
   return (
     <section className={`mb-6 space-y-4 p-3 sm:p-4 ${cardClass}`}>
       <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-        <label className="block min-w-0 space-y-1 text-xs font-medium text-[var(--cb-ink-muted)]">
+        <label className="block min-w-0 space-y-1 text-sm font-medium text-[var(--cb-ink-muted)]">
           Agent name
           <input
             value={current.name}
@@ -46,7 +46,7 @@ export function EvalDeskMeta({
             placeholder="e.g. Support triage agent v0.3"
           />
         </label>
-        <label className="block min-w-0 space-y-1 text-xs font-medium text-[var(--cb-ink-muted)]">
+        <label className="block min-w-0 space-y-1 text-sm font-medium text-[var(--cb-ink-muted)]">
           Date
           <input
             type="date"
@@ -64,17 +64,12 @@ export function EvalDeskMeta({
       >
         <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-2">
           <p className="text-2xl font-semibold tracking-tight">{vs.label}</p>
-          <p className="text-xs opacity-80">
+          <p className="text-sm opacity-80">
             {counts.pass} pass · {counts.fail} fail · {counts.na} n/a ·{" "}
             {counts.unset} unset
           </p>
         </div>
-        <p className="mt-1 text-sm opacity-90">{current.reasonSummary}</p>
-      </div>
-
-      <div className="rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-bg)_70%,white)] px-3 py-2 text-xs leading-relaxed text-[var(--cb-ink-muted)]">
-        <span className="font-medium text-[var(--cb-ink)]">Rule: </span>
-        {PLAIN_RULE}
+        <p className="mt-1 text-base">{current.reasonSummary}</p>
       </div>
 
       <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap">
@@ -101,6 +96,11 @@ export function EvalDeskMeta({
           </button>
         </div>
       </div>
+
+      <div className="rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-bg)_70%,white)] px-3 py-2 text-base leading-relaxed text-[var(--cb-ink-muted)]">
+        <span className="font-medium text-[var(--cb-ink)]">Rule: </span>
+        {PLAIN_RULE}
+      </div>
     </section>
   );
 }
@@ -119,13 +119,13 @@ export function EvalDeskSections({
         return (
           <section key={section.id} className={`p-3 sm:p-5 ${cardClass}`}>
             <div className="mb-4 min-w-0">
-              <span className="inline-flex rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-line)_35%,white)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--cb-ink-muted)]">
+              <span className="inline-flex rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-line)_35%,white)] px-2 py-0.5 text-sm font-semibold text-[var(--cb-ink-muted)]">
                 {meta.title}
               </span>
               <h2 className="mt-1 text-lg font-semibold tracking-tight text-[var(--cb-ink)]">
                 {section.title}
               </h2>
-              <p className="text-sm text-[var(--cb-ink-muted)]">
+              <p className="text-base text-[var(--cb-ink-muted)]">
                 {section.description}
               </p>
             </div>
@@ -138,14 +138,14 @@ export function EvalDeskSections({
                 >
                   <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-[var(--cb-ink)]">
+                      <p className="text-base font-medium text-[var(--cb-ink)]">
                         {item.label}
                         {item.required ? (
-                          <span className="ml-2 text-[10px] uppercase tracking-wide text-[var(--cb-clay-deep)]">
+                          <span className="ml-2 text-sm font-medium text-[var(--ink-2)]">
                             required
                           </span>
                         ) : (
-                          <span className="ml-2 text-[10px] uppercase tracking-wide text-[var(--cb-ink-muted)]">
+                          <span className="ml-2 text-sm text-[var(--cb-ink-muted)]">
                             optional
                           </span>
                         )}
@@ -177,7 +177,7 @@ export function EvalDeskSections({
                       ))}
                     </div>
                   </div>
-                  <label className="mt-2 block min-w-0 space-y-1 text-xs font-medium text-[var(--cb-ink-muted)]">
+                  <label className="mt-2 block min-w-0 space-y-1 text-sm font-medium text-[var(--cb-ink-muted)]">
                     Notes
                     <input
                       value={item.notes}

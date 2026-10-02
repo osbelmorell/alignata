@@ -46,12 +46,12 @@ export function WhatChangedCardView({
           <p className="break-words text-sm text-[var(--cb-ink-muted)]">
             {card.windowLabel} · {fmt(card.from)} → {fmt(card.to)}
           </p>
-          <p className="text-xs text-[var(--cb-ink-muted)]">
+          <p className="text-sm text-[var(--cb-ink-muted)]">
             Generated {fmt(card.generatedAt)} · {card.eventCount} events
           </p>
         </div>
         <div
-          className={`shrink-0 self-start rounded-[var(--cb-radius-pill)] border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide ${verdictClass(card.decision.verdict)}`}
+          className={`shrink-0 self-start rounded-[var(--cb-radius-pill)] border px-3 py-1.5 text-sm font-semibold ${verdictClass(card.decision.verdict)}`}
         >
           {label}
         </div>
@@ -98,7 +98,7 @@ export function WhatChangedCardView({
           {card.config.map((c, i) => (
             <li
               key={`${c.key}-${i}`}
-              className="min-w-0 break-words rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-bg)_55%,white)] px-3 py-2 font-mono text-xs sm:text-sm"
+              className="min-w-0 break-words rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-bg)_55%,white)] px-3 py-2 font-mono text-sm sm:text-sm"
             >
               <span className="text-[var(--cb-olive)]">{c.key}</span>
               <span className="text-[var(--cb-ink-muted)]">
@@ -120,7 +120,7 @@ export function WhatChangedCardView({
               key={`${f.flag}-${i}`}
               className="min-w-0 break-words rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-bg)_55%,white)] px-3 py-2"
             >
-              <span className="font-mono text-[var(--cb-clay-deep)]">
+              <span className="font-mono text-[color-mix(in_srgb,var(--cb-danger)_45%,var(--ink))]">
                 {f.flag}
               </span>
               <span className="text-[var(--cb-ink-muted)]">

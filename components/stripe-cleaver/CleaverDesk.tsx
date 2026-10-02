@@ -26,7 +26,7 @@ function downloadText(filename: string, text: string) {
 }
 
 const softSelectedBtn =
-  "rounded-[var(--cb-radius-pill)] border border-[var(--cb-ink)] bg-[color-mix(in_srgb,var(--cb-ink)_8%,white)] px-3 py-1.5 text-xs font-semibold text-[var(--cb-ink)]";
+  "rounded-[var(--cb-radius-pill)] border border-[var(--cb-ink)] bg-[color-mix(in_srgb,var(--cb-ink)_8%,white)] px-3 py-1.5 text-sm font-semibold text-[var(--cb-ink)]";
 
 export function CleaverDesk() {
   // Read localStorage once on the client; the !hydrated placeholder hides it until mounted.
@@ -99,37 +99,18 @@ export function CleaverDesk() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl min-w-0 px-3 py-8 text-[var(--cb-ink)] sm:px-4 sm:py-10">
-      <header className="mb-6 min-w-0 space-y-2 sm:mb-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--cb-ink-muted)]">
+    <div className="mx-auto w-full max-w-4xl min-w-0 px-5 pt-5 pb-10 text-[var(--cb-ink)] sm:px-6 sm:pt-10">
+      <header className="mb-5 min-w-0 space-y-2 sm:mb-8">
+        <p className="fx-tool-kicker">
           Build bet · Hobby · this browser only
         </p>
         <h1 className="break-words text-3xl font-semibold tracking-tight">
           Stripe Payout Cleaver
         </h1>
-        <p className="max-w-2xl text-sm leading-relaxed text-[var(--cb-ink-muted)]">
+        <p className="fx-tool-intro max-w-2xl">
           Turn a Stripe payout file into a books-ready download.
         </p>
       </header>
-
-      <AboutPanel />
-
-      <section
-        className={`mb-4 grid min-w-0 gap-3 p-3 sm:mb-6 sm:grid-cols-3 sm:p-4 ${cardClass}`}
-      >
-        <div className="min-w-0">
-          <p className="text-xs text-[var(--cb-ink-muted)]">Rows cleaned</p>
-          <p className="text-2xl font-medium">{result?.rows.length ?? 0}</p>
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-[var(--cb-ink-muted)]">Fee rows</p>
-          <p className="text-2xl font-medium">{result?.feeCount ?? 0}</p>
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-[var(--cb-ink-muted)]">Local downloads</p>
-          <p className="text-2xl font-medium">{importCount}</p>
-        </div>
-      </section>
 
       <section
         className={`mb-6 min-w-0 space-y-3 p-3 sm:mb-8 sm:p-4 ${cardClass}`}
@@ -146,7 +127,7 @@ export function CleaverDesk() {
             setDragOver(false);
             onFile(e.dataTransfer.files?.[0] || null);
           }}
-          className={`rounded-[var(--cb-radius-card-sm)] border border-dashed px-3 py-6 text-center text-sm ${
+          className={`rounded-[var(--cb-radius-card-sm)] border border-dashed px-3 py-5 text-center text-base ${
             dragOver
               ? "border-[var(--cb-olive)] bg-[color-mix(in_srgb,var(--cb-lime)_18%,white)]"
               : "border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-bg)_70%,white)] text-[var(--cb-ink-muted)]"
@@ -166,7 +147,7 @@ export function CleaverDesk() {
         <textarea
           value={paste}
           onChange={(e) => setPaste(e.target.value)}
-          rows={8}
+          rows={4}
           spellCheck={false}
           className={textareaClass}
           placeholder="Paste payout rows here…"
@@ -226,6 +207,29 @@ export function CleaverDesk() {
         </div>
       </section>
 
+      <p className="mb-6 min-w-0 break-words text-base text-[var(--cb-ink-muted)]" role="status">
+        {status}
+      </p>
+
+      <AboutPanel />
+
+      <section
+        className={`mb-4 grid min-w-0 gap-3 p-3 sm:mb-6 sm:grid-cols-3 sm:p-4 ${cardClass}`}
+      >
+        <div className="min-w-0">
+          <p className="text-sm text-[var(--cb-ink-muted)]">Rows cleaned</p>
+          <p className="text-2xl font-medium">{result?.rows.length ?? 0}</p>
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm text-[var(--cb-ink-muted)]">Fee rows</p>
+          <p className="text-2xl font-medium">{result?.feeCount ?? 0}</p>
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm text-[var(--cb-ink-muted)]">Local downloads</p>
+          <p className="text-2xl font-medium">{importCount}</p>
+        </div>
+      </section>
+
       {result ? (
         <section
           className={`mb-6 min-w-0 space-y-3 p-3 sm:mb-8 sm:p-4 ${cardClass}`}
@@ -253,7 +257,7 @@ export function CleaverDesk() {
                   </span>
                   <span
                     className={`shrink-0 tabular-nums ${
-                      r.amount < 0 ? "text-[var(--cb-danger)]" : ""
+                      r.amount < 0 ? "text-[color-mix(in_srgb,var(--cb-danger)_45%,var(--ink))]" : ""
                     }`}
                   >
                     {r.amount.toFixed(2)}
@@ -265,10 +269,7 @@ export function CleaverDesk() {
         </section>
       ) : null}
 
-      <p className="min-w-0 break-words text-xs text-[var(--cb-ink-muted)]" role="status">
-        {status}
-      </p>
-      <footer className="pt-6 text-center text-xs text-[var(--cb-ink-muted)]">
+      <footer className="pt-6 text-center text-sm text-[var(--cb-ink-muted)]">
         This browser only · no share card · robots noindex · main on Vercel
       </footer>
     </div>

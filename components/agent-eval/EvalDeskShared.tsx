@@ -10,13 +10,13 @@ export const STATUS_OPTS: { value: ItemStatus; label: string }[] = [
 ];
 
 export const primaryBtn =
-  "rounded-[var(--cb-radius-pill)] bg-[var(--cb-ink)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90";
+  "fx-btn-primary";
 
 export const secondaryBtn =
-  "rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-line)_35%,white)] px-2.5 py-1.5 text-xs font-medium text-[var(--cb-ink)] hover:bg-[var(--cb-line)]";
+  "rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-line)_35%,white)] px-2.5 py-1.5 text-sm font-medium text-[var(--cb-ink)] hover:bg-[var(--cb-line)]";
 
 export const quietBtn =
-  "rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[var(--cb-surface)] px-2.5 py-1.5 text-xs font-medium text-[var(--cb-ink-muted)] hover:bg-[var(--cb-bg)] hover:text-[var(--cb-ink)]";
+  "rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[var(--cb-surface)] px-2.5 py-1.5 text-sm font-medium text-[var(--cb-ink-muted)] hover:bg-[var(--cb-bg)] hover:text-[var(--cb-ink)]";
 
 export const cardClass =
   "min-w-0 rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[var(--cb-surface)] shadow-[var(--cb-shadow)] sm:rounded-[var(--cb-radius-squircle)]";
@@ -49,7 +49,7 @@ export function verdictStyles(v: AgentEval["verdict"]) {
   if (v === "FAIL") {
     return {
       badge:
-        "border-[color-mix(in_srgb,var(--cb-danger)_40%,var(--cb-line))] bg-[color-mix(in_srgb,var(--cb-danger)_12%,white)] text-[var(--cb-clay-deep)]",
+        "border-[color-mix(in_srgb,var(--cb-danger)_40%,var(--cb-line))] bg-[color-mix(in_srgb,var(--cb-danger)_12%,white)] text-[color-mix(in_srgb,var(--cb-danger)_45%,var(--ink))]",
       label: "NO-GO",
     };
   }
@@ -62,7 +62,7 @@ export function verdictStyles(v: AgentEval["verdict"]) {
 
 export function statusBtnClass(active: boolean, status: ItemStatus) {
   const base =
-    "rounded-[var(--cb-radius-pill)] border px-2 py-1 text-xs font-medium transition-colors";
+    "min-w-11 rounded-[var(--cb-radius-pill)] border px-3 py-1 text-sm font-medium transition-colors";
   if (!active) {
     return `${base} border-[var(--cb-line)] bg-[var(--cb-surface)] text-[var(--cb-ink-muted)] hover:bg-[var(--cb-bg)] hover:text-[var(--cb-ink)]`;
   }
@@ -70,10 +70,10 @@ export function statusBtnClass(active: boolean, status: ItemStatus) {
     return `${base} border-[var(--cb-olive)] bg-[color-mix(in_srgb,var(--cb-olive)_14%,white)] text-[var(--cb-olive-deep)]`;
   }
   if (status === "fail") {
-    return `${base} border-[var(--cb-danger)] bg-[color-mix(in_srgb,var(--cb-danger)_12%,white)] text-[var(--cb-clay-deep)]`;
+    return `${base} border-[var(--cb-danger)] bg-[color-mix(in_srgb,var(--cb-danger)_12%,white)] text-[color-mix(in_srgb,var(--cb-danger)_45%,var(--ink))]`;
   }
   if (status === "na") {
     return `${base} border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-line)_45%,white)] text-[var(--cb-ink)]`;
   }
-  return `${base} border-[var(--cb-ink)] bg-[var(--cb-ink)] text-white`;
+  return `${base} fx-btn-selected text-[var(--cb-ink)]`;
 }

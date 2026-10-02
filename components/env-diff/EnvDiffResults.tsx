@@ -45,7 +45,7 @@ export function EnvDiffResults({
           <p className="break-words text-sm text-[var(--cb-ink-muted)]">
             {snap.summaryLine}
           </p>
-          <p className="text-xs text-[var(--cb-ink-muted)]">
+          <p className="text-sm text-[var(--cb-ink-muted)]">
             Generated {fmt(snap.generatedAt)}
           </p>
         </div>
@@ -107,7 +107,7 @@ export function EnvDiffResults({
         <button
           type="button"
           onClick={() => setShowUnchanged((v) => !v)}
-          className="mb-2 text-xs text-[var(--cb-ink-muted)] hover:text-[var(--cb-ink)]"
+          className="mb-2 text-sm text-[var(--cb-ink-muted)] hover:text-[var(--cb-ink)]"
         >
           {showUnchanged ? "Hide" : "Show"} unchanged ({snap.counts.unchanged})
         </button>

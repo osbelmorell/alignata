@@ -27,7 +27,7 @@ export function KillBar({ log, asOfMs }: KillBarProps) {
       "rounded-[var(--cb-radius-pill)] bg-[var(--cb-lime)] px-1.5 py-0.5 font-semibold text-[var(--cb-lime-ink)]";
   } else if (inWindow === 0) {
     status = "below bar — kill if still zero after 2 weeks of live flags";
-    tone = "font-semibold text-[var(--cb-danger)]";
+    tone = "font-semibold text-[var(--ink)]";
   } else {
     status = `below bar (${inWindow}/${BAR})`;
     tone = "font-semibold text-[var(--cb-olive-deep)]";
@@ -35,7 +35,7 @@ export function KillBar({ log, asOfMs }: KillBarProps) {
 
   return (
     <footer className="border-t border-[var(--cb-line)] bg-[var(--cb-surface)] px-4 py-3">
-      <div className="mx-auto flex max-w-6xl flex-col gap-1 text-[11px] leading-relaxed text-[var(--cb-ink-muted)] sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto flex max-w-6xl flex-col gap-1 text-base leading-relaxed text-[var(--cb-ink-muted)] sm:flex-row sm:items-center sm:justify-between">
         <p>
           Kill bar = ≥{BAR} Osbel decisions in 14 days. Kill if zero after 2
           weeks of live flags.

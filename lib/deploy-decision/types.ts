@@ -112,7 +112,7 @@ export const STATE_META: Record<
     short: "APPROVE",
     // Lime signal for "last APPROVE" only (≤1–2 hits/screen)
     tone: "rounded-[var(--cb-radius-pill)] bg-[var(--cb-lime)] px-1.5 py-0.5 text-[var(--cb-lime-ink)]",
-    btn: "border-transparent bg-[var(--cb-ink)] text-white hover:opacity-90",
+    btn: "fx-btn-primary border-transparent",
     chip: "border-[var(--cb-ink)] bg-[var(--cb-ink)] text-white",
   },
   size: {

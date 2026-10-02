@@ -129,25 +129,23 @@ export function EnvDiffDesk() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl min-w-0 px-3 py-8 text-[var(--cb-ink)] sm:px-4 sm:py-10">
-      <header className="mb-6 min-w-0 space-y-2 sm:mb-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--cb-ink-muted)]">
+    <div className="mx-auto w-full max-w-4xl min-w-0 px-5 pt-5 pb-10 text-[var(--cb-ink)] sm:px-6 sm:pt-10">
+      <header className="mb-5 min-w-0 space-y-2 sm:mb-8">
+        <p className="fx-tool-kicker">
           Build bet · Hobby · this browser only
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-[var(--cb-ink)]">
           Env Diff Snapshot
         </h1>
-        <p className="max-w-2xl text-sm leading-relaxed text-[var(--cb-ink-muted)]">
+        <p className="fx-tool-intro max-w-2xl">
           Paste two setting lists and see what&apos;s missing, extra, or
           different — secrets stay masked so you can share the report.
         </p>
       </header>
 
-      <AboutPanel />
-
       <section className={`mb-4 space-y-4 p-3 sm:mb-6 sm:p-4 ${cardClass}`}>
-        <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-          <label className="block min-w-0 space-y-1 text-xs text-[var(--cb-ink-muted)]">
+        <div className="grid min-w-0 grid-cols-2 gap-3">
+          <label className="block min-w-0 space-y-1 text-sm text-[var(--cb-ink-muted)]">
             Before label
             <input
               value={beforeLabel}
@@ -156,7 +154,7 @@ export function EnvDiffDesk() {
               placeholder="staging"
             />
           </label>
-          <label className="block min-w-0 space-y-1 text-xs text-[var(--cb-ink-muted)]">
+          <label className="block min-w-0 space-y-1 text-sm text-[var(--cb-ink-muted)]">
             After label
             <input
               value={afterLabel}
@@ -168,25 +166,25 @@ export function EnvDiffDesk() {
         </div>
 
         <div className="flex min-w-0 flex-col gap-3 sm:grid sm:grid-cols-2">
-          <label className="block min-w-0 space-y-1 text-xs text-[var(--cb-ink-muted)]">
+          <label className="block min-w-0 space-y-1 text-sm text-[var(--cb-ink-muted)]">
             Before ({beforeLabel || "before"}) — key lists or key=value lines
             <textarea
               value={beforeText}
               onChange={(e) => setBeforeText(e.target.value)}
-              rows={12}
+              rows={4}
               spellCheck={false}
-              className={textareaClass}
+              className={`${textareaClass} sm:min-h-[18rem]`}
               placeholder={"NODE_ENV\nDATABASE_URL\nSTRIPE_SECRET_KEY"}
             />
           </label>
-          <label className="block min-w-0 space-y-1 text-xs text-[var(--cb-ink-muted)]">
+          <label className="block min-w-0 space-y-1 text-sm text-[var(--cb-ink-muted)]">
             After ({afterLabel || "after"}) — key lists or key=value lines
             <textarea
               value={afterText}
               onChange={(e) => setAfterText(e.target.value)}
-              rows={12}
+              rows={4}
               spellCheck={false}
-              className={textareaClass}
+              className={`${textareaClass} sm:min-h-[18rem]`}
               placeholder={"NODE_ENV\nDATABASE_URL\nSENTRY_DSN"}
             />
           </label>
@@ -202,7 +200,7 @@ export function EnvDiffDesk() {
             </button>
           </div>
         </div>
-        <p className="text-xs text-[var(--cb-ink-muted)]">
+        <p className="text-base text-[var(--cb-ink-muted)]">
           Tip: key-only lists work. Secret-like values stay masked in the
           report.
         </p>
@@ -210,7 +208,7 @@ export function EnvDiffDesk() {
 
       {status ? (
         <p
-          className="mb-4 min-w-0 break-words text-sm text-[var(--cb-ink-muted)] sm:mb-6"
+          className="mb-4 min-w-0 break-words text-base text-[var(--cb-ink)] sm:mb-6"
           role="status"
         >
           {status}
@@ -249,7 +247,7 @@ export function EnvDiffDesk() {
           ) : null}
         </div>
         {history.length === 0 ? (
-          <p className="text-sm text-[var(--cb-ink-muted)]">
+          <p className="text-base text-[var(--cb-ink-muted)]">
             Diffs are saved here (this browser). Last paste pair is restored on
             reload.
           </p>
@@ -277,7 +275,7 @@ export function EnvDiffDesk() {
                       {h.counts.changed}c / {h.counts.secretLike} secret-like
                     </span>
                   </span>
-                  <span className="shrink-0 text-xs text-[var(--cb-ink-muted)]">
+                  <span className="shrink-0 text-sm text-[var(--cb-ink-muted)]">
                     {fmt(h.generatedAt)}
                   </span>
                 </button>
@@ -287,7 +285,9 @@ export function EnvDiffDesk() {
         )}
       </section>
 
-      <footer className="pt-2 text-center text-xs text-[var(--cb-ink-muted)]">
+      <AboutPanel />
+
+      <footer className="pt-2 text-center text-sm text-[var(--cb-ink-muted)]">
         This browser only · robots noindex · main branch only on Vercel
       </footer>
     </div>

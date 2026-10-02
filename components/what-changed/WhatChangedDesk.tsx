@@ -1,6 +1,7 @@
 "use client";
 
 import { WhatChangedCardView } from "@/components/what-changed/WhatChangedCardView";
+import { AboutPanel } from "@/components/what-changed/AboutPanel";
 import { WhatChangedForm } from "@/components/what-changed/WhatChangedForm";
 import { WhatChangedHistory } from "@/components/what-changed/WhatChangedHistory";
 import {
@@ -262,7 +263,7 @@ export function WhatChangedDesk() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl min-w-0 px-3 py-8 text-[var(--cb-ink)] sm:px-4 sm:py-10">
+    <div className="mx-auto w-full max-w-4xl min-w-0 px-5 pt-5 pb-10 text-[var(--cb-ink)] sm:px-6 sm:pt-10">
       <WhatChangedForm
         mode={mode}
         setMode={setMode}
@@ -303,7 +304,9 @@ export function WhatChangedDesk() {
         setStatus={setStatus}
       />
 
-      <footer className="pt-6 text-center text-xs text-[var(--cb-ink-muted)]">
+      <AboutPanel />
+
+      <footer className="pt-6 text-center text-sm text-[var(--cb-ink-muted)]">
         Client-side only · robots noindex · main branch only on Vercel
       </footer>
     </div>

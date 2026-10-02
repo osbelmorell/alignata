@@ -1,7 +1,6 @@
 "use client";
 
 import type { Dispatch, SetStateAction } from "react";
-import { AboutPanel } from "@/components/what-changed/AboutPanel";
 import {
   SAMPLE_AFTER,
   SAMPLE_BEFORE,
@@ -100,20 +99,18 @@ export function WhatChangedForm(props: {
 
   return (
     <>
-      <header className="mb-6 min-w-0 space-y-2 sm:mb-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--cb-ink-muted)]">
+      <header className="mb-5 min-w-0 space-y-2 sm:mb-8">
+        <p className="fx-tool-kicker">
           Build bet · Hobby · this browser only
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-[var(--cb-ink)]">
           What-Changed Card
         </h1>
-        <p className="max-w-2xl text-sm leading-relaxed text-[var(--cb-ink-muted)]">
+        <p className="fx-tool-intro max-w-2xl">
           Build one card of what moved — deploys, settings, flags, upstreams —
           then mark go, hold, or verify. Copy it into a thread when you need it.
         </p>
       </header>
-
-      <AboutPanel />
 
       <section className={`mb-4 space-y-4 p-3 sm:mb-6 sm:p-4 ${cardClass}`}>
         <div className="flex min-w-0 flex-wrap gap-2">
@@ -130,7 +127,7 @@ export function WhatChangedForm(props: {
               onClick={() => setMode(id)}
               className={
                 mode === id
-                  ? "rounded-[var(--cb-radius-pill)] border border-[var(--cb-ink)] bg-[color-mix(in_srgb,var(--cb-ink)_8%,white)] px-3 py-1.5 text-xs font-semibold text-[var(--cb-ink)]"
+                  ? "rounded-[var(--cb-radius-pill)] border border-[var(--cb-ink)] bg-[color-mix(in_srgb,var(--cb-ink)_8%,white)] px-3 py-1.5 text-sm font-semibold text-[var(--cb-ink)]"
                   : secondaryBtn
               }
             >
@@ -139,8 +136,8 @@ export function WhatChangedForm(props: {
           ))}
         </div>
 
-        <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-          <label className="block min-w-0 space-y-1 text-xs font-medium text-[var(--cb-ink-muted)]">
+        <div className="grid min-w-0 grid-cols-2 gap-3">
+          <label className="block min-w-0 space-y-1 text-sm font-medium text-[var(--cb-ink-muted)]">
             Service
             <input
               list="service-list"
@@ -155,7 +152,7 @@ export function WhatChangedForm(props: {
               ))}
             </datalist>
           </label>
-          <label className="block min-w-0 space-y-1 text-xs font-medium text-[var(--cb-ink-muted)]">
+          <label className="block min-w-0 space-y-1 text-sm font-medium text-[var(--cb-ink-muted)]">
             Time window
             <select
               value={preset}
@@ -172,7 +169,7 @@ export function WhatChangedForm(props: {
         </div>
         {preset === "custom" && (
           <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-            <label className="block min-w-0 space-y-1 text-xs font-medium text-[var(--cb-ink-muted)]">
+            <label className="block min-w-0 space-y-1 text-sm font-medium text-[var(--cb-ink-muted)]">
               From
               <input
                 type="datetime-local"
@@ -181,7 +178,7 @@ export function WhatChangedForm(props: {
                 className={inputClass}
               />
             </label>
-            <label className="block min-w-0 space-y-1 text-xs font-medium text-[var(--cb-ink-muted)]">
+            <label className="block min-w-0 space-y-1 text-sm font-medium text-[var(--cb-ink-muted)]">
               To
               <input
                 type="datetime-local"
@@ -195,7 +192,7 @@ export function WhatChangedForm(props: {
 
         {(mode === "sample" || mode === "checklist") && (
           <div className="min-w-0 space-y-2">
-            <p className="text-xs font-medium text-[var(--cb-ink-muted)]">
+            <p className="text-sm font-medium text-[var(--cb-ink-muted)]">
               Change types in play
             </p>
             <div className="flex min-w-0 flex-wrap gap-3">
@@ -219,7 +216,7 @@ export function WhatChangedForm(props: {
 
         {mode === "diff" && (
           <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-            <label className="block min-w-0 space-y-1 text-xs font-medium text-[var(--cb-ink-muted)]">
+            <label className="block min-w-0 space-y-1 text-sm font-medium text-[var(--cb-ink-muted)]">
               Before settings
               <textarea
                 value={beforeCfg}
@@ -228,7 +225,7 @@ export function WhatChangedForm(props: {
                 className={monoInputClass}
               />
             </label>
-            <label className="block min-w-0 space-y-1 text-xs font-medium text-[var(--cb-ink-muted)]">
+            <label className="block min-w-0 space-y-1 text-sm font-medium text-[var(--cb-ink-muted)]">
               After settings
               <textarea
                 value={afterCfg}
@@ -243,7 +240,7 @@ export function WhatChangedForm(props: {
         {mode === "checklist" && (
           <div className="grid min-w-0 gap-3 sm:grid-cols-2">
             {kinds.deploy && (
-              <label className="block min-w-0 space-y-1 text-xs font-medium text-[var(--cb-ink-muted)]">
+              <label className="block min-w-0 space-y-1 text-sm font-medium text-[var(--cb-ink-muted)]">
                 Deploy note
                 <input
                   value={checkNotes.deploy}
@@ -255,7 +252,7 @@ export function WhatChangedForm(props: {
               </label>
             )}
             {kinds.config && (
-              <label className="block min-w-0 space-y-1 text-xs font-medium text-[var(--cb-ink-muted)]">
+              <label className="block min-w-0 space-y-1 text-sm font-medium text-[var(--cb-ink-muted)]">
                 Settings note (key: old → new)
                 <input
                   value={checkNotes.config}
@@ -267,7 +264,7 @@ export function WhatChangedForm(props: {
               </label>
             )}
             {kinds.flag && (
-              <label className="block min-w-0 space-y-1 text-xs font-medium text-[var(--cb-ink-muted)]">
+              <label className="block min-w-0 space-y-1 text-sm font-medium text-[var(--cb-ink-muted)]">
                 Flag note (name: from → to)
                 <input
                   value={checkNotes.flag}
@@ -279,7 +276,7 @@ export function WhatChangedForm(props: {
               </label>
             )}
             {kinds.upstream && (
-              <label className="block min-w-0 space-y-1 text-xs font-medium text-[var(--cb-ink-muted)]">
+              <label className="block min-w-0 space-y-1 text-sm font-medium text-[var(--cb-ink-muted)]">
                 Upstream note
                 <input
                   value={checkNotes.upstream}
@@ -320,7 +317,7 @@ export function WhatChangedForm(props: {
           <h2 className="text-sm font-medium text-[var(--cb-ink)]">
             Paste change events (optional)
           </h2>
-          <p className="text-xs leading-relaxed text-[var(--cb-ink-muted)]">
+          <p className="text-base leading-relaxed text-[var(--cb-ink-muted)]">
             Each event needs{" "}
             <code className="text-[var(--cb-ink)]">service</code>,{" "}
             <code className="text-[var(--cb-ink)]">kind</code>,{" "}
@@ -341,7 +338,7 @@ export function WhatChangedForm(props: {
 
       {status ? (
         <p
-          className="mb-4 min-w-0 break-words text-sm text-[var(--cb-ink-muted)] sm:mb-6"
+          className="mb-4 min-w-0 break-words text-base text-[var(--cb-ink)] sm:mb-6"
           role="status"
         >
           {status}

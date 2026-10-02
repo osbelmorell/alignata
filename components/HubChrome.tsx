@@ -33,7 +33,7 @@ export function HubChrome() {
           <span aria-hidden="true">←</span>
           All tools
         </Link>
-        <span className="hidden text-[10px] uppercase tracking-[0.16em] text-[var(--cb-ink-muted)] sm:inline">
+        <span className="hidden text-sm font-medium text-[var(--cb-ink-muted)] sm:inline">
           Alignata
         </span>
       </div>

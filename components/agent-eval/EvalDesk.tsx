@@ -131,22 +131,20 @@ export function EvalDesk() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl min-w-0 px-3 py-8 text-[var(--cb-ink)] sm:px-4 sm:py-10">
-      <header className="mb-6 min-w-0 space-y-2 sm:mb-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--cb-ink-muted)]">
+    <div className="mx-auto w-full max-w-4xl min-w-0 px-5 pt-5 pb-10 text-[var(--cb-ink)] sm:px-6 sm:pt-10">
+      <header className="mb-5 min-w-0 space-y-2 sm:mb-8">
+        <p className="fx-tool-kicker">
           Build bet · Hobby · client-side only
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-[var(--cb-ink)]">
           Agent Eval Go/No-Go
         </h1>
-        <p className="max-w-2xl text-sm leading-relaxed text-[var(--cb-ink-muted)]">
+        <p className="fx-tool-intro max-w-2xl">
           Walk a short checklist and get a clear go or no-go on whether an agent
           is ready to ship. Export JSON or markdown; recent saves stay in
           localStorage.
         </p>
       </header>
-
-      <AboutPanel />
 
       <EvalDeskMeta
         current={current}
@@ -158,7 +156,7 @@ export function EvalDesk() {
 
       {status ? (
         <p
-          className="mb-4 min-w-0 break-words rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[var(--cb-surface)] px-3 py-2 text-xs text-[var(--cb-ink-muted)] shadow-[var(--cb-shadow)] sm:mb-6"
+          className="mb-4 min-w-0 break-words rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[var(--cb-surface)] px-3 py-2 text-base text-[var(--cb-ink)] shadow-[var(--cb-shadow)] sm:mb-6"
           role="status"
         >
           {status}
@@ -181,7 +179,9 @@ export function EvalDesk() {
         onLoadRecent={onLoadRecent}
       />
 
-      <footer className="pt-4 text-center text-xs text-[var(--cb-ink-muted)]">
+      <AboutPanel />
+
+      <footer className="pt-4 text-center text-sm text-[var(--cb-ink-muted)]">
         Client-side only · robots noindex · main branch only on Vercel
       </footer>
     </div>

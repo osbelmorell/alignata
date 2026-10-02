@@ -41,7 +41,7 @@ export function BundleDeskHistory({
           <h2 className="text-sm font-semibold text-[var(--cb-ink)]">
             History ({ordered.length})
           </h2>
-          <p className="text-xs text-[var(--cb-ink-muted)]">
+          <p className="text-sm text-[var(--cb-ink-muted)]">
             Select up to 2 to diff · else auto-diffs latest two
           </p>
         </div>
@@ -73,22 +73,22 @@ export function BundleDeskHistory({
                         {b.name}
                       </span>
                       {b.marked_live ? (
-                        <span className="rounded-[var(--cb-radius-pill)] bg-[var(--cb-lime)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--cb-lime-ink)]">
+                        <span className="rounded-[var(--cb-radius-pill)] bg-[var(--cb-lime)] px-1.5 py-0.5 text-sm font-semibold text-[var(--cb-lime-ink)]">
                           live
                         </span>
                       ) : (
-                        <span className="rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[var(--cb-surface)] px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-[var(--cb-ink-muted)]">
+                        <span className="rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[var(--cb-surface)] px-1.5 py-0.5 text-sm text-[var(--cb-ink-muted)]">
                           draft
                         </span>
                       )}
-                      <span className="rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] px-1.5 py-0.5 text-[10px] text-[var(--cb-ink-muted)]">
+                      <span className="rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] px-1.5 py-0.5 text-sm text-[var(--cb-ink-muted)]">
                         {b.env}
                       </span>
                     </div>
-                    <p className="mt-1 break-all font-mono text-xs text-[var(--cb-ink-muted)]">
+                    <p className="mt-1 break-all font-mono text-sm text-[var(--cb-ink-muted)]">
                       {b.prompt_ref} · {b.model_id}
                     </p>
-                    <p className="mt-0.5 text-[11px] text-[var(--cb-ink-muted)]">
+                    <p className="mt-0.5 text-sm text-[var(--cb-ink-muted)]">
                       {fmt(b.created_at)}
                     </p>
                   </button>
@@ -121,7 +121,7 @@ export function BundleDeskHistory({
           </p>
         ) : (
           <>
-            <p className="mb-4 min-w-0 break-words text-xs text-[var(--cb-ink-muted)]">
+            <p className="mb-4 min-w-0 break-words text-sm text-[var(--cb-ink-muted)]">
               <span className="text-[var(--cb-ink)]">
                 {diffPair.before.name}
               </span>
@@ -136,7 +136,7 @@ export function BundleDeskHistory({
             <div className="min-w-0 max-w-full overflow-x-auto">
               <table className="w-full min-w-[520px] text-left text-sm">
                 <thead>
-                  <tr className="border-b border-[var(--cb-line)] text-xs uppercase tracking-wide text-[var(--cb-ink-muted)]">
+                  <tr className="border-b border-[var(--cb-line)] text-sm text-[var(--cb-ink-muted)]">
                     <th className="pb-2 pr-3 font-medium">Field</th>
                     <th className="pb-2 pr-3 font-medium">Before</th>
                     <th className="pb-2 font-medium">After</th>
@@ -161,22 +161,22 @@ export function BundleDeskHistory({
                       >
                         {f.label}
                         {f.changed ? (
-                          <span className="ml-1.5 text-[10px] uppercase text-[var(--cb-olive)]">
+                          <span className="ml-1.5 text-sm text-[var(--cb-olive)]">
                             changed
                           </span>
                         ) : null}
                       </td>
                       <td
-                        className={`max-w-[12rem] break-all py-2.5 pr-3 align-top font-mono text-xs ${
+                        className={`max-w-[12rem] break-all py-2.5 pr-3 align-top font-mono text-sm ${
                           f.changed
-                            ? "text-[var(--cb-danger)]"
+                            ? "text-[color-mix(in_srgb,var(--cb-danger)_45%,var(--ink))]"
                             : "text-[var(--cb-ink-muted)]"
                         }`}
                       >
                         {f.before || "—"}
                       </td>
                       <td
-                        className={`max-w-[12rem] break-all py-2.5 align-top font-mono text-xs ${
+                        className={`max-w-[12rem] break-all py-2.5 align-top font-mono text-sm ${
                           f.changed
                             ? "text-[var(--cb-olive-deep)]"
                             : "text-[var(--cb-ink-muted)]"

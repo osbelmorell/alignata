@@ -73,25 +73,21 @@ export function CostDesk() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl min-w-0 px-3 py-8 text-[var(--cb-ink)] sm:px-4 sm:py-10">
-      <header className="mb-6 min-w-0 space-y-2 sm:mb-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--cb-ink-muted)]">
+    <div className="mx-auto w-full max-w-4xl min-w-0 px-5 pt-5 pb-10 text-[var(--cb-ink)] sm:px-6 sm:pt-10">
+      <header className="mb-5 min-w-0 space-y-2 sm:mb-8">
+        <p className="fx-tool-kicker">
           Build bet · Hobby · this browser only
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-[var(--cb-ink)]">
           Feature-Cost Tag
         </h1>
-        <p className="max-w-2xl text-sm leading-relaxed text-[var(--cb-ink-muted)]">
+        <p className="fx-tool-intro max-w-2xl">
           See which product feature is burning the AI bill, day by day — and get
           a heads-up when one feature eats ≥ {pct(ALERT_THRESHOLD)} of spend. No
           accounts — data stays in this browser.
         </p>
       </header>
 
-      <AboutPanel />
-
-      <CostDeskTiles events={events} total={total} alerts={alerts} />
-      <CostDeskAlertBanner alerts={alerts} />
       <CostDeskIngest
         paste={paste}
         setPaste={setPaste}
@@ -101,9 +97,13 @@ export function CostDesk() {
         persist={persist}
         clearStore={clearStore}
       />
+      <CostDeskAlertBanner alerts={alerts} />
+      <CostDeskTiles events={events} total={total} alerts={alerts} />
       <CostDeskTable rollup={rollup} />
 
-      <footer className="pt-6 text-center text-xs text-[var(--cb-ink-muted)]">
+      <AboutPanel />
+
+      <footer className="pt-6 text-center text-sm text-[var(--cb-ink-muted)]">
         Client-side only · robots noindex · main branch only on Vercel
       </footer>
     </div>

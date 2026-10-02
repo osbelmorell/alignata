@@ -30,12 +30,21 @@ export function CostDeskIngest({
   return (
     <section className={`mb-6 space-y-3 p-3 sm:mb-8 sm:p-4 ${cardClass}`}>
       <h2 className="text-sm font-medium text-[var(--cb-ink)]">Ingest</h2>
-      <p className="text-xs leading-relaxed text-[var(--cb-ink-muted)]">
-        Each row needs a <code className="text-[var(--cb-ink)]">feature</code>{" "}
-        name and a <code className="text-[var(--cb-ink)]">cost (USD)</code> (+
-        optional date, tokens, model). CSV needs a header row. JSON: one object
-        per line.
-      </p>
+      <textarea
+        value={paste}
+        onChange={(e) => setPaste(e.target.value)}
+        placeholder='{"ts":"2026-09-14","feature":"research","costUsd":12.5,"tokens":800000}'
+        rows={3}
+        className={`min-h-24 ${inputClass}`}
+      />
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <button type="button" className={primaryBtn} onClick={onPasteIngest}>
+          Show the bill by feature
+        </button>
+        <p className="min-w-0 break-words text-base text-[var(--cb-ink-muted)]">
+          {status}
+        </p>
+      </div>
       <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap">
         <div className="flex min-w-0 flex-wrap gap-2">
           <label className={`cursor-pointer ${secondaryBtn}`}>
@@ -71,20 +80,12 @@ export function CostDeskIngest({
           </button>
         </div>
       </div>
-      <textarea
-        value={paste}
-        onChange={(e) => setPaste(e.target.value)}
-        placeholder='{"ts":"2026-09-14","feature":"research","costUsd":12.5,"tokens":800000}'
-        className={`min-h-28 ${inputClass}`}
-      />
-      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-        <button type="button" className={primaryBtn} onClick={onPasteIngest}>
-          Ingest paste
-        </button>
-        <p className="min-w-0 break-words text-xs text-[var(--cb-ink-muted)]">
-          {status}
-        </p>
-      </div>
+      <p className="text-base leading-relaxed text-[var(--cb-ink-muted)]">
+        Each row needs a <code className="text-[var(--cb-ink)]">feature</code>{" "}
+        name and a <code className="text-[var(--cb-ink)]">cost (USD)</code> (+
+        optional date, tokens, model). CSV needs a header row. JSON: one object
+        per line.
+      </p>
     </section>
   );
 }

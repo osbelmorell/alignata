@@ -27,10 +27,10 @@ import {
 } from "@/lib/deploy-decision/types";
 
 const secondaryBtn =
-  "rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-line)_35%,white)] px-3 py-1.5 text-xs font-medium text-[var(--cb-ink)] hover:bg-[var(--cb-line)]";
+  "rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-line)_35%,white)] px-3 py-1.5 text-sm font-medium text-[var(--cb-ink)] hover:bg-[var(--cb-line)]";
 
 const quietBtn =
-  "rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[var(--cb-surface)] px-3 py-1.5 text-xs font-medium text-[var(--cb-ink-muted)] hover:bg-[var(--cb-bg)] hover:text-[var(--cb-ink)]";
+  "rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[var(--cb-surface)] px-3 py-1.5 text-sm font-medium text-[var(--cb-ink-muted)] hover:bg-[var(--cb-bg)] hover:text-[var(--cb-ink)]";
 
 export function DecisionDesk() {
   const state = useSyncExternalStore(
@@ -138,13 +138,13 @@ export function DecisionDesk() {
       <header className="border-b border-[var(--cb-line)] bg-[var(--cb-surface)]">
         <div className="mx-auto flex max-w-6xl flex-col gap-1.5 px-3 py-3 sm:gap-3 sm:px-4 sm:py-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--cb-ink-muted)] sm:text-[11px]">
+            <p className="fx-tool-kicker">
               Bet B · Investment desk
             </p>
             <h1 className="mt-0.5 text-lg font-semibold tracking-tight text-[var(--cb-ink)] sm:mt-1 sm:text-2xl">
               Deploy Decision Card
             </h1>
-            <p className="mt-1 text-sm text-[var(--cb-ink-muted)]">
+            <p className="mt-1 text-base text-[var(--cb-ink-muted)]">
               Opportunity in → Approve / Size / Pass out. Local only — one
               obvious next tap.
             </p>

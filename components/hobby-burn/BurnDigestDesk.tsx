@@ -22,19 +22,19 @@ import {
 import type { Digest, ProjectBurn } from "@/lib/hobby-burn/types";
 
 const primaryBtn =
-  "rounded-[var(--cb-radius-pill)] bg-[var(--cb-ink)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90";
+  "fx-btn-primary";
 
 const secondaryBtn =
-  "rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-line)_35%,white)] px-2.5 py-1.5 text-xs font-medium text-[var(--cb-ink)] hover:bg-[var(--cb-line)]";
+  "rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-line)_35%,white)] px-2.5 py-1.5 text-sm font-medium text-[var(--cb-ink)] hover:bg-[var(--cb-line)]";
 
 const quietBtn =
-  "rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[var(--cb-surface)] px-2.5 py-1.5 text-xs font-medium text-[var(--cb-ink-muted)] hover:bg-[var(--cb-bg)] hover:text-[var(--cb-ink)]";
+  "rounded-[var(--cb-radius-pill)] border border-[var(--cb-line)] bg-[var(--cb-surface)] px-2.5 py-1.5 text-sm font-medium text-[var(--cb-ink-muted)] hover:bg-[var(--cb-bg)] hover:text-[var(--cb-ink)]";
 
 const cardClass =
   "min-w-0 rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[var(--cb-surface)] shadow-[var(--cb-shadow)] sm:rounded-[var(--cb-radius-squircle)]";
 
 const inputClass =
-  "w-full max-w-full min-w-0 rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-bg)_70%,white)] px-3 py-2 font-mono text-xs text-[var(--cb-ink)] placeholder:text-[var(--cb-ink-muted)] outline-none focus:border-[var(--cb-ink)] focus:bg-[var(--cb-surface)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--cb-ink)_12%,transparent)]";
+  "w-full max-w-full min-w-0 rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-bg)_70%,white)] px-3 py-2 font-mono text-sm text-[var(--cb-ink)] placeholder:text-[var(--cb-ink-muted)] outline-none focus:border-[var(--cb-ink)] focus:bg-[var(--cb-surface)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--cb-ink)_12%,transparent)]";
 
 const fieldClass =
   "min-w-0 rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-bg)_70%,white)] px-3 py-2 text-sm text-[var(--cb-ink)] placeholder:text-[var(--cb-ink-muted)] outline-none focus:border-[var(--cb-ink)] focus:bg-[var(--cb-surface)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--cb-ink)_12%,transparent)]";
@@ -174,75 +174,33 @@ export function BurnDigestDesk() {
   const topBurner = digest?.rows.find((r) => r.isTop)?.project ?? "—";
 
   return (
-    <div className="mx-auto w-full max-w-4xl min-w-0 px-3 py-8 text-[var(--cb-ink)] sm:px-4 sm:py-10">
-      <header className="mb-6 min-w-0 space-y-2 sm:mb-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--cb-ink-muted)]">
+    <div className="mx-auto w-full max-w-4xl min-w-0 px-5 pt-5 pb-10 text-[var(--cb-ink)] sm:px-6 sm:pt-10">
+      <header className="mb-5 min-w-0 space-y-2 sm:mb-8">
+        <p className="fx-tool-kicker">
           Build bet · Hobby · this browser only
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-[var(--cb-ink)]">
           Hobby Deploy Burn Digest
         </h1>
-        <p className="max-w-2xl text-sm leading-relaxed text-[var(--cb-ink-muted)]">
+        <p className="fx-tool-intro max-w-2xl">
           Paste this week’s usage list (or type counts) and see which project
           burned the free deploy window — plus a one-liner ready for chat.
         </p>
       </header>
 
-      <AboutPanel />
-
-      <section
-        className={`mb-4 grid min-w-0 gap-3 p-3 sm:mb-6 sm:grid-cols-3 sm:p-4 ${cardClass}`}
-      >
-        <div className="min-w-0">
-          <p className="text-xs text-[var(--cb-ink-muted)]">Projects</p>
-          <p className="text-2xl font-medium text-[var(--cb-ink)]">
-            {digest?.rows.length ?? 0}
-          </p>
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-[var(--cb-ink-muted)]">Total deploys</p>
-          <p className="text-2xl font-medium text-[var(--cb-ink)]">
-            {digest?.totalDeploys ?? 0}
-          </p>
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-[var(--cb-ink-muted)]">Top burner</p>
-          <p className="truncate text-2xl font-medium text-[var(--cb-ink)]">
-            {topBurner}
-          </p>
-        </div>
-      </section>
-
-      {digest ? (
-        <div className="mb-4 min-w-0 break-words rounded-[var(--cb-radius-card-sm)] border border-[color-mix(in_srgb,var(--cb-lime)_55%,var(--cb-line))] bg-[color-mix(in_srgb,var(--cb-lime)_28%,white)] px-3 py-3 text-sm text-[var(--cb-lime-ink)] sm:mb-6 sm:px-4">
-          <strong className="font-semibold">Weekly one-liner:</strong>{" "}
-          {digest.oneLiner}
-        </div>
-      ) : null}
-
       <section className={`mb-6 space-y-3 p-3 sm:mb-8 sm:p-4 ${cardClass}`}>
         <h2 className="text-sm font-medium text-[var(--cb-ink)]">Ingest</h2>
-        <p className="text-xs leading-relaxed text-[var(--cb-ink-muted)]">
-          Flexible columns:{" "}
-          <code className="text-[var(--cb-ink)]">project</code>/
-          <code className="text-[var(--cb-ink)]">name</code>,{" "}
-          <code className="text-[var(--cb-ink)]">builds</code>/
-          <code className="text-[var(--cb-ink)]">deploys</code>/
-          <code className="text-[var(--cb-ink)]">count</code>, optional{" "}
-          <code className="text-[var(--cb-ink)]">hours</code>. JSON array /
-          NDJSON also work.
-        </p>
         <textarea
           value={paste}
           onChange={(e) => setPaste(e.target.value)}
-          rows={7}
+          rows={4}
           spellCheck={false}
           className={inputClass}
           placeholder={"project,deploys,hours\napi,48,12.4"}
         />
         <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           <button type="button" className={primaryBtn} onClick={onPasteIngest}>
-            Parse paste
+            Show which projects used the quota
           </button>
           <div className="flex min-w-0 flex-wrap gap-2">
             <label className={`cursor-pointer ${secondaryBtn}`}>
@@ -284,8 +242,22 @@ export function BurnDigestDesk() {
           </div>
         </div>
 
+        <p className="min-w-0 break-words text-base text-[var(--cb-ink)]">
+          {status}
+        </p>
+        <p className="text-base leading-relaxed text-[var(--cb-ink-muted)]">
+          Flexible columns:{" "}
+          <code className="text-[var(--cb-ink)]">project</code>/
+          <code className="text-[var(--cb-ink)]">name</code>,{" "}
+          <code className="text-[var(--cb-ink)]">builds</code>/
+          <code className="text-[var(--cb-ink)]">deploys</code>/
+          <code className="text-[var(--cb-ink)]">count</code>, optional{" "}
+          <code className="text-[var(--cb-ink)]">hours</code>. JSON array /
+          NDJSON also work.
+        </p>
+
         <div className="border-t border-[var(--cb-line)] pt-3">
-          <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--cb-ink-muted)]">
+          <h3 className="mb-2 text-sm font-medium text-[var(--cb-ink-muted)]">
             Manual row
           </h3>
           <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap">
@@ -318,6 +290,37 @@ export function BurnDigestDesk() {
           </div>
         </div>
       </section>
+
+
+      <section
+        className={`mb-4 grid min-w-0 gap-3 p-3 sm:mb-6 sm:grid-cols-3 sm:p-4 ${cardClass}`}
+      >
+        <div className="min-w-0">
+          <p className="text-sm text-[var(--cb-ink-muted)]">Projects</p>
+          <p className="text-2xl font-medium text-[var(--cb-ink)]">
+            {digest?.rows.length ?? 0}
+          </p>
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm text-[var(--cb-ink-muted)]">Total deploys</p>
+          <p className="text-2xl font-medium text-[var(--cb-ink)]">
+            {digest?.totalDeploys ?? 0}
+          </p>
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm text-[var(--cb-ink-muted)]">Top burner</p>
+          <p className="truncate text-2xl font-medium text-[var(--cb-ink)]">
+            {topBurner}
+          </p>
+        </div>
+      </section>
+
+      {digest ? (
+        <div className="mb-4 min-w-0 break-words rounded-[var(--cb-radius-card-sm)] border border-[color-mix(in_srgb,var(--cb-lime)_55%,var(--cb-line))] bg-[color-mix(in_srgb,var(--cb-lime)_28%,white)] px-3 py-3 text-sm text-[var(--cb-lime-ink)] sm:mb-6 sm:px-4">
+          <strong className="font-semibold">Weekly one-liner:</strong>{" "}
+          {digest.oneLiner}
+        </div>
+      ) : null}
 
       <section className={`mb-6 overflow-hidden sm:mb-8 ${cardClass}`}>
         <div className="flex min-w-0 flex-col gap-2 border-b border-[var(--cb-line)] px-3 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-4">
@@ -379,7 +382,7 @@ export function BurnDigestDesk() {
         ) : (
           <div className="min-w-0 overflow-x-auto">
             <table className="w-full min-w-0 text-left text-sm sm:min-w-[28rem]">
-              <thead className="bg-[color-mix(in_srgb,var(--cb-bg)_70%,white)] text-xs uppercase tracking-wide text-[var(--cb-ink-muted)]">
+              <thead className="bg-[color-mix(in_srgb,var(--cb-bg)_70%,white)] text-sm text-[var(--cb-ink-muted)]">
                 <tr>
                   <th className="px-3 py-2 font-medium sm:px-4">Project</th>
                   <th className="px-3 py-2 text-right font-medium sm:px-4">
@@ -406,7 +409,7 @@ export function BurnDigestDesk() {
                     <td className="min-w-0 px-3 py-2.5 font-medium text-[var(--cb-ink)] sm:px-4">
                       <span className="break-words">{r.project}</span>
                       {r.isTop ? (
-                        <span className="ml-2 inline-block rounded-[var(--cb-radius-pill)] border border-[color-mix(in_srgb,var(--cb-lime)_55%,var(--cb-line))] bg-[var(--cb-lime)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--cb-lime-ink)]">
+                        <span className="ml-2 inline-block rounded-[var(--cb-radius-pill)] border border-[color-mix(in_srgb,var(--cb-lime)_55%,var(--cb-line))] bg-[var(--cb-lime)] px-1.5 py-0.5 text-sm font-semibold text-[var(--cb-lime-ink)]">
                           top burner
                         </span>
                       ) : null}
@@ -478,11 +481,9 @@ export function BurnDigestDesk() {
         </section>
       ) : null}
 
-      <p className="min-w-0 break-words text-xs text-[var(--cb-ink-muted)]">
-        {status}
-      </p>
+      <AboutPanel />
 
-      <footer className="pt-6 text-center text-xs text-[var(--cb-ink-muted)]">
+      <footer className="pt-6 text-center text-sm text-[var(--cb-ink-muted)]">
         Client-side only · robots noindex · main branch only on Vercel
       </footer>
     </div>

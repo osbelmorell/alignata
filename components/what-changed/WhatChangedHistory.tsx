@@ -71,7 +71,7 @@ export function WhatChangedHistory({
                   </span>
                 </span>
                 <span
-                  className={`shrink-0 self-start rounded-[var(--cb-radius-pill)] border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${verdictClass(h.decision.verdict)}`}
+                  className={`shrink-0 self-start rounded-[var(--cb-radius-pill)] border px-2 py-0.5 text-sm font-semibold ${verdictClass(h.decision.verdict)}`}
                 >
                   {verdictLabel(h.decision.verdict)}
                 </span>

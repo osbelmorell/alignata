@@ -106,79 +106,18 @@ export function LicenseGateDesk() {
       : "These packages use copyleft licenses. Shipping them can force you to open-source your linked code or take on license risk.";
 
   return (
-    <div className="mx-auto w-full max-w-4xl min-w-0 px-3 py-8 text-[var(--cb-ink)] sm:px-4 sm:py-10">
-      <header className="mb-6 min-w-0 space-y-2 sm:mb-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--cb-ink-muted)]">
+    <div className="mx-auto w-full max-w-4xl min-w-0 px-5 pt-5 pb-10 text-[var(--cb-ink)] sm:px-6 sm:pt-10">
+      <header className="mb-5 min-w-0 space-y-2 sm:mb-8">
+        <p className="fx-tool-kicker">
           Build bet · Hobby · this browser only
         </p>
         <h1 className="break-words text-3xl font-semibold tracking-tight">
           License Risk Gate
         </h1>
-        <p className="max-w-2xl text-sm leading-relaxed text-[var(--cb-ink-muted)]">
+        <p className="fx-tool-intro max-w-2xl">
           Drop a lockfile and see if license risk is a pass or fail.
         </p>
       </header>
-
-      <AboutPanel />
-
-      <section
-        className={`mb-4 grid min-w-0 gap-3 p-3 sm:mb-6 sm:grid-cols-3 sm:p-4 ${cardClass}`}
-      >
-        <div className="min-w-0">
-          <p className="text-xs text-[var(--cb-ink-muted)]">Verdict</p>
-          <p className="text-2xl font-medium">
-            {result ? (
-              <span
-                className={
-                  pass
-                    ? "inline-block rounded-[var(--cb-radius-pill)] border border-[color-mix(in_srgb,var(--cb-lime)_55%,var(--cb-line))] bg-[var(--cb-lime)] px-3 py-0.5 text-base font-semibold text-[var(--cb-lime-ink)]"
-                    : "inline-block rounded-[var(--cb-radius-pill)] border border-[color-mix(in_srgb,var(--cb-danger)_45%,var(--cb-line))] bg-[color-mix(in_srgb,var(--cb-danger)_18%,white)] px-3 py-0.5 text-base font-semibold"
-                }
-              >
-                {result.status}
-              </span>
-            ) : (
-              "—"
-            )}
-          </p>
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-[var(--cb-ink-muted)]">Deny hits</p>
-          <p className="text-2xl font-medium">{result?.hits.length ?? 0}</p>
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-[var(--cb-ink-muted)]">Packages scanned</p>
-          <p className="text-2xl font-medium">{result?.scanned ?? 0}</p>
-        </div>
-      </section>
-
-      {showFailCard ? (
-        <div
-          className={`${warnClayBox} mb-4 min-w-0 space-y-3 break-words px-3 py-3 text-sm sm:mb-6 sm:px-4`}
-        >
-          <div className="min-w-0 space-y-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--cb-ink-muted)]">
-              Why
-            </p>
-            <p>{failWhy}</p>
-          </div>
-          <div className="min-w-0 space-y-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--cb-ink-muted)]">
-              Impact
-            </p>
-            <p>This project isn’t clear to ship until you fix or accept these hits.</p>
-          </div>
-          <div className="min-w-0 space-y-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--cb-ink-muted)]">
-              Next
-            </p>
-            <p>
-              Download the list, then review or replace those packages — or send the list to
-              legal or eng.
-            </p>
-          </div>
-        </div>
-      ) : null}
 
       <section
         className={`mb-6 min-w-0 space-y-3 p-3 sm:mb-8 sm:p-4 ${cardClass}`}
@@ -267,10 +206,70 @@ export function LicenseGateDesk() {
           className={textareaClass}
           placeholder='{"name":"…","lockfileVersion":3,"packages":{…}}'
         />
-        <p className="min-w-0 text-xs text-[var(--cb-ink-muted)]">
+        <p className="min-w-0 text-sm text-[var(--cb-ink-muted)]">
           Local scans (dogfood): {scanCount}
         </p>
       </section>
+
+
+      <section
+        className={`mb-4 grid min-w-0 gap-3 p-3 sm:mb-6 sm:grid-cols-3 sm:p-4 ${cardClass}`}
+      >
+        <div className="min-w-0">
+          <p className="text-sm text-[var(--cb-ink-muted)]">Verdict</p>
+          <p className="text-2xl font-medium">
+            {result ? (
+              <span
+                className={
+                  pass
+                    ? "inline-block rounded-[var(--cb-radius-pill)] border border-[color-mix(in_srgb,var(--cb-lime)_55%,var(--cb-line))] bg-[var(--cb-lime)] px-3 py-0.5 text-base font-semibold text-[var(--cb-lime-ink)]"
+                    : "inline-block rounded-[var(--cb-radius-pill)] border border-[color-mix(in_srgb,var(--cb-danger)_45%,var(--cb-line))] bg-[color-mix(in_srgb,var(--cb-danger)_18%,white)] px-3 py-0.5 text-base font-semibold"
+                }
+              >
+                {result.status}
+              </span>
+            ) : (
+              "—"
+            )}
+          </p>
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm text-[var(--cb-ink-muted)]">Deny hits</p>
+          <p className="text-2xl font-medium">{result?.hits.length ?? 0}</p>
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm text-[var(--cb-ink-muted)]">Packages scanned</p>
+          <p className="text-2xl font-medium">{result?.scanned ?? 0}</p>
+        </div>
+      </section>
+
+      {showFailCard ? (
+        <div
+          className={`${warnClayBox} mb-4 min-w-0 space-y-3 break-words px-3 py-3 text-sm sm:mb-6 sm:px-4`}
+        >
+          <div className="min-w-0 space-y-1">
+            <p className="text-sm font-semibold text-[var(--cb-ink-muted)]">
+              Why
+            </p>
+            <p>{failWhy}</p>
+          </div>
+          <div className="min-w-0 space-y-1">
+            <p className="text-sm font-semibold text-[var(--cb-ink-muted)]">
+              Impact
+            </p>
+            <p>This project isn’t clear to ship until you fix or accept these hits.</p>
+          </div>
+          <div className="min-w-0 space-y-1">
+            <p className="text-sm font-semibold text-[var(--cb-ink-muted)]">
+              Next
+            </p>
+            <p>
+              Download the list, then review or replace those packages — or send the list to
+              legal or eng.
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       {result ? (
         <section
@@ -299,7 +298,7 @@ export function LicenseGateDesk() {
                     {" "}
                     @{h.version || "?"} · {h.license}
                   </span>
-                  <div className="break-words text-xs text-[var(--cb-ink-muted)]">
+                  <div className="break-words text-sm text-[var(--cb-ink-muted)]">
                     {h.reason}
                   </div>
                 </li>
@@ -309,10 +308,12 @@ export function LicenseGateDesk() {
         </section>
       ) : null}
 
-      <p className="min-w-0 break-words text-xs text-[var(--cb-ink-muted)]" role="status">
+      <p className="min-w-0 break-words text-base text-[var(--cb-ink-muted)]" role="status">
         {status}
       </p>
-      <footer className="pt-6 text-center text-xs text-[var(--cb-ink-muted)]">
+      <AboutPanel />
+
+      <footer className="pt-6 text-center text-sm text-[var(--cb-ink-muted)]">
         This browser only · robots noindex · main on Vercel
       </footer>
     </div>

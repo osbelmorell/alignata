@@ -39,7 +39,7 @@ export function EvalDeskExport({
           Download Markdown
         </button>
       </div>
-      <p className="text-xs text-[var(--cb-ink-muted)]">
+      <p className="text-base text-[var(--cb-ink-muted)]">
         Updated {fmt(current.updatedAt)} · id {current.id.slice(0, 8)}…
       </p>
     </section>
@@ -65,14 +65,14 @@ export function EvalDeskHistory({
           <button
             type="button"
             onClick={onClearHistory}
-            className="text-xs text-[var(--cb-ink-muted)] hover:text-[var(--cb-ink)]"
+            className="text-sm text-[var(--cb-ink-muted)] hover:text-[var(--cb-ink)]"
           >
             Clear history
           </button>
         ) : null}
       </div>
       {history.length === 0 ? (
-        <p className="text-sm text-[var(--cb-ink-muted)]">
+        <p className="text-base text-[var(--cb-ink-muted)]">
           No saved checklists yet. Score + Save to recent.
         </p>
       ) : (
@@ -88,13 +88,13 @@ export function EvalDeskHistory({
                   <p className="truncate text-sm text-[var(--cb-ink)]">
                     {ev.name || "(unnamed)"}
                   </p>
-                  <p className="text-xs text-[var(--cb-ink-muted)]">
+                  <p className="text-sm text-[var(--cb-ink-muted)]">
                     {ev.date} · {fmt(ev.updatedAt)}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span
-                    className={`rounded-[var(--cb-radius-pill)] border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${hvs.badge}`}
+                    className={`rounded-[var(--cb-radius-pill)] border px-2 py-0.5 text-sm font-medium ${hvs.badge}`}
                   >
                     {hvs.label}
                   </span>

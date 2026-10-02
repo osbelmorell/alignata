@@ -155,11 +155,11 @@ export function Scorecard() {
       {editMode && (
         <div
           role="status"
-          className="mb-3 rounded-[var(--cb-radius-card-sm)] border border-[color-mix(in_srgb,var(--cb-clay)_50%,var(--cb-line))] bg-[color-mix(in_srgb,var(--cb-clay)_18%,white)] px-3 py-2 text-xs text-[var(--cb-olive-deep)] sm:mb-4 sm:text-sm"
+          className="mb-3 rounded-[var(--cb-radius-card-sm)] border border-[color-mix(in_srgb,var(--cb-clay)_50%,var(--cb-line))] bg-[color-mix(in_srgb,var(--cb-clay)_18%,white)] px-3 py-2 text-sm text-[var(--cb-olive-deep)] sm:mb-4 sm:text-sm"
         >
           <strong className="font-semibold">Edit mode</strong> — not the board
           source of truth; update{" "}
-          <code className="font-mono text-[10px] sm:text-xs">
+          <code className="font-mono text-sm sm:text-sm">
             public/scorecard.json
           </code>{" "}
           via git for Osbel.
@@ -187,16 +187,16 @@ export function Scorecard() {
 
         <header className="mb-6 flex flex-col gap-4 border-b border-[var(--cb-line)] pb-6 sm:mb-8 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-8">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--cb-ink-muted)]">
+            <p className="fx-tool-kicker">
               Bet A · Enterprise
             </p>
             <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-[var(--cb-ink)] sm:mt-2 sm:text-4xl">
               {data.title}
             </h1>
-            <p className="mt-1.5 max-w-2xl text-sm text-[var(--cb-ink-muted)] sm:mt-2 sm:text-base">
+            <p className="mt-1.5 max-w-2xl text-base text-[var(--cb-ink-muted)] sm:mt-2">
               {data.subtitle}
             </p>
-            <p className="mt-2 text-xs text-[var(--cb-ink-muted)] sm:mt-3">
+            <p className="mt-2 text-base text-[var(--cb-ink-muted)] sm:mt-3">
               Snapshot {updatedLabel}
               {" · "}
               Overall:{" "}
@@ -205,7 +205,7 @@ export function Scorecard() {
               </span>
             </p>
             {!editMode && (
-              <p className="mt-1 text-xs text-[var(--cb-ink-muted)]">
+              <p className="mt-1 text-base text-[var(--cb-ink-muted)]">
                 Source: /scorecard.json · updated{" "}
                 {hydrated
                   ? formatScorecardDate(data.updatedAt)
@@ -217,7 +217,11 @@ export function Scorecard() {
             )}
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={copyJson} className={secondaryBtn}>
+            <button
+              type="button"
+              onClick={copyJson}
+              className={editMode && jsonOpen ? secondaryBtn : "fx-btn-primary"}
+            >
               Copy JSON
             </button>
             {editMode && (
@@ -252,7 +256,7 @@ export function Scorecard() {
                 <h2 className="text-sm font-semibold text-[var(--cb-ink)]">
                   Paste JSON
                 </h2>
-                <p className="text-xs text-[var(--cb-ink-muted)]">
+                <p className="text-base text-[var(--cb-ink-muted)]">
                   Edit statuses and lastOutcome, then Apply. Persists to
                   localStorage (edit mode only).
                 </p>
@@ -260,7 +264,7 @@ export function Scorecard() {
               <button
                 type="button"
                 onClick={applyJson}
-                className="rounded-[var(--cb-radius-pill)] bg-[var(--cb-ink)] px-3 py-2 text-sm font-semibold text-white hover:opacity-90"
+                className="fx-btn-primary"
               >
                 Apply JSON
               </button>
@@ -270,10 +274,10 @@ export function Scorecard() {
               onChange={(e) => setJsonText(e.target.value)}
               rows={14}
               spellCheck={false}
-              className="w-full rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-bg)_70%,white)] px-3 py-2 font-mono text-xs leading-relaxed text-[var(--cb-ink)] outline-none focus:border-[var(--cb-ink)] focus:bg-[var(--cb-surface)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--cb-ink)_12%,transparent)]"
+              className="w-full rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[color-mix(in_srgb,var(--cb-bg)_70%,white)] px-3 py-2 font-mono text-sm leading-relaxed text-[var(--cb-ink)] outline-none focus:border-[var(--cb-ink)] focus:bg-[var(--cb-surface)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--cb-ink)_12%,transparent)]"
             />
             {jsonError && (
-              <p className="mt-2 text-sm text-[var(--cb-danger)]">
+              <p className="mt-2 text-sm text-[color-mix(in_srgb,var(--cb-danger)_45%,var(--ink))]">
                 JSON error: {jsonError}
               </p>
             )}
@@ -281,7 +285,7 @@ export function Scorecard() {
         )}
       </div>
 
-      <footer className="mt-8 text-center text-xs text-[var(--cb-ink-muted)] sm:mt-10">
+      <footer className="mt-8 text-center text-sm text-[var(--cb-ink-muted)] sm:mt-10">
         {editMode
           ? "v0 · edit mode · local only — push public/scorecard.json for the board"
           : "v0 · read-only board view · source: /scorecard.json"}
