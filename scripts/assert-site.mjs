@@ -6,6 +6,7 @@ import {
   ARTICLES_KEY,
   DOGFOOD_KEY,
   articleSlug,
+  dogfoodHref,
   dogfoodSession,
   getOrCreateId,
   homeClickTarget,
@@ -142,6 +143,18 @@ test("dogfood: ?dogfood=1 marks the whole session, ?dogfood=0 clears it", () => 
   assert.equal(dogfoodSession("", s), true, "later pages in the session stay dogfood");
   assert.equal(dogfoodSession("?dogfood=0", s), false);
   assert.equal(dogfoodSession("", s), false);
+});
+
+test("dogfood tool links: same-origin links get ?dogfood=1; external, bad or already-marked links are left alone", () => {
+  const O = "https://alignata.com";
+  assert.equal(dogfoodHref("/engrave-merge", O), "/engrave-merge?dogfood=1");
+  assert.equal(dogfoodHref("/stripe-cleaver?x=2#top", O), "/stripe-cleaver?x=2&dogfood=1#top");
+  assert.equal(dogfoodHref("https://alignata.com/scorecard", O), "/scorecard?dogfood=1");
+  assert.equal(dogfoodHref("/license-gate?dogfood=0", O), "/license-gate?dogfood=1", "a stale ?dogfood=0 is flipped");
+  assert.equal(dogfoodHref("/engrave-merge?dogfood=1", O), null);
+  assert.equal(dogfoodHref("https://example.com/tool", O), null);
+  assert.equal(dogfoodHref("//example.com/tool", O), null);
+  assert.equal(dogfoodHref("http://[bad", O), null);
 });
 
 test("handler: 204 + x-site-store, ≤ 1 KB, writes only site:ev:<ET day>, stores no IP/UA", async () => {

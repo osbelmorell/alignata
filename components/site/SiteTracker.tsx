@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Analytics, type BeforeSendEvent } from "@vercel/analytics/next";
-import { SID_KEY, VID_KEY, dogfoodSession, getOrCreateId, homeClickTarget, routeEvents, sendSiteEvent, shouldSkip } from "@/lib/site/client";
+import { SID_KEY, VID_KEY, dogfoodHref, dogfoodSession, getOrCreateId, homeClickTarget, routeEvents, sendSiteEvent, shouldSkip } from "@/lib/site/client";
 
 const safe = <T,>(f: () => T): T | null => {
   try {
@@ -23,21 +23,32 @@ function excluded(): boolean {
 
 const beforeSend = (event: BeforeSendEvent) => (excluded() ? null : event);
 
+/** Dogfood session: add ?dogfood=1 to a tool link (data-tool-slug) so the tool counts the run as a test. */
+function markToolLink(a: Element | null) {
+  if (!a) return;
+  const next = dogfoodHref(a.getAttribute("href") || "", location.origin);
+  if (next) a.setAttribute("href", next);
+}
+
 /**
  * Before-baseline tracking for the redesign (renders nothing visible):
  * Vercel Web Analytics pageviews, plus first-party site events to /api/site/e —
  * page_view on every route, apps_view on /apps, tool_open when an /apps card or its Open is tapped,
  * article_view {slug, n} on a Daily Digest article, home_click {target} when a link on `/` is tapped. Ids: sid (sessionStorage), vid (localStorage).
+ * In a dogfood session, tool links (on / and /apps) get ?dogfood=1 so the tools' own counts skip our test runs.
  */
 export function SiteTracker() {
   const pathname = usePathname();
   const ids = useRef<{ sid: string; vid: string; dogfood: boolean } | null>(null);
   const skip = useRef(false);
+  const dogfoodRef = useRef(false);
 
   useEffect(() => {
     const local = safe(() => window.localStorage);
     const session = safe(() => window.sessionStorage);
     const dogfood = dogfoodSession(location.search, session);
+    dogfoodRef.current = dogfood;
+    if (dogfood) document.querySelectorAll("a[data-tool-slug]").forEach(markToolLink);
     skip.current = shouldSkip({ webdriver: navigator.webdriver, local });
     if (skip.current) return;
     ids.current ??= { sid: getOrCreateId(session, SID_KEY), vid: getOrCreateId(local, VID_KEY), dogfood };
@@ -48,6 +59,8 @@ export function SiteTracker() {
   useEffect(() => {
     // Capture phase, no preventDefault: the tap navigates exactly as before.
     const onClick = (e: MouseEvent) => {
+      // Dogfood: make sure the tool link carries ?dogfood=1 before the browser follows it (covers links rendered late).
+      if (dogfoodRef.current) markToolLink((e.target as Element | null)?.closest?.("a[data-tool-slug]") ?? null);
       if (skip.current || !ids.current) return;
       if (location.pathname === "/") {
         const link = (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;

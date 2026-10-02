@@ -48,6 +48,22 @@ export function dogfoodSession(search: string, session: KV | null): boolean {
   }
 }
 
+/**
+ * In a dogfood session, a same-origin tool link gets ?dogfood=1 so the tool's own tracker (e.g. Engrave Merge's
+ * dog- install id) marks our test runs too. Returns the new href, or null to leave the link alone
+ * (external link, bad URL, or the param already there). Keeps the path, other params and the #hash.
+ */
+export function dogfoodHref(href: string, origin: string): string | null {
+  try {
+    const u = new URL(href, origin);
+    if (u.origin !== origin || u.searchParams.get("dogfood") === "1") return null;
+    u.searchParams.set("dogfood", "1");
+    return u.pathname + u.search + u.hash;
+  } catch {
+    return null;
+  }
+}
+
 /** Never send from automated browsers (navigator.webdriver) or the owner's own device (EXCLUDED_IIDS). */
 export function shouldSkip(env: { webdriver?: boolean; local: KV | null }, excluded: readonly string[] = EXCLUDED_IIDS): boolean {
   if (env.webdriver) return true;
