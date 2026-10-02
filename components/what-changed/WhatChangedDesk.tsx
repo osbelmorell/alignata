@@ -8,7 +8,8 @@ import {
   SAMPLE_BEFORE,
 } from "@/components/what-changed/WhatChangedShared";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useHydrated } from "@/lib/useHydrated";
 import { buildCard, presetToRange } from "@/lib/what-changed/buildCard";
 import { diffConfigToEvents } from "@/lib/what-changed/configDiff";
 import { parseChangeEvents } from "@/lib/what-changed/parse";
@@ -49,22 +50,17 @@ export function WhatChangedDesk() {
     upstream: "payments-gateway degraded (2026.09.12)",
   });
   const [card, setCard] = useState<WhatChangedCard | null>(null);
-  const [history, setHistory] = useState<WhatChangedCard[]>([]);
+  // Read localStorage once on the client; the !hydrated placeholder hides it until mounted.
+  const [initialHistory] = useState(loadHistory);
+  const [history, setHistory] = useState<WhatChangedCard[]>(initialHistory.cards);
   const [paste, setPaste] = useState("");
-  const [status, setStatus] = useState("");
-  const [hydrated, setHydrated] = useState(false);
+  const [status, setStatus] = useState(
+    initialHistory.cards.length
+      ? `Loaded ${initialHistory.cards.length} saved card(s) · ${SAMPLE_EVENTS.length} sample events ready.`
+      : `${SAMPLE_EVENTS.length} sample events loaded — pick a flow and generate.`,
+  );
+  const hydrated = useHydrated();
   const [demoNow] = useState(() => new Date(SAMPLE_ANCHOR_ISO).getTime());
-
-  useEffect(() => {
-    const store = loadHistory();
-    setHistory(store.cards);
-    setHydrated(true);
-    setStatus(
-      store.cards.length
-        ? `Loaded ${store.cards.length} saved card(s) · ${SAMPLE_EVENTS.length} sample events ready.`
-        : `${SAMPLE_EVENTS.length} sample events loaded — pick a flow and generate.`,
-    );
-  }, []);
 
   const services = useMemo(() => {
     const fromEvents = Array.from(new Set(events.map((e) => e.service))).sort();

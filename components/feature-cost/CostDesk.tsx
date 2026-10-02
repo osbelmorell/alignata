@@ -8,7 +8,8 @@ import {
   CostDeskTiles,
 } from "@/components/feature-cost/CostDeskRollup";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useHydrated } from "@/lib/useHydrated";
 import { parseIngest } from "@/lib/feature-cost/parse";
 import { ALERT_THRESHOLD, dailyFeatureRollup } from "@/lib/feature-cost/rollup";
 import { clearStore, loadStore, saveStore } from "@/lib/feature-cost/storage";
@@ -16,19 +17,16 @@ import type { CostEvent } from "@/lib/feature-cost/types";
 import { pct } from "@/components/feature-cost/CostDeskShared";
 
 export function CostDesk() {
-  const [events, setEvents] = useState<CostEvent[]>([]);
+  // Read localStorage once on the client; the !hydrated placeholder hides it until mounted.
+  const [initialStore] = useState(loadStore);
+  const [events, setEvents] = useState<CostEvent[]>(initialStore.events);
   const [paste, setPaste] = useState("");
-  const [status, setStatus] = useState("Load sample or paste spend rows.");
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    const store = loadStore();
-    setEvents(store.events);
-    setHydrated(true);
-    if (store.events.length) {
-      setStatus(`Loaded ${store.events.length} events from this browser.`);
-    }
-  }, []);
+  const [status, setStatus] = useState(
+    initialStore.events.length
+      ? `Loaded ${initialStore.events.length} events from this browser.`
+      : "Load sample or paste spend rows.",
+  );
+  const hydrated = useHydrated();
 
   const rollup = useMemo(() => dailyFeatureRollup(events), [events]);
   const total = rollup.reduce((s, r) => s + r.totalCostUsd, 0);

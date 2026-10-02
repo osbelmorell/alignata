@@ -13,7 +13,8 @@ import { hitsToCsv, scanLockfile } from "@/lib/license-gate/parse";
 import { SAMPLE_FILENAME, SAMPLE_PACKAGE_LOCK } from "@/lib/license-gate/sample";
 import { loadStore, recordScan } from "@/lib/license-gate/storage";
 import type { ScanResult } from "@/lib/license-gate/types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useHydrated } from "@/lib/useHydrated";
 
 function downloadText(filename: string, text: string) {
   const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
@@ -46,17 +47,11 @@ export function LicenseGateDesk() {
   const [paste, setPaste] = useState("");
   const [filename, setFilename] = useState("");
   const [result, setResult] = useState<ScanResult | null>(null);
-  const [status, setStatus] = useState("");
-  const [scanCount, setScanCount] = useState(0);
-  const [hydrated, setHydrated] = useState(false);
+  const [status, setStatus] = useState("Drop a lockfile or Load sample.");
+  // Read localStorage once on the client; the !hydrated placeholder hides it until mounted.
+  const [scanCount, setScanCount] = useState(() => loadStore().scanCount);
+  const hydrated = useHydrated();
   const [dragOver, setDragOver] = useState(false);
-
-  useEffect(() => {
-    const s = loadStore();
-    setScanCount(s.scanCount);
-    setHydrated(true);
-    setStatus("Drop a lockfile or Load sample.");
-  }, []);
 
   function run(text: string, name: string, note?: string) {
     if (!text.trim()) {

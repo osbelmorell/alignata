@@ -2,7 +2,8 @@
 
 import { AboutPanel } from "@/components/hobby-burn/AboutPanel";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useHydrated } from "@/lib/useHydrated";
 import { makeDigest } from "@/lib/hobby-burn/digest";
 import {
   copyText,
@@ -43,32 +44,22 @@ function pct(n: number) {
 }
 
 export function BurnDigestDesk() {
-  const [rows, setRows] = useState<ProjectBurn[]>([]);
-  const [paste, setPaste] = useState("");
-  const [digests, setDigests] = useState<Digest[]>([]);
+  // Read localStorage once on the client; the !hydrated placeholder hides it until mounted.
+  const [initialStore] = useState(loadStore);
+  const restored = initialStore.rows.length > 0;
+  const [rows, setRows] = useState<ProjectBurn[]>(restored ? initialStore.rows : SAMPLE_ROWS);
+  const [paste, setPaste] = useState(restored ? initialStore.lastPaste : SAMPLE_CSV);
+  const [digests, setDigests] = useState<Digest[]>(restored ? initialStore.digests : []);
   const [status, setStatus] = useState(
-    "Load sample or paste a usage list.",
+    restored
+      ? `Restored ${initialStore.rows.length} project(s) from local data.`
+      : `Demo: ${SAMPLE_ROWS.length} sample projects loaded.`,
   );
-  const [hydrated, setHydrated] = useState(false);
+  const hydrated = useHydrated();
 
   const [manualProject, setManualProject] = useState("");
   const [manualDeploys, setManualDeploys] = useState("");
   const [manualGb, setManualGb] = useState("");
-
-  useEffect(() => {
-    const store = loadStore();
-    if (store.rows.length) {
-      setRows(store.rows);
-      setPaste(store.lastPaste);
-      setDigests(store.digests);
-      setStatus(`Restored ${store.rows.length} project(s) from local data.`);
-    } else {
-      setRows(SAMPLE_ROWS);
-      setPaste(SAMPLE_CSV);
-      setStatus(`Demo: ${SAMPLE_ROWS.length} sample projects loaded.`);
-    }
-    setHydrated(true);
-  }, []);
 
   const digest = useMemo(
     () => (rows.length ? makeDigest(rows, "This week") : null),

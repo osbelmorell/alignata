@@ -5,7 +5,8 @@ import { BundleDeskHistory } from "@/components/agent-bundle/BundleDeskHistory";
 import { BundleDeskRegister } from "@/components/agent-bundle/BundleDeskRegister";
 import { secondaryBtn, quietBtn } from "@/components/agent-bundle/BundleDeskShared";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useHydrated } from "@/lib/useHydrated";
 import { chronological, diffBundles } from "@/lib/agent-bundle/diff";
 import {
   appendBundle,
@@ -44,26 +45,21 @@ async function copyText(text: string): Promise<boolean> {
 
 export function BundleDesk() {
   const [tab, setTab] = useState<Tab>("register");
-  const [bundles, setBundles] = useState<Bundle[]>([]);
+  // Read localStorage once on the client; the !hydrated placeholder hides it until mounted.
+  const [initialStore] = useState(loadStore);
+  const [bundles, setBundles] = useState<Bundle[]>(initialStore.bundles);
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [status, setStatus] = useState("");
-  const [hydrated, setHydrated] = useState(false);
+  const [status, setStatus] = useState(
+    initialStore.bundles.length
+      ? `Loaded ${initialStore.bundles.length} bundle(s) from localStorage.`
+      : "No bundles yet — register one or load sample.",
+  );
+  const hydrated = useHydrated();
   const [selectedIds, setSelectedIds] = useState<[string | null, string | null]>([
     null,
     null,
   ]);
-
-  useEffect(() => {
-    const store = loadStore();
-    setBundles(store.bundles);
-    setHydrated(true);
-    setStatus(
-      store.bundles.length
-        ? `Loaded ${store.bundles.length} bundle(s) from localStorage.`
-        : "No bundles yet — register one or load sample.",
-    );
-  }, []);
 
   const ordered = useMemo(() => chronological(bundles), [bundles]);
 
@@ -186,7 +182,7 @@ export function BundleDesk() {
           Agent Bundle Tag
         </h1>
         <p className="max-w-2xl text-sm leading-relaxed text-[var(--cb-ink-muted)]">
-          Record what's live for an agent and see what changed.
+          Record what&apos;s live for an agent and see what changed.
         </p>
       </header>
 

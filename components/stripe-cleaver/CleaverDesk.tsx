@@ -12,7 +12,8 @@ import { cleaveStripeCsv } from "@/lib/stripe-cleaver/cleave";
 import { SAMPLE_STRIPE_CSV } from "@/lib/stripe-cleaver/sample";
 import { bumpImport, loadStore } from "@/lib/stripe-cleaver/storage";
 import type { BooksPreset, CleaveResult } from "@/lib/stripe-cleaver/types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useHydrated } from "@/lib/useHydrated";
 
 function downloadText(filename: string, text: string) {
   const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
@@ -28,24 +29,18 @@ const softSelectedBtn =
   "rounded-[var(--cb-radius-pill)] border border-[var(--cb-ink)] bg-[color-mix(in_srgb,var(--cb-ink)_8%,white)] px-3 py-1.5 text-xs font-semibold text-[var(--cb-ink)]";
 
 export function CleaverDesk() {
+  // Read localStorage once on the client; the !hydrated placeholder hides it until mounted.
+  const [initialStore] = useState(loadStore);
   const [paste, setPaste] = useState("");
-  const [preset, setPreset] = useState<BooksPreset>("quickbooks");
+  const [preset, setPreset] = useState<BooksPreset>(initialStore.lastPreset);
   const [result, setResult] = useState<CleaveResult | null>(null);
-  const [status, setStatus] = useState("");
-  const [importCount, setImportCount] = useState(0);
-  const [hydrated, setHydrated] = useState(false);
+  const [status, setStatus] = useState("Drop a Stripe payout file or Load sample.");
+  const [importCount, setImportCount] = useState(initialStore.importCount);
+  const hydrated = useHydrated();
   const [dragOver, setDragOver] = useState(false);
 
   const hasRows = Boolean(result && result.rows.length > 0);
   const booksLabel = preset === "quickbooks" ? "QuickBooks" : "Xero";
-
-  useEffect(() => {
-    const s = loadStore();
-    setImportCount(s.importCount);
-    setPreset(s.lastPreset);
-    setHydrated(true);
-    setStatus("Drop a Stripe payout file or Load sample.");
-  }, []);
 
   function run(text: string, note?: string) {
     if (!text.trim()) {

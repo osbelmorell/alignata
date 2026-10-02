@@ -10,7 +10,8 @@ import {
   EvalDeskHistory,
 } from "@/components/agent-eval/EvalDeskHistoryPanel";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useHydrated } from "@/lib/useHydrated";
 import {
   blankEval,
   computeVerdict,
@@ -26,26 +27,18 @@ import { clearHistory, loadStore, saveEval } from "@/lib/agent-eval/storage";
 import type { AgentEval } from "@/lib/agent-eval/types";
 
 export function EvalDesk() {
-  const [current, setCurrent] = useState<AgentEval>(() => blankEval());
-  const [history, setHistory] = useState<AgentEval[]>([]);
-  const [status, setStatus] = useState("");
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    const store = loadStore();
-    setHistory(store.evals);
-    if (store.lastEval) {
-      setCurrent(computeVerdict(store.lastEval));
-      setStatus(
-        `Restored last save · ${store.evals.length} recent in localStorage.`,
-      );
-    } else {
-      setStatus(
-        "Score the checklist. Rule: any required Fail → no-go. Load a sample pass or fail to demo.",
-      );
-    }
-    setHydrated(true);
-  }, []);
+  // Read localStorage once on the client; the !hydrated placeholder hides it until mounted.
+  const [initialStore] = useState(loadStore);
+  const [current, setCurrent] = useState<AgentEval>(() =>
+    initialStore.lastEval ? computeVerdict(initialStore.lastEval) : blankEval(),
+  );
+  const [history, setHistory] = useState<AgentEval[]>(initialStore.evals);
+  const [status, setStatus] = useState(
+    initialStore.lastEval
+      ? `Restored last save · ${initialStore.evals.length} recent in localStorage.`
+      : "Score the checklist. Rule: any required Fail → no-go. Load a sample pass or fail to demo.",
+  );
+  const hydrated = useHydrated();
 
   function update(next: AgentEval, note?: string) {
     const scored = computeVerdict(next);

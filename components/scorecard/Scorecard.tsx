@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { AboutPanel } from "@/components/scorecard/AboutPanel";
 import { PillarCard } from "@/components/scorecard/PillarCard";
 import {
@@ -16,10 +16,14 @@ import {
   type Status,
 } from "@/lib/scorecard/types";
 
+const noSubscribe = () => () => {};
+/** ?edit=1 → edit mode. false on the server and during hydration (same as before). */
+const readEditParam = () => new URLSearchParams(window.location.search).get("edit") === "1";
+
 export function Scorecard() {
   const [data, setData] = useState<ScorecardData>(DEFAULT_SCORECARD);
   const [hydrated, setHydrated] = useState(false);
-  const [editMode, setEditMode] = useState(false);
+  const editMode = useSyncExternalStore(noSubscribe, readEditParam, () => false);
   const [jsonOpen, setJsonOpen] = useState(false);
   const [jsonText, setJsonText] = useState("");
   const [jsonError, setJsonError] = useState<string | null>(null);
@@ -27,10 +31,6 @@ export function Scorecard() {
   const [loadSource, setLoadSource] = useState<"file" | "default">("default");
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const isEdit = params.get("edit") === "1";
-    setEditMode(isEdit);
-
     let cancelled = false;
 
     async function loadShared() {
@@ -64,10 +64,18 @@ export function Scorecard() {
     };
   }, []);
 
+  // In edit mode, keep the JSON box in step with `data` (adjusted during render
+  // instead of setState in an effect; same trigger: data / hydrated / editMode change).
+  const syncActive = hydrated && editMode;
+  const [synced, setSynced] = useState({ data, active: false });
+  if (synced.data !== data || synced.active !== syncActive) {
+    setSynced({ data, active: syncActive });
+    if (syncActive) setJsonText(exportScorecardJson(data));
+  }
+
   useEffect(() => {
     if (!hydrated || !editMode) return;
     saveScorecard(data);
-    setJsonText(exportScorecardJson(data));
   }, [data, hydrated, editMode]);
 
   useEffect(() => {

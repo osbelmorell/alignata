@@ -12,7 +12,8 @@ import {
   textareaClass,
 } from "@/components/env-diff/deskShared";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useHydrated } from "@/lib/useHydrated";
 import { buildDiffSnapshot } from "@/lib/env-diff/diff";
 import { copyText, snapshotToJson, snapshotToMarkdown } from "@/lib/env-diff/export";
 import {
@@ -25,32 +26,30 @@ import { clearHistory, loadStore, prependSnapshot } from "@/lib/env-diff/storage
 import type { EnvDiffSnapshot } from "@/lib/env-diff/types";
 
 export function EnvDiffDesk() {
-  const [beforeText, setBeforeText] = useState(SAMPLE_BEFORE);
-  const [afterText, setAfterText] = useState(SAMPLE_AFTER);
-  const [beforeLabel, setBeforeLabel] = useState(SAMPLE_BEFORE_LABEL);
-  const [afterLabel, setAfterLabel] = useState(SAMPLE_AFTER_LABEL);
+  // Read localStorage once on the client; the !hydrated placeholder hides it until mounted.
+  const [initialStore] = useState(loadStore);
+  const restore = Boolean(initialStore.lastBefore.trim() || initialStore.lastAfter.trim());
+  const [beforeText, setBeforeText] = useState(
+    restore ? initialStore.lastBefore || SAMPLE_BEFORE : SAMPLE_BEFORE,
+  );
+  const [afterText, setAfterText] = useState(
+    restore ? initialStore.lastAfter || SAMPLE_AFTER : SAMPLE_AFTER,
+  );
+  const [beforeLabel, setBeforeLabel] = useState(
+    restore ? initialStore.lastBeforeLabel || SAMPLE_BEFORE_LABEL : SAMPLE_BEFORE_LABEL,
+  );
+  const [afterLabel, setAfterLabel] = useState(
+    restore ? initialStore.lastAfterLabel || SAMPLE_AFTER_LABEL : SAMPLE_AFTER_LABEL,
+  );
   const [snap, setSnap] = useState<EnvDiffSnapshot | null>(null);
-  const [history, setHistory] = useState<EnvDiffSnapshot[]>([]);
-  const [status, setStatus] = useState("");
-  const [hydrated, setHydrated] = useState(false);
+  const [history, setHistory] = useState<EnvDiffSnapshot[]>(initialStore.snapshots);
+  const [status, setStatus] = useState(
+    initialStore.snapshots.length
+      ? `Loaded ${initialStore.snapshots.length} recent snapshot(s). Paste key lists or Load sample.`
+      : "Paste two setting lists, or Load sample. Secret-like values stay masked.",
+  );
+  const hydrated = useHydrated();
   const [showUnchanged, setShowUnchanged] = useState(false);
-
-  useEffect(() => {
-    const store = loadStore();
-    setHistory(store.snapshots);
-    if (store.lastBefore.trim() || store.lastAfter.trim()) {
-      setBeforeText(store.lastBefore || SAMPLE_BEFORE);
-      setAfterText(store.lastAfter || SAMPLE_AFTER);
-      setBeforeLabel(store.lastBeforeLabel || SAMPLE_BEFORE_LABEL);
-      setAfterLabel(store.lastAfterLabel || SAMPLE_AFTER_LABEL);
-    }
-    setHydrated(true);
-    setStatus(
-      store.snapshots.length
-        ? `Loaded ${store.snapshots.length} recent snapshot(s). Paste key lists or Load sample.`
-        : "Paste two setting lists, or Load sample. Secret-like values stay masked.",
-    );
-  }, []);
 
   const secretRows = useMemo(
     () => (snap ? snap.rows.filter((r) => r.secretLike) : []),
