@@ -280,8 +280,16 @@ test("Daily Digest (v1.4): tags, real read time, hero art + alt, verbatim pull q
     assert.ok(w > 0, p.slug);
     assert.equal(meta.readMinutes(p), Math.max(1, Math.round(w / 230)), p.slug);
     assert.match(meta.postMeta(p), /^(Technique|Deep dive|Essay) · [A-Z][a-z]{2} \d{1,2} · \d+ min read$/);
+    assert.ok(p.hero, `${p.slug}: has its own art (no fallback)`);
     const hero = meta.postHero(p);
-    for (const size of [640, 1280]) assert.ok(existsSync(`public/art/${hero.image}-${size}.webp`), `${p.slug}: ${hero.image}-${size}.webp`);
+    if ("src" in hero) {
+      for (const f of [hero.src, hero.cardSrc]) assert.ok(existsSync(`public${f}`), `${p.slug}: ${f}`);
+      assert.equal(hero.src, `/art/digest/${p.slug}.webp`);
+      assert.equal(hero.cardSrc, `/art/digest/${p.slug}-card.webp`);
+      assert.deepEqual([meta.heroImage(p).width, meta.heroImage(p).height, meta.cardImage(p).width, meta.cardImage(p).height], [1600, 900, 1200, 900]);
+    } else {
+      for (const size of [640, 1280]) assert.ok(existsSync(`public/art/${hero.image}-${size}.webp`), `${p.slug}: ${hero.image}-${size}.webp`);
+    }
     assert.match(hero.alt, /^[A-Z].{10,200}\.$/, `${p.slug}: alt is one plain sentence`);
     if (p.pullQuote) {
       const paras = meta.bodyBlocks(p).filter((b) => b.kind === "paragraph").map((b) => toPlainText(b.text));
@@ -290,7 +298,7 @@ test("Daily Digest (v1.4): tags, real read time, hero art + alt, verbatim pull q
     }
   }
   assert.equal(meta.postHero(posts.find((p) => p.slug === "the-ai-safety-paradox")).image, "the-ai-safety-paradox");
-  assert.equal(posts.filter((p) => p.hero).length, 1, "only the Safety Paradox has its own art for now");
+  assert.equal(posts.filter((p) => p.hero && "src" in p.hero).length, 23, "Brand Creator art for the 23 other articles (Oct 2)");
   assert.equal(meta.shortDate("2026-10-02"), "Oct 2");
   assert.equal(meta.shortDate("2026-09-16"), "Sep 16");
   // Next article: the next older one, oldest wraps to newest; following it visits every article once.

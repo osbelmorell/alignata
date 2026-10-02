@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ArticleBody } from "@/components/daily-digest/ArticleBody";
 import { PostCard } from "@/components/fantasy/PostCard";
 import { toPlainText } from "@/lib/daily-digest/blocks";
-import { nextPost, postHero, postTag, readMinutes, shortDate } from "@/lib/daily-digest/meta";
+import { heroImage, nextPost, postTag, readMinutes, shortDate } from "@/lib/daily-digest/meta";
 
 export const dynamicParams = false;
 
@@ -51,7 +51,7 @@ export default async function DailyDigestPostPage({
   const { slug } = await params;
   const post = getPost(slug);
   if (!post) notFound();
-  const hero = postHero(post);
+  const hero = heroImage(post);
   const next = nextPost(post.slug);
 
   return (
@@ -71,12 +71,12 @@ export default async function DailyDigestPostPage({
           <figure className="fx-hero fx-art fx-reveal">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`/art/${hero.image}-1280.webp`}
-              srcSet={`/art/${hero.image}-640.webp 640w, /art/${hero.image}-1280.webp 1280w`}
+              src={hero.src}
+              {...(hero.srcSet ? { srcSet: hero.srcSet } : {})}
               sizes="(min-width: 1280px) 1184px, calc(100vw - 40px)"
               alt={hero.alt}
-              width={1280}
-              height={720}
+              width={hero.width}
+              height={hero.height}
               fetchPriority="high"
               decoding="async"
             />

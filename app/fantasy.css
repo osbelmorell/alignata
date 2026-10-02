@@ -83,7 +83,7 @@ a.fx-pill:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 
 /* Daily Digest index (SPEC §7, frozen reference daily-digest.html) */
 .fx-posts { margin-top: 48px; display: grid; grid-template-columns: 1fr; row-gap: 48px; }
-.fx-post .fx-art { aspect-ratio: 16 / 9; }
+.fx-post .fx-art { aspect-ratio: 4 / 3; } /* card crop (1200×900), Brand Creator art Oct 2 */
 .fx-post .fx-meta { margin-top: 16px; }
 .fx-post h2, .fx-post h3 { margin-top: 8px; font-family: var(--display); font-weight: 600; font-size: 22px; line-height: 1.25;
   letter-spacing: -0.01em; }

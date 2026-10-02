@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { Post } from "@/content/posts";
-import { postCardDek, postHero, postMeta } from "@/lib/daily-digest/meta";
+import { cardImage, postCardDek, postMeta } from "@/lib/daily-digest/meta";
 
 /**
- * Daily Digest card (SPEC §7, frozen reference daily-digest.html): art 16:9, meta (tag · date · read time),
+ * Daily Digest card (SPEC §7, frozen reference daily-digest.html): art (4:3 card crop), meta (tag · date · read time),
  * title, one-line dek. No Open pill: the title is the link and its ::after covers the whole card (48px+ tap area).
  * Card art is decorative (alt=""), because the title next to it names the card; the article hero carries the alt.
  */
@@ -23,18 +23,18 @@ export function PostCard({
   /** Homepage only: data-home-target="article:<slug>" for home_click. */
   homeTarget?: boolean;
 }) {
-  const art = postHero(post);
+  const art = cardImage(post);
   return (
     <article className={`fx-post fx-card${feature ? " fx-feature" : ""}`} data-post-card={post.slug}>
       <figure className="fx-art fx-reveal">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={`/art/${art.image}-1280.webp`}
-          srcSet={`/art/${art.image}-640.webp 640w, /art/${art.image}-1280.webp 1280w`}
+          src={art.src}
+          {...(art.srcSet ? { srcSet: art.srcSet } : {})}
           sizes={feature ? "(min-width: 900px) 690px, calc(100vw - 40px)" : "(min-width: 900px) 380px, calc(100vw - 40px)"}
           alt=""
-          width={1280}
-          height={720}
+          width={art.width}
+          height={art.height}
           {...(eager ? { fetchPriority: "high" as const } : { loading: "lazy" as const })}
           decoding="async"
         />

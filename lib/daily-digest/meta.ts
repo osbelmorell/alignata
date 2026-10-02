@@ -18,6 +18,23 @@ export function postHero(post: Post): PostHero {
   return post.hero ?? FALLBACK_HERO;
 }
 
+/** One <img> worth of attributes. */
+export type ArtImage = { src: string; srcSet?: string; width: number; height: number; alt: string };
+
+/** Article hero, 16:9: the 1600×900 file, or the legacy 640/1280 pair. */
+export function heroImage(post: Post): ArtImage {
+  const h = postHero(post);
+  if ("src" in h) return { src: h.src, width: 1600, height: 900, alt: h.alt };
+  return { src: `/art/${h.image}-1280.webp`, srcSet: `/art/${h.image}-640.webp 640w, /art/${h.image}-1280.webp 1280w`, width: 1280, height: 720, alt: h.alt };
+}
+
+/** Card art, shown 4:3: the 1200×900 centre-safe crop, or the legacy 16:9 pair cropped by object-fit. */
+export function cardImage(post: Post): ArtImage {
+  const h = postHero(post);
+  if ("src" in h) return { src: h.cardSrc, width: 1200, height: 900, alt: h.alt };
+  return { ...heroImage(post) };
+}
+
 export function postCardDek(post: Post): string {
   return toPlainText(post.cardDek ?? post.dek);
 }
