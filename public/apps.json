@@ -173,6 +173,22 @@
         "Read pass or fail and any copyleft hits.",
         "Download the list if you need it in a thread."
       ]
+    },
+    {
+      "id": "engrave-merge",
+      "name": "Engrave Merge",
+      "url": "/engrave-merge",
+      "blurb": "Turn Etsy orders into a LightBurn file, ready to engrave.",
+      "status": "live",
+      "pitch": "For Etsy sellers who engrave names with LightBurn. Your file stays on your device.",
+      "what": "Copying names from Etsy orders into LightBurn by hand is slow, and one typo ruins a blank.",
+      "why": "One file in, one merge file out, plus a list of orders to check before you engrave.",
+      "how": [
+        "In Etsy, download the “Order Items” file.",
+        "Drop it here and tap “Make merge file”.",
+        "Check the problem list for anything that needs a look.",
+        "In LightBurn, load the merge file and follow the steps on the page."
+      ]
     }
   ]
 }

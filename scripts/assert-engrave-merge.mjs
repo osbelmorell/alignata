@@ -847,3 +847,25 @@ test("merge_downloaded never fires with 0 rows (sendEvent guard)", async () => {
     globalThis.fetch = saved.fetch;
   }
 });
+
+test("Re-list: Engrave Merge card has the About fields; robots + sitemap list only listed pages", async () => {
+  const apps = JSON.parse(readFileSync(join(root, "public/apps.json"), "utf8")).apps;
+  const em = apps.find((a) => a.id === "engrave-merge");
+  assert.ok(em, "card present");
+  assert.deepEqual(Object.keys(em).sort(), Object.keys(apps[0]).sort(), "same shape as the other cards");
+  assert.equal(em.blurb, "Turn Etsy orders into a LightBurn file, ready to engrave.");
+  assert.equal(em.how.length, 4);
+  assert.equal(em.how[0], "In Etsy, download the \u201cOrder Items\u201d file.");
+  assert.equal(em.how[1], "Drop it here and tap \u201cMake merge file\u201d.");
+  assert.doesNotMatch(readFileSync(join(root, "app/engrave-merge/page.tsx"), "utf8"), /robots|noindex/);
+  const robots = (await import("../app/robots.ts")).default();
+  assert.deepEqual(robots, { rules: { userAgent: "*", allow: "/" }, sitemap: "https://alignata.com/sitemap.xml" });
+  const urls = (await import("../app/sitemap.ts")).default().map((e) => e.url);
+  const { posts } = await import("../content/posts.ts");
+  assert.equal(urls.length, 2 + apps.length + 1 + posts.length);
+  assert.equal(new Set(urls).size, urls.length, "no duplicates");
+  for (const u of ["https://alignata.com", "https://alignata.com/apps", "https://alignata.com/engrave-merge", "https://alignata.com/daily-digest"]) assert.ok(urls.includes(u), u);
+  for (const p of posts) assert.ok(urls.includes(`https://alignata.com/daily-digest/${p.slug}`));
+  assert.ok(!urls.some((u) => /\/(blog|llm-digest)(\/|$)/.test(u)), "no redirect-only paths");
+  for (const u of urls) assert.match(u, /^https:\/\/alignata\.com(\/[a-z0-9-]+)*$/, "kebab paths on alignata.com");
+});
