@@ -19,7 +19,9 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 // The ONE fixture-fingerprint list (shared with the server event filter). Needs tsx: npm run engrave:kpis.
-import { isFixtureFingerprint } from "../lib/engrave-merge/fixtures.ts";
+import { EXCLUDED_IIDS, isExcludedIid, isFixtureFingerprint } from "../lib/engrave-merge/fixtures.ts";
+// The ONE key prefix/pattern (shared with the event store writer).
+import { EVENT_KEY_MATCH } from "../lib/engrave-merge/store.ts";
 
 export const PROD_HOST = "alignata.com";
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -43,12 +45,13 @@ export function weekOf(day) {
   return new Date(d.getTime() - back * DAY_MS).toISOString().slice(0, 10);
 }
 
-export function computeKpis(events, now = Date.now()) {
-  const excluded = { dogfood: 0, nonProdHost: 0, fixture: 0 };
+export function computeKpis(events, now = Date.now(), excludedIids = EXCLUDED_IIDS) {
+  const excluded = { dogfood: 0, nonProdHost: 0, fixture: 0, excludedIid: 0 };
   const real = [];
   for (const e of events) {
     if (e.dogfood === true || String(e.iid || "").startsWith("dog-")) excluded.dogfood++;
     else if (e.host !== PROD_HOST) excluded.nonProdHost++;
+    else if (isExcludedIid(e.iid, excludedIids)) excluded.excludedIid++;
     else if (isFixtureFingerprint(fpOf(e))) excluded.fixture++;
     else real.push(e);
   }
@@ -148,7 +151,7 @@ export async function readStore(env = process.env) {
   const keys = new Set();
   let cursor = "0";
   do {
-    const [next, batch] = await redis(url, token, ["SCAN", cursor, "MATCH", "em:ev:*", "COUNT", "1000"]);
+    const [next, batch] = await redis(url, token, ["SCAN", cursor, "MATCH", EVENT_KEY_MATCH, "COUNT", "1000"]);
     batch.forEach((k) => keys.add(k));
     cursor = String(next);
   } while (cursor !== "0");
@@ -171,7 +174,7 @@ function print(k) {
     iso
       ? new Date(iso).toLocaleString("en-US", { timeZone: "America/New_York", dateStyle: "medium", timeStyle: "short" }) + " ET"
       : "not started (no real file yet)";
-  console.log("Engrave Merge KPIs (fixtures, dogfood and non-alignata.com hosts excluded)");
+  console.log("Engrave Merge KPIs (fixtures, dogfood, excluded devices and non-alignata.com hosts excluded)");
   console.log(`  T0 (first real file):          ${fmtNY(k.t0)}`);
   if (k.windowEnd) console.log(`  Kill-bar window ends:          ${fmtNY(k.windowEnd)}`);
   console.log(`  Status:                        ${k.status}`);
@@ -187,7 +190,7 @@ function print(k) {
   if (k.killIf.length) console.log(`  Kill conditions met: ${k.killIf.join("; ")}`);
   console.log(
     `  Events: ${k.totalEvents} total, ${k.realEvents} real; excluded dogfood ${k.excluded.dogfood}, ` +
-      `non-prod host ${k.excluded.nonProdHost}, fixture ${k.excluded.fixture}`,
+      `non-prod host ${k.excluded.nonProdHost}, fixture ${k.excluded.fixture}, excluded device ${k.excluded.excludedIid}`,
   );
 }
 

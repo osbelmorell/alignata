@@ -14,3 +14,14 @@ export const FIXTURE_FINGERPRINTS: readonly string[] = [
 export function isFixtureFingerprint(fp: string | undefined | null): boolean {
   return !!fp && FIXTURE_FINGERPRINTS.includes(fp);
 }
+
+/**
+ * Backstop for owner / test devices: their em_iid values (the random id in localStorage).
+ * Events from these iids are dropped by the server and ignored by the KPI script, even
+ * without ?dogfood=1. Add an id by reading localStorage.em_iid on that device.
+ */
+export const EXCLUDED_IIDS: readonly string[] = [];
+
+export function isExcludedIid(iid: string | undefined | null, list: readonly string[] = EXCLUDED_IIDS): boolean {
+  return !!iid && list.includes(iid);
+}

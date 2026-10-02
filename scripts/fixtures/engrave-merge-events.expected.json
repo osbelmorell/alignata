@@ -11,6 +11,7 @@
   "excluded": {
     "dogfood": 2,
     "nonProdHost": 1,
-    "fixture": 1
+    "fixture": 1,
+    "excludedIid": 0
   }
 }

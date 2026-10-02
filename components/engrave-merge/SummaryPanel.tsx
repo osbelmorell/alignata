@@ -3,13 +3,15 @@ import { COPY } from "@/lib/engrave-merge/copy";
 import { type SummaryView, howManyLabel } from "@/lib/engrave-merge/summary";
 
 const secondaryBtn =
-  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--cb-radius-pill)] border border-[var(--cb-ink)] bg-[var(--cb-surface)] px-4 text-base font-medium text-[var(--cb-ink)] hover:bg-[var(--cb-bg)]";
+  "inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[var(--cb-ink)] bg-[var(--cb-surface)] px-4 text-base font-medium text-[var(--cb-ink)] hover:bg-[var(--cb-bg)]";
 const fieldClass =
   "min-h-[44px] rounded-xl border border-[var(--cb-ink-muted)] bg-[var(--cb-surface)] px-3 text-base text-[var(--cb-ink)]";
 const muted = "text-[var(--cb-ink-muted)]";
 
 export interface SummaryPanelProps {
   view: SummaryView;
+  /** "Updated" in the fixed 20px line under the count line after a settings change re-ran the file. */
+  updated?: boolean;
   listings: { lid: string; itemName: string }[];
   listing: string;
   onListing: (lid: string) => void;
@@ -18,16 +20,41 @@ export interface SummaryPanelProps {
 }
 
 /**
- * After a file is loaded. Order is fixed so nothing above the buttons depends on the
- * "Which items" pick: actions row → picker → count/note → problem table. That keeps
- * "Download problem list" and the picker in the same place for All items and any pick.
+ * After a file is loaded: picker → count line (one line, fixed height) → "Updated" line (fixed 20px,
+ * always reserved) → Download problem list / Print cut sheet → warning / note / Show all items →
+ * problem table. Everything above the buttons has a fixed height, so they keep the same position
+ * for All items, any pick, and while "Updated" shows.
  */
 export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function SummaryPanel(
-  { view, listings, listing, onListing, onProblems, onPrint },
+  { view, updated = false, listings, listing, onListing, onProblems, onPrint },
   ref,
 ) {
   return (
-    <section ref={ref} aria-label="Summary" className="mt-6 scroll-mt-4 space-y-4">
+    <section ref={ref} aria-label="Summary" className="mt-6 scroll-mt-4 space-y-3">
+      <label className="flex min-w-0 flex-col gap-1">
+        <span className="text-base font-medium">{COPY.whichItems}</span>
+        <select
+          data-which-items
+          className={`${fieldClass} w-full min-w-0 truncate`}
+          value={listing}
+          onChange={(e) => onListing(e.target.value)}
+        >
+          <option value="">{COPY.whichAll}</option>
+          {listings.map((l) => (
+            <option key={l.lid} value={l.lid}>
+              {COPY.whichOneShort(l.itemName, l.lid)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div>
+        <p data-count-line className="h-6 truncate whitespace-nowrap text-base font-semibold leading-6">
+          {view.countLine}
+        </p>
+        <p data-updated aria-live="polite" className={`h-5 text-base leading-5 ${muted}`}>
+          {updated ? COPY.updated : ""}
+        </p>
+      </div>
       <div data-actions className="flex flex-wrap gap-2">
         {view.showDownload && (
           <button type="button" data-download-problems className={secondaryBtn} onClick={onProblems}>
@@ -38,39 +65,41 @@ export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function 
           {COPY.printCutsheet}
         </button>
       </div>
-      <label className="flex flex-col gap-1">
-        <span className="text-base font-medium">{COPY.whichItems}</span>
-        <select data-which-items className={fieldClass} value={listing} onChange={(e) => onListing(e.target.value)}>
-          <option value="">{COPY.whichAll}</option>
-          {listings.map((l) => (
-            <option key={l.lid} value={l.lid}>
-              {COPY.whichOne(l.itemName, l.lid)}
-            </option>
-          ))}
-        </select>
-      </label>
-      <div className="space-y-2">
-        <p className="text-base leading-6">
-          <span data-count-line className="font-semibold">
-            {view.countLine}
-          </span>
-          {view.warning && (
-            <span data-warning-line className="block font-semibold text-[#8a1c1c]">
-              {view.warning}
-            </span>
+      {(view.warning || view.note || view.showAllButton) && (
+        <div className="space-y-2">
+          {(view.warning || view.note) && (
+            <p className="text-base leading-6">
+              {view.warning && (
+                <span data-warning-line className="block font-semibold text-[#8a1c1c]">
+                  {view.warning}
+                </span>
+              )}
+              {view.note && (
+                <span data-note-line className={`block ${muted}`}>
+                  {view.note}
+                </span>
+              )}
+            </p>
           )}
-          {view.note && (
-            <span data-note-line className={`block ${muted}`}>
-              {view.note}
-            </span>
+          {view.showAllButton && (
+            <button
+              type="button"
+              data-show-all
+              className={secondaryBtn}
+              onClick={(e) => {
+                onListing("");
+                // focus moves to the picker
+                e?.currentTarget
+                  ?.closest("section")
+                  ?.querySelector<HTMLSelectElement>("[data-which-items]")
+                  ?.focus();
+              }}
+            >
+              {COPY.showAllItems}
+            </button>
           )}
-        </p>
-        {view.showAllButton && (
-          <button type="button" data-show-all className={secondaryBtn} onClick={() => onListing("")}>
-            {COPY.showAllItems}
-          </button>
-        )}
-      </div>
+        </div>
+      )}
       {view.showProblems && (
         <div className="space-y-2">
           <h2 className="text-base font-semibold">{COPY.problemListTitle}</h2>

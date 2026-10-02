@@ -1,6 +1,6 @@
 // Engrave Merge golden tests (SPEC §9 AT-01, 03, 04, 05, 06, 07, 23, 24).
 // Run: npm run test:engrave   (node --import tsx --test scripts/assert-engrave-merge.mjs)
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import assert from "node:assert/strict";
@@ -11,7 +11,9 @@ import { mergeCsv, exceptionsCsv } from "../lib/engrave-merge/outputs.ts";
 import opentype from "opentype.js";
 import { charsetCheck, fontFrom } from "../lib/engrave-merge/glyphs.ts";
 import { fingerprintOf } from "../lib/engrave-merge/fingerprint.ts";
-import { FIXTURE_FINGERPRINTS } from "../lib/engrave-merge/fixtures.ts";
+import { EXCLUDED_IIDS, FIXTURE_FINGERPRINTS, isExcludedIid } from "../lib/engrave-merge/fixtures.ts";
+import { IID_KEY, initInstallId } from "../lib/engrave-merge/track.ts";
+import { EngraveMergeDesk } from "../components/engrave-merge/EngraveMergeDesk.tsx";
 import { buildRecipe, parseRecipe } from "../lib/engrave-merge/recipe.ts";
 import { validateEvent } from "../lib/engrave-merge/events.ts";
 import { handleEvent } from "../lib/engrave-merge/handler.ts";
@@ -21,7 +23,8 @@ import { readCsv } from "../lib/engrave-merge/csv.ts";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { SummaryPanel } from "../components/engrave-merge/SummaryPanel.tsx";
-import { computeKpis, parseLog } from "./engrave-merge-kpis.mjs";
+import { computeKpis, parseLog, readStore } from "./engrave-merge-kpis.mjs";
+import { EM_KEY_PREFIX, appendEvent, eventKey } from "../lib/engrave-merge/store.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const FX = join(root, "lib/engrave-merge/__fixtures__");
@@ -245,6 +248,7 @@ test("fx03_multiline_commas__no_split, Keychain picked: download shows, no \"Eve
     assert.notEqual(v.note, "Everything is ready.");
     assert.equal(v.note, "Everything you picked is ready. 2 other items in your file need a look.");
     assert.equal(v.showAllButton, true);
+    assert.equal(v.countLine, incl ? "1 in your merge file" : "1 ready for LightBurn", "clean pick: no 0 part");
     assert.equal(exceptionsCsv(res), read("expected/fx03_multiline_commas__no_split/expected_exceptions.csv"), "download unfiltered");
     console.log(`# fx03 no_split Keychain incl=${incl}: ${v.countLine} | ${v.note}`);
   }
@@ -256,18 +260,31 @@ test("fx03_multiline_commas__no_split, Keychain picked: download shows, no \"Eve
   const props = (res, lid) => ({ view: summaryView(res, false), listings: all.listings, listing: lid, onListing: () => {}, onProblems: () => {}, onPrint: () => {} });
   const htmlAll = renderToStaticMarkup(createElement(SummaryPanel, props(allRes, "")));
   const htmlKey = renderToStaticMarkup(createElement(SummaryPanel, props(keyRes, key.lid)));
-  // 1) Download sits above everything that depends on the pick, with identical markup before it → same position.
+  // 1) Order: picker → count line → Updated line → downloads → note / Show all → table.
   for (const h of [htmlAll, htmlKey]) {
-    const dl = h.indexOf("data-download-problems");
-    assert.ok(dl > 0, "download button rendered");
-    assert.ok(dl < h.indexOf("data-count-line"), "download above the count line");
-    if (h.includes("data-problem-list")) assert.ok(dl < h.indexOf("data-problem-list"), "download above the table");
+    const pos = ["data-which-items", "data-count-line", "data-updated", "data-download-problems"].map((k) => h.indexOf(k));
+    assert.ok(pos.every((p, i) => p > 0 && (i === 0 || p > pos[i - 1])), "picker → count → Updated → downloads");
+    for (const later of ["data-note-line", "data-warning-line", "data-show-all", "data-problem-list"])
+      if (h.includes(later)) assert.ok(h.indexOf(later) > pos[3], `${later} below the downloads`);
   }
-  const pre = (h) => h.slice(0, h.indexOf("<select"));
-  assert.equal(pre(htmlAll), pre(htmlKey), "markup up to the picker (incl. Download problem list) identical for All items and Keychain");
+  // 2) Same position for the downloads: everything above them has the same structure and fixed-height
+  //    classes in both picks; only the text and the selected option differ.
+  const skeleton = (h) =>
+    h
+      .slice(0, h.indexOf("data-download-problems"))
+      .replace(/ selected=""/g, "")
+      .replace(/>[^<]*</g, "><");
+  assert.equal(skeleton(htmlAll), skeleton(htmlKey), "identical structure above Download problem list (All items vs Keychain)");
+  assert.match(htmlAll, /data-count-line="true" class="h-6 truncate whitespace-nowrap/, "count line: one fixed line");
+  assert.match(htmlAll, /data-updated="true" aria-live="polite" class="h-5 /, "Updated: fixed 20px, always reserved");
+  assert.match(htmlAll, /<label class="flex min-w-0 flex-col/, "picker label can shrink (min-w-0)");
   assert.ok(htmlAll.includes("data-problem-list") && !htmlKey.includes("data-problem-list"));
   assert.ok(htmlKey.includes(">Show all items<") && !htmlAll.includes(">Show all items<"));
-  // 2) "Show all items" resets the picker to All items ("").
+  // Updated on/off does not change the structure above the buttons either.
+  const htmlUpd = renderToStaticMarkup(createElement(SummaryPanel, { ...props(allRes, ""), updated: true }));
+  assert.ok(htmlUpd.includes(">Updated<"));
+  assert.equal(skeleton(htmlUpd), skeleton(htmlAll));
+  // 3) "Show all items" resets the picker to All items ("").
   let picked = null;
   const tree = SummaryPanel.render({ ...props(keyRes, key.lid), onListing: (v) => { picked = v; } }, null);
   const find = (n) => {
@@ -330,10 +347,9 @@ test("Sweep: no count line reads 0 while the on-screen table has rows (all cases
     { name: "dup_only_1", text: dupOnlyFile(1), c: {} },
     { name: "dup_only_3", text: dupOnlyFile(3), c: {} },
   ];
-  // The problem side of the count line (after "·") must never be 0 next to a table with rows.
-  // A 0 on the ready side ("0 ready for LightBurn · 6 need a look") is a true count and allowed.
-  const zero = /· 0 /;
-  let readyZero = 0;
+  // No count line ever contains a 0 count, on either side, in any pick or mode.
+  const zero = /(^|· )0 /;
+  const shapes = new Set();
   let checked = 0;
   for (const { name, text, c } of inputs) {
     const recipe = c.recipe ? JSON.parse(read(c.recipe)) : null;
@@ -347,10 +363,11 @@ test("Sweep: no count line reads 0 while the on-screen table has rows (all cases
         const st = { ...settings, includeFlagged: incl };
         const res = emProcess(text, { settings: st, explicit: Object.keys(st), recipe, glyphCheck, listing });
         const v = summaryView(res, incl);
+        assert.ok(!zero.test(v.countLine), `${name} incl=${incl} pick=${listing}: "${v.countLine}" has a 0 count`);
+        shapes.add(v.countLine.replace(/\d+/g, "N"));
         if (v.problems.length > 0) {
-          assert.ok(!zero.test(v.countLine), `${name} incl=${incl} pick=${listing}: "${v.countLine}" next to ${v.problems.length} rows`);
+          assert.ok(v.countLine.includes(" · ") || /need a look|with problems|left out/.test(v.countLine), `${name}: problem count shown next to rows`);
           assert.notEqual(v.note, "Everything is ready.");
-          if (/^0 /.test(v.countLine)) readyZero++;
         } else {
           assert.equal(v.showProblems, false);
         }
@@ -360,7 +377,7 @@ test("Sweep: no count line reads 0 while the on-screen table has rows (all cases
       }
     }
   }
-  console.log(`# no-zero sweep: ${checked} views checked; ${readyZero} with 0 on the ready side (allowed)`);
+  console.log(`# no-zero sweep: ${checked} views checked; count-line shapes: ${[...shapes].sort().join(" | ")}`);
 });
 
 test("AT-02 Sold Orders file → WRONG_FILE, no outputs", () => {
@@ -485,4 +502,209 @@ test("AT-24 KPI script on a synthetic event log", () => {
     },
     expected,
   );
+});
+
+test("EXCLUDED_IIDS: owner/test devices are dropped by the server and ignored by the KPI script", async () => {
+  assert.ok(Array.isArray(EXCLUDED_IIDS));
+  const dev = "0b9d2c1e-1111-4222-8333-999999999999";
+  assert.equal(isExcludedIid(dev, [dev]), true);
+  assert.equal(isExcludedIid(iid, [dev]), false);
+  assert.equal(isExcludedIid("", [dev]), false);
+  // server: excluded iid → 204, skipped-filter (nothing stored); other iids go on to the store path
+  const body = (who) => JSON.stringify({ v: 1, event: "pro_interest_tap", iid: who, dogfood: false, props: {} });
+  const req = (who) => new Request("https://alignata.com/api/engrave-merge/e", { method: "POST", body: body(who) });
+  const r1 = await handleEvent(req(dev), { excludedIids: [dev] });
+  assert.equal(r1.status, 204);
+  assert.equal(r1.headers.get("x-em-store"), "skipped-filter", "excluded device not stored");
+  const r2 = await handleEvent(req(iid), { excludedIids: [dev] });
+  assert.notEqual(r2.headers.get("x-em-store"), "skipped-filter", "other devices are not filtered");
+  // KPI script
+  const t = Date.parse("2026-10-05T14:00:00Z");
+  const ev = (who, h, f) => ({ v: 1, event: "file_processed", iid: who, dogfood: false, props: { row_count: 9, item_count: 9, exception_count: 0, file_fingerprint: f }, ts: t + h * 3600e3, day: "2026-10-05", host: "alignata.com", prod: true });
+  const k = computeKpis([ev(dev, 0, "d".repeat(64)), ev(iid, 2, "e".repeat(64))], t + 86400e3, [dev]);
+  assert.equal(k.excluded.excludedIid, 1);
+  assert.equal(k.killBar.distinctRealFiles, 1);
+  assert.equal(k.t0, new Date(t + 2 * 3600e3).toISOString(), "an excluded device does not start the clock");
+});
+
+// The desk's source, split into its top-level handlers ("const name = ... \n  };").
+const deskSrc = readFileSync(join(root, "components/engrave-merge/EngraveMergeDesk.tsx"), "utf8");
+const handlerBody = (name) => {
+  const start = deskSrc.indexOf(`  const ${name} = `);
+  assert.ok(start >= 0, `handler ${name} exists`);
+  return deskSrc.slice(start, deskSrc.indexOf("\n  };\n", start));
+};
+
+test("A settings re-run sends no event; only page open, file load, downloads, print and the Pro tap do", () => {
+  // Every sendEvent call in the desk, by event name: exactly these six, once each.
+  const calls = [...deskSrc.matchAll(/sendEvent\(iidRef\.current, "([a-z_]+)"/g)].map((m) => m[1]).sort();
+  assert.deepEqual(calls, ["cutsheet_printed", "exceptions_downloaded", "file_processed", "merge_downloaded", "page_open", "pro_interest_tap"]);
+  // The re-run path: setters, font, settings file, Updated flash, picker, Start over → no event.
+  for (const h of ["markUpdated", "setS", "setL", "toggleText", "onFont", "onLoadRecipe", "onStartOver"])
+    assert.ok(!handlerBody(h).includes("sendEvent"), `${h} sends no event`);
+  // The results are derived (useMemo) from process(); neither process nor summary can reach the tracker.
+  for (const f of ["lib/engrave-merge/process.ts", "lib/engrave-merge/summary.ts"])
+    assert.ok(!/from "\.\/track"|sendEvent/.test(readFileSync(join(root, f), "utf8")), `${f} has no tracking`);
+  const memo = deskSrc.slice(deskSrc.indexOf("const result = useMemo("), deskSrc.indexOf("const ok: ProcessOk"));
+  assert.ok(memo.includes("runProcess(") && !memo.includes("sendEvent"));
+});
+
+test("Start over keeps em_iid and sends no event", () => {
+  const body = handlerBody("onStartOver");
+  assert.ok(!/localStorage|IID_KEY|iidRef|sendEvent/.test(body), "Start over never touches the install id or events");
+  for (const s of ["setFile(null)", "setSettings(DEFAULT_SETTINGS)", "setListingCfg({})", "setExtraLabels([])", "setListing(\"\")", "setFont(null)"])
+    assert.ok(body.includes(s), `Start over clears: ${s}`);
+  assert.ok(body.includes("window.scrollTo({ top: 0") && body.includes("fileInput.current?.focus("), "back to top, drop zone focused");
+  // em_iid survives a reload after Start over: initInstallId reuses the stored id.
+  const store = new Map();
+  globalThis.localStorage = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, String(v)) };
+  try {
+    const first = initInstallId("");
+    assert.equal(store.get(IID_KEY), first);
+    assert.equal(initInstallId(""), first, "same id next time");
+  } finally {
+    delete globalThis.localStorage;
+  }
+});
+
+test("Page order at load: nothing but the drop zone and a collapsed Settings row above Make merge file (620px rule)", () => {
+  const html = renderToStaticMarkup(createElement(EngraveMergeDesk));
+  const at = (needle) => {
+    const i = html.indexOf(needle);
+    assert.ok(i >= 0, `${needle} rendered`);
+    return i;
+  };
+  const order = ["data-dropzone", "Where do I find this file?", "data-settings", "data-primary", 'role="status"', "How to use this in LightBurn", "data-start-over"];
+  const pos = order.map(at);
+  assert.deepEqual([...pos].sort((a, b) => a - b), pos, `order: ${order.join(" → ")}`);
+  const settingsTag = html.slice(html.lastIndexOf("<details", at("data-settings")), html.indexOf(">", at("data-settings")));
+  assert.ok(!/\sopen(=|\s|>|$)/.test(settingsTag), "Settings collapsed by default");
+  assert.ok(html.indexOf("data-item-settings") > at("data-settings") && html.indexOf("data-item-settings") < at("data-primary"), "Item settings inside Settings");
+  assert.equal((html.match(/rounded-\[var\(--cb-radius-pill\)\][^"]*bg-\[var\(--cb-ink\)\]/g) || []).length, 1, "one black pill");
+  assert.ok(!/data-start-over[^>]*radius-pill/.test(html), "Start over is not a pill");
+  // Measured bottom of Make merge file at 390×844 is checked in the browser e2e (≤ 620px).
+});
+
+test("Redis keys: every key Engrave Merge writes or reads starts with the em: prefix", async () => {
+  assert.equal(EM_KEY_PREFIX, "em:");
+  const sent = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    const body = JSON.parse(init.body);
+    const cmds = Array.isArray(body[0]) ? body : [body]; // pipeline (writer) or single command (KPI reader)
+    sent.push(...cmds);
+    const cmd = cmds[0][0];
+    const result = cmd === "SCAN" ? ["0", [eventKey("2026-10-02")]] : cmd === "LRANGE" ? [] : "OK";
+    return new Response(JSON.stringify(Array.isArray(body[0]) ? cmds.map(() => ({ result: "OK" })) : { result }), { status: 200 });
+  };
+  try {
+    assert.equal(await appendEvent({ url: "https://kv.invalid", token: "t" }, "2026-10-02", "{}"), true);
+    await readStore({ KV_REST_API_URL: "https://kv.invalid", KV_REST_API_READ_ONLY_TOKEN: "t" });
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+  // Key argument per command: RPUSH/EXPIRE/LRANGE key = args[1]; SCAN … MATCH <pattern>.
+  const keys = sent.map((c) => (c[0] === "SCAN" ? c[c.indexOf("MATCH") + 1] : c[1]));
+  assert.deepEqual(sent.map((c) => c[0]), ["RPUSH", "EXPIRE", "SCAN", "LRANGE"], "only these commands");
+  for (const k of keys) assert.ok(k.startsWith(EM_KEY_PREFIX), `key ${k} starts with ${EM_KEY_PREFIX}`);
+  assert.ok(!sent.some((c) => c.includes("MATCH") && c[c.indexOf("MATCH") + 1] === "*"), "never scans the whole store");
+  // The prefix comes from the one constant, and nothing else in the repo talks to a Redis/KV store.
+  assert.ok(readFileSync(join(root, "lib/engrave-merge/store.ts"), "utf8").includes("${EM_KEY_PREFIX}ev:"));
+  const allowed = new Set(["lib/engrave-merge/store.ts", "scripts/engrave-merge-kpis.mjs", "scripts/assert-engrave-merge.mjs"]);
+  const hits = [];
+  const walk = (dir) => {
+    for (const e of readdirSync(join(root, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${e.name}`;
+      if (e.isDirectory()) walk(rel);
+      else if (/\.(m?[jt]sx?)$/.test(e.name) && /KV_REST_API|UPSTASH_REDIS|@upstash\/redis|@vercel\/kv/.test(readFileSync(join(root, rel), "utf8")) && !allowed.has(rel)) hits.push(rel);
+    }
+  };
+  for (const d of ["app", "components", "lib", "scripts"]) walk(d);
+  assert.deepEqual(hits, [], "no other Redis/KV client in the repo");
+});
+
+test("Event endpoint: x-em-store header for every path (status 204, empty body), one safe log line", async () => {
+  const env = ["KV_REST_API_URL", "KV_REST_API_TOKEN", "UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"];
+  const saved = Object.fromEntries(env.map((k) => [k, process.env[k]]));
+  const realFetch = globalThis.fetch;
+  const realLog = console.log;
+  const logs = [];
+  const calls = [];
+  let mode = "ok";
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url: String(url), body: JSON.parse(init.body) });
+    if (mode === "throw") throw new Error("network down");
+    if (mode === "500") return new Response("{}", { status: 500 });
+    return new Response(JSON.stringify([{ result: 1 }, { result: 1 }]), { status: 200 });
+  };
+  console.log = (...a) => logs.push(a.join(" "));
+  const dogIid = "dog-" + iid;
+  const ev = (extra = {}) =>
+    new Request("https://alignata.com/api/engrave-merge/e", {
+      method: "POST",
+      body: JSON.stringify({ v: 1, event: "page_open", iid: dogIid, dogfood: true, props: {}, ...extra }),
+    });
+  const check = async (req, want) => {
+    const r = await handleEvent(req);
+    assert.equal(r.status, 204);
+    assert.equal(await r.text(), "", "empty body");
+    assert.equal(r.headers.get("x-em-store"), want);
+    return r;
+  };
+  try {
+    for (const k of env) delete process.env[k];
+    await check(ev(), "skipped-config");
+    process.env.KV_REST_API_URL = "https://kv.invalid";
+    process.env.KV_REST_API_TOKEN = "t";
+    await check(ev(), "stored"); // dogfood events ARE stored (flagged dogfood: true)
+    const stored = JSON.parse(calls.at(-1).body[0][2]);
+    assert.equal(stored.dogfood, true);
+    assert.ok(calls.at(-1).body[0][1].startsWith("em:ev:"));
+    mode = "500";
+    await check(ev(), "error");
+    mode = "throw";
+    await check(ev(), "error");
+    mode = "ok";
+    const n = calls.length;
+    const fixture = new Request("https://alignata.com/api/engrave-merge/e", {
+      method: "POST",
+      body: JSON.stringify({ v: 1, event: "file_processed", iid, dogfood: false, props: { row_count: 9, item_count: 9, exception_count: 0, file_fingerprint: FIXTURE_FINGERPRINTS[0] } }),
+    });
+    await check(fixture, "skipped-filter");
+    assert.equal(calls.length, n, "filtered events never reach the store");
+    const bad = await handleEvent(new Request("https://alignata.com/api/engrave-merge/e", { method: "POST", body: "nope" }));
+    assert.equal(bad.status, 400);
+  } finally {
+    globalThis.fetch = realFetch;
+    console.log = realLog;
+    for (const k of env) {
+      if (saved[k] === undefined) delete process.env[k];
+      else process.env[k] = saved[k];
+    }
+  }
+  // Log lines: exactly "[engrave-merge] event <name> <result>", never an id or a value.
+  assert.deepEqual(logs, [
+    "[engrave-merge] event page_open skipped-config",
+    "[engrave-merge] event page_open stored",
+    "[engrave-merge] event page_open error",
+    "[engrave-merge] event page_open error",
+    "[engrave-merge] event file_processed skipped-filter",
+  ]);
+  assert.ok(!logs.some((l) => l.includes(iid) || l.includes("dog-")));
+});
+
+test("Picker label cut and Settings row length", async () => {
+  const { COPY } = await import("../lib/engrave-merge/copy.ts");
+  const long = "Personalized Engraved Wooden Cutting Board with Custom Family Name and Established Date, Walnut Maple or Cherry, Gift for Mom";
+  const title140 = (long + " Housewarming Wedding").slice(0, 140);
+  assert.equal(title140.length, 140);
+  const opt = COPY.whichOneShort(title140, "3000000001");
+  assert.match(opt, /… \(3000000001\)$/, "ends with … (listing ID)");
+  const cut = opt.replace(/… \(3000000001\)$/, "");
+  assert.ok(cut.length <= 40 && cut.length >= 30, `about 40 characters: ${cut.length}`);
+  assert.ok(title140.startsWith(cut) && /\s/.test(title140[cut.length] ?? " ") , "cut at a word break");
+  assert.equal(COPY.whichOneShort("Custom Engraved Keychain", "3000000002"), "Custom Engraved Keychain (3000000002)", "short titles unchanged");
+  assert.equal(COPY.settingsRow(0), "Settings · Standard");
+  assert.equal(COPY.settingsRow(3), "Settings · 3 changed");
+  for (const n of [0, 1, 9, 12, 99]) assert.ok(COPY.settingsRow(n).length <= 35);
 });

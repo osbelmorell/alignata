@@ -39,14 +39,15 @@ export function summaryView(ok: Pick<ProcessOk, "stats" | "problems">, includeFl
   const duplicatesOnly = shown.length > 0 && dupLines === shown.length;
   const hasProblems = shown.length > 0;
   const n = s.flagged_in_merge_items;
-  // Never a "0" next to a table with rows: duplicate-only shows the duplicate count instead.
-  const countLine = duplicatesOnly
-    ? includeFlagged
-      ? COPY.summaryCountsDupOnlyIncluded(s.ready_items, dupLines)
-      : COPY.summaryCountsDupOnly(s.ready_items, dupLines)
-    : includeFlagged
-      ? COPY.summaryCountsIncluded(s.ready_items, n)
-      : COPY.summaryCounts(s.ready_items, s.held_items);
+  // Count line: left = items in the merge file, right = what the table shows for this pick
+  // (duplicates only → the duplicate count). Any part that would read 0 is left out: no 0 anywhere.
+  const left = includeFlagged ? COPY.countInFile : COPY.countReady;
+  const rightN = !hasProblems ? 0 : duplicatesOnly ? dupLines : includeFlagged ? n : s.held_items;
+  const right = duplicatesOnly ? COPY.countDupLeftOut : includeFlagged ? COPY.countWithProblems : COPY.countNeedLook;
+  const parts = [s.ready_items > 0 ? left(s.ready_items) : null, rightN > 0 ? right(rightN) : null].filter(
+    (x): x is string => x !== null,
+  );
+  const countLine = parts.length ? parts.join(" · ") : COPY.countNothing;
   const warning = includeFlagged && n > 0 ? COPY.summaryIncludedWarning(n) : null;
   const others = ok.problems.filter((p) => !p.inScope);
   const otherItems = others.reduce((sum, p) => sum + p.counted, 0); // items, like "need a look" (duplicates count 0)

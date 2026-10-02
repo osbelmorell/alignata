@@ -28,7 +28,7 @@
 ## 3. Page layout (phone-first)
 
 Hard requirements:
-- On a **390 px wide** viewport, the **drop zone and the primary button sit fully inside the first 660 px** of the page (measured `getBoundingClientRect().bottom ≤ 660` at scrollY 0).
+- On a **390 px wide** viewport with Settings collapsed, the **drop zone, the Settings row and the primary button sit fully inside the first 620 px** of the page (measured `getBoundingClientRect().bottom ≤ 620` for Make merge file at scrollY 0; 604 px measured on the settings commit).
 - **All text ≥ 16 px** computed (no 11 px eyebrows or `text-xs`/`text-sm` on this page), WCAG **AA** contrast everywhere (axe: zero `color-contrast` violations).
 - **Exactly ONE black primary pill button** (`bg-[var(--cb-ink)]` #121410, explicit `text-white`, 18.5:1 contrast). Everything else is secondary (outline) or a text link.
 - No jargon on the face: say "file", "problem list", "settings file", never "CSV parsing", "exceptions", "recipe JSON" or "fingerprint". The exact Etsy filename can appear in help text.
@@ -48,9 +48,23 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
 │ │                                                   │ │  <input type=file accept=.csv>
 │ └───────────────────────────────────────────────────┘ │
 │ Where do I find this file? (text button, below box)   │
+│ ▸ Settings · Standard                          (48px) │  collapsed row ("Settings · {n} changed")
 │ (( [COPY: Make merge file] ))                  (52px) │  ONE black pill, full width, white label
 │ status line (aria-live=polite)                 (24px) │  e.g. File loaded. Tap "Make merge file" to get your LightBurn file.
-└────────────────────── ≈ 470–520px ────────────────────┘  (budget 660px)
+└────────────────────── ≈ 604px ───────────────────────┘  (budget 620px)
+   Settings row contents (opens in place):
+       - [COPY: Include orders already shipped]                 toggle, off
+       - [COPY: Most letters per line] number, default 40 (0 = no limit)
+       - [COPY: Split text into lines]                          toggle, on
+       - [COPY: Number of line columns]                         number, default 6, range 1–10
+       - [COPY: Remove "1. 2. 3." numbering]                    toggle, on
+       - [COPY: Put items that need a look in the merge file anyway] toggle, off
+       - Check my font (optional)                               44px outlined button, file input .ttf/.otf
+       - ▸ [COPY: Item settings]  collapsed row; per-listing mapping (§6.6)
+       - [COPY: Save settings file] / [COPY: Load settings file]
+     Row label (Copy, final; ≤ 35 characters): "Settings · Standard" / "Settings · {n} changed", n = main settings
+     changed from the standard ones + font file + extra labels + each item with item settings.
+     Font check: full-width 44px outlined button "Check my font (optional)"; shows the font file's name once picked.
    below the fold (after a file is loaded):
    • summary (the ONLY count on screen): `{ready} ready for LightBurn · {held} need a look`, then
      "Items that need a look are left out of the merge file. The problem list says why." (or "Everything is ready." when held = 0).
@@ -77,21 +91,24 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
      both include-anyway modes, followed by a "Show all items" button (≥ 44px) that resets the picker to All items.
      (If the other problems are only duplicates, the duplicate note is shown instead.)
      "Everything is ready." shows only when the whole file has 0 problems.
-     Summary order (fixed so nothing jumps when the pick changes): [Download problem list] [Print cut sheet] → Which items →
-     count line / note / Show all items → problem table.
+     Results order (Product Experience, Oct 2): Which items picker → count line (ONE line, fixed 24px, never wraps) →
+     "Updated" line (fixed 20px, always reserved, empty when idle) → [Download problem list] [Print cut sheet] →
+     warning / note / Show all items → problem table. Everything above the buttons has a fixed height, so they keep the
+     same position for All items, any pick and while "Updated" shows (Playwright: same page y across All items → clean
+     pick → Show all items). After "Show all items", focus moves to the picker.
+     No 0 anywhere in the count line: a part whose number is 0 is left out (clean pick: "{ready} ready for LightBurn" /
+     "{inFile} in your merge file"; nothing ready: "{held} need a look"). Both parts 0: "No items to engrave."
+     [improvised; no Copy string yet]. Worst case "999 ready for LightBurn · 99 duplicates left out" = 334 px of 358 px.
+     Picker: the label is `flex min-w-0 flex-col`, the select `w-full min-w-0` with ellipsis; option text over ~40
+     characters is cut at a word break, then "… (listing ID)". Gate: 140-character title, WebKit at 390 →
+     scrollWidth == clientWidth.
    • secondary buttons: Download problem list (shown whenever exception_count > 0)  [COPY: Print cut sheet]
    • "Which items" select: All items / one per listing (exports that listing only, rows renumbered from 1)
-   • ▸ [COPY: Settings]  (disclosure, closed by default)
-       - [COPY: Include orders already shipped]                 toggle, off
-       - [COPY: Most letters per line] number, default 40 (0 = no limit)
-       - [COPY: Split text into lines]                          toggle, on
-       - [COPY: Number of line columns]                         number, default 6, range 1–10
-       - [COPY: Remove "1. 2. 3." numbering]                    toggle, on
-       - [COPY: Put items that need a look in the merge file anyway] toggle, off
-       - [COPY: Check letters against my font (optional)]       file input .ttf/.otf
-       - [COPY: Item settings]  per-listing mapping (§6.6)
-       - [COPY: Save settings file] / [COPY: Load settings file]
    • ▸ [COPY: How to use this in LightBurn] (§7.4 guide, collapsed)
+   • [Start over]: outlined 44px button (not a pill). Tap → inline "This clears your file and all settings."
+     [Yes, start over] [Cancel] (no modal; 44px each, 8px apart; focus starts on Cancel). Yes clears the
+     file, results, all settings, the font file and the picker; keeps localStorage em_iid; sends no event; scrolls to the
+     top and focuses the drop zone.
    • quiet text button: [COPY: I'd pay for unlimited batches]  → on tap: [COPY: Thanks, noted. No sign-up needed.]
    • [COPY: Try it with a sample file] text link (loads a bundled synthetic fixture; excluded from metrics)
 ```
@@ -99,7 +116,12 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
 Behaviour:
 - Before a file is chosen, tapping the primary button opens the file picker (same as the drop zone). A disabled black button is not allowed because it would fail the "one clear action" rule.
 - When a file is chosen it's parsed immediately (fires `file_processed`) and the status line updates. Tapping **Make merge file** downloads the merge file (fires `merge_downloaded`) and scrolls to the summary.
-- Changing a setting re-runs the parse in memory. It does **not** re-fire `file_processed` unless a different file is loaded.
+- Changed settings apply on their own: each change re-runs the loaded file in place (no scroll jump); number fields apply
+  400 ms after typing stops, or at once on blur/Enter, so a download always uses the current settings. An aria-live
+  "Updated" shows for 1.5 s in the fixed 20px line under the count line. A re-run sends **no** event (it never re-fires `file_processed`);
+  only real downloads count. Speed gate: a 1,000-item file re-runs in ≤ 300 ms at 4× CPU throttle (measured p50 134 ms,
+  max 170 ms), so there is no "Update results" button.
+- Only Make merge file is a pill; secondary buttons are outlined with rounded corners (12px), not pills.
 - Wrong file (missing required columns, §5.1): show a plain message in the status line, e.g. [COPY: This looks like Etsy's "Sold Orders" file. Please download "Order Items" instead.] Show it when `Full Name` is present and `Variations` is missing. No outputs.
 - Mojibake guard: if the decoded text contains U+FFFD, show [COPY: Some letters look garbled. Download the file again from Etsy and don't open it in Excel first.] and still process.
 - "Where do I find this file?" expands to: [COPY: In Etsy, go to Shop Manager → Settings → Options → Download Data. Pick "Order Items", choose the month, and tap Download CSV.] (**Product Copy to verify the current Etsy menu path.**)
@@ -276,11 +298,22 @@ Envelope: `{ v: 1, event, iid, dogfood: boolean, props }`. The server adds `ts` 
 1. Opening the page with `?dogfood=1` rewrites `em_iid` to `dog-<new uuid>` (still just a random id, so the localStorage rule holds). `?dogfood=0` gives a fresh non-dog id. Events from `dog-` ids get `dogfood: true`.
 2. The server drops fingerprints listed in `fixture_fingerprints.json` (the sample-file button uses a fixture, so it's excluded automatically). Ship the list as ONE constant in `lib/engrave-merge/fixtures.ts`; the server event filter and `npm run engrave:kpis` both import it (no duplicate lists).
 3. Analysis counts only `host === "alignata.com"`, which excludes previews and localhost.
+3a. Backstop for owner/test devices: `EXCLUDED_IIDS` (next to the fixture list in `lib/engrave-merge/fixtures.ts`).
+    The server drops events from those em_iid values (204, nothing stored) and `npm run engrave:kpis` ignores them.
 4. Osbel and Eng Ops dogfood **only** with `?dogfood=1`.
 
 ### 8.4 Where events go (Eng Ops chooses; record the choice in the PR)
 - **Fact:** Vercel Web Analytics custom events (`track()`) are **Pro/Enterprise only**, with **2 properties per event on Pro** (8 with Web Analytics Plus). The hub runs on **Hobby** (existing tools say "Hobby"). Hobby runtime logs are kept for **1 hour** (Pro 1 day). So "log to Vercel logs" **alone cannot** support a 14-day kill bar on Hobby.
-- **Option A (recommended):** route handler `app/api/engrave-merge/e/route.ts` validates the event, then appends one JSON line to a **free KV**: Upstash Redis via the Vercel Marketplace, `RPUSH em:ev:<day>`, TTL 120 days. Plus `console.log` of the same line for live debugging.
+- **Option A (recommended):** route handler `app/api/engrave-merge/e/route.ts` validates the event, then appends one JSON line to a **free KV**: Upstash Redis via the Vercel Marketplace, `RPUSH em:ev:<day>`, TTL 120 days. **Chosen** (store `upstash-kv-crimson-flower`, env `KV_REST_API_URL` +
+  `KV_REST_API_TOKEN`; the KPI script prefers `KV_REST_API_READ_ONLY_TOKEN`).
+  - Every 204 from the event endpoints carries `x-em-store: stored | skipped-config | skipped-filter | error` (body empty)
+    and logs ONE line `[engrave-merge] event <name> <result>`: no ids, no values (the full event is not logged).
+    skipped-filter = fixture fingerprint or EXCLUDED_IIDS device. Dogfood events ARE stored (`dogfood: true`) so the
+    pipeline can be confirmed; the KPI script excludes them.
+  - Keys: ONE prefix `em:` (`EM_KEY_PREFIX` in `lib/engrave-merge/store.ts`). Writes: `em:ev:<YYYY-MM-DD>` (RPUSH +
+    EXPIRE). Reads (KPI script): `SCAN MATCH em:ev:*` + `LRANGE`. Nothing else. The same store is shared with
+    osbelmorell/betting-calculator, whose keys are `ahadle:{prod|qa}:lb:*`, `ahadle:{prod|qa}:rl:*`, `markets:*` and
+    `seo:*`, so no `em:` collision (tested: every key written/read starts with `em:`).
 - **Option B:** the same handler writes one tiny JSON object per event to **Vercel Blob** (`em-events/<day>/<ts>-<rand>.json`, private).
 - **Option C:** Pro plan + `track()`. `file_processed` has 4 props, so it needs Web Analytics Plus or splitting. The dashboard can't do the per-install distinct-day maths, so a raw export would still be needed.
 - **Required in every option:** `scripts/engrave-merge-kpis.mjs` (read-only) prints T0, the three kill-bar numbers and the weekly outcome metric from the stored events.

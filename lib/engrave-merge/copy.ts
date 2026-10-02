@@ -30,8 +30,6 @@ export const COPY = {
   statusUnreadable: "Couldn't open that file. Please try again.",
   garbled: "Some letters look garbled. Download the file again from Etsy and don't open it in Excel first.",
 
-  /** The ONLY count on screen. ready + held = total items to make (one per merge row). */
-  summaryCounts: (ready: number, held: number) => `${ready} ready for LightBurn · ${held} need a look`,
   summaryHeldNote: "Items that need a look are left out of the merge file. The problem list says why.",
   summaryAllReady: "Everything is ready.",
   /** One listing picked, it has 0 problems, but other items in the file need a look. n = items (same counting as "need a look"). */
@@ -45,13 +43,16 @@ export const COPY = {
     n === 1
       ? "1 duplicate line was left out. The problem list shows it."
       : `${n} duplicate lines were left out. The problem list shows it.`,
-  /** Duplicate-only (no real problems, d ≥ 1 duplicate lines): count lines for include-anyway OFF / ON. */
-  summaryCountsDupOnly: (ready: number, d: number) =>
-    `${ready} ready for LightBurn · ${d === 1 ? "1 duplicate left out" : `${d} duplicates left out`}`,
-  summaryCountsDupOnlyIncluded: (inFile: number, d: number) =>
-    `${inFile} in your merge file · ${d === 1 ? "1 duplicate left out" : `${d} duplicates left out`}`,
-  /** "Put items that need a look in the merge file anyway" ON: count line. n = items with problems (same unit). */
-  summaryCountsIncluded: (inFile: number, n: number) => `${inFile} in your merge file · ${n} with problems`,
+  /**
+   * The ONLY count on screen, built from parts joined with " · " (ready + held = total items to make, one per merge row).    * A part whose number is 0 is left out (no 0 anywhere).
+   */
+  countReady: (n: number) => `${n} ready for LightBurn`,
+  countInFile: (n: number) => `${n} in your merge file`,
+  countNeedLook: (n: number) => `${n} need a look`,
+  countWithProblems: (n: number) => `${n} with problems`,
+  countDupLeftOut: (d: number) => (d === 1 ? "1 duplicate left out" : `${d} duplicates left out`),
+  /** Both parts would be 0 (e.g. every order already shipped). [Improvised: no Copy string for this yet.] */
+  countNothing: "No items to engrave.",
   /** "Include anyway" ON and some items in the file have problems. n = items. */
   summaryIncludedWarning: (n: number) =>
     n === 1
@@ -72,15 +73,26 @@ export const COPY = {
   whichItems: "Which items",
   whichAll: "All items",
   whichOne: (name: string, lid: string) => `${name} (${lid})`,
+  /** Picker option: titles over ~40 characters are cut at a word break, then "… (listing ID)". */
+  whichOneShort: (name: string, lid: string) => {
+    const t = name.trim();
+    if (t.length <= 40) return `${t} (${lid})`;
+    const cut = t.slice(0, 41).replace(/\s+\S*$/, "") || t.slice(0, 40);
+    return `${cut.replace(/[\s,.;:–-]+$/, "")}… (${lid})`;
+  },
 
   settings: "Settings",
+  /** Settings row (collapsed), ≤ 35 characters. n = settings changed from the standard ones. */
+  settingsRow: (n: number) => (n === 0 ? "Settings · Standard" : `Settings · ${n} changed`),
+  /** aria-live, in a fixed 20px line under the count line for a moment after a settings change re-runs the file. */
+  updated: "Updated",
   includeShipped: "Include orders already shipped",
   charLimit: "Most letters per line (0 = no limit)",
   splitLines: "Split text into lines",
   lineColumns: "Number of line columns (1–10)",
   stripNumbers: 'Remove "1. 2. 3." numbering',
   includeFlagged: "Put items that need a look in the merge file anyway",
-  fontCheck: "Check letters against my font (optional)",
+  fontCheck: "Check my font (optional)",
   fontLoaded: (name: string, missing: number) =>
     missing === 0 ? `${name}: no missing letters.` : `${name}: ${missing} missing ${missing === 1 ? "letter" : "letters"}.`,
   fontError: "Couldn't read that font file.",
@@ -104,6 +116,10 @@ export const COPY = {
   settingsTooBig: "That settings file is too big.",
 
   guide: "How to use this in LightBurn",
+  startOver: "Start over",
+  startOverWarn: "This clears your file and all settings.",
+  startOverYes: "Yes, start over",
+  startOverCancel: "Cancel",
   guideSteps: [
     "In LightBurn, add a text box and type %11 (whole text) or %12, %13 … (one line each).",
     "Set the text box's mode to Merge/CSV in the text toolbar.",
