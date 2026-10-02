@@ -318,7 +318,7 @@ export function EngraveMergeDesk() {
                     </tr>
                   </thead>
                   <tbody>
-                    {ok.problems.map((p, i) => (
+                    {view.problems.map((p, i) => (
                       <tr key={i} className="border-b border-[var(--cb-line)] align-top last:border-b-0">
                         <td className="px-3 py-2">
                           {p.item}

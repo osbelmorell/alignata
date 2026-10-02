@@ -14,8 +14,14 @@ export interface SummaryView {
   note: string | null;
   /** "Include anyway" ON and items with problems are in the merge file. */
   warning: string | null;
-  /** Problem list table + "Download problem list" button: whenever the problem list has rows. */
+  /** Problem list table + "Download problem list" button: whenever the on-screen table has rows. */
   showProblems: boolean;
+  /**
+   * On-screen table rows: the rows for the "Which items" pick (all rows for "All items").
+   * A row belongs to a pick by its Listing ID (duplicates included); rows with a blank
+   * Listing ID only show under "All items". The downloaded problem list is never filtered.
+   */
+  problems: ProblemItem[];
 }
 
 /**
@@ -24,17 +30,18 @@ export interface SummaryView {
  */
 export function summaryView(ok: Pick<ProcessOk, "stats" | "problems">, includeFlagged: boolean): SummaryView {
   const s = ok.stats;
-  const dupLines = ok.problems.filter((p) => p.dup).length;
-  const duplicatesOnly = ok.problems.length > 0 && dupLines === ok.problems.length;
-  const hasProblems = s.exception_count > 0;
+  const shown = ok.problems.filter((p) => p.inScope);
+  const dupLines = shown.filter((p) => p.dup).length;
+  const duplicatesOnly = shown.length > 0 && dupLines === shown.length;
+  const hasProblems = shown.length > 0;
   const n = s.flagged_in_merge_items;
   const countLine = includeFlagged
     ? COPY.summaryCountsIncluded(s.ready_items, n)
     : COPY.summaryCounts(s.ready_items, s.held_items);
   const warning = includeFlagged && n > 0 ? COPY.summaryIncludedWarning(n) : null;
   let note: string | null = null;
-  if (!hasProblems && ok.problems.length === 0) note = COPY.summaryAllReady;
+  if (!hasProblems) note = COPY.summaryAllReady; // this pick really has zero problems
   else if (duplicatesOnly) note = COPY.summaryDuplicatesOnly(dupLines);
   else if (!warning) note = COPY.summaryHeldNote;
-  return { countLine, note, warning, showProblems: hasProblems || ok.problems.length > 0 };
+  return { countLine, note, warning, showProblems: hasProblems, problems: shown };
 }

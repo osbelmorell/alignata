@@ -62,6 +62,9 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
      "Everything is ready." only when the problem list is empty, in either mode.
    • on-screen problem list (whenever exception_count > 0): Item · How many · Problem. How many = raw Quantity,
      "0, counted as 1" for an unreadable quantity, "Duplicate, left out" for a duplicate (on screen only; the file keeps raw Quantity)
+     With one listing picked under "Which items", the on-screen table shows only that listing's rows (by Listing ID,
+     duplicates included; rows with a blank Listing ID show only under "All items"), so it adds up to the count.
+     No rows for the pick → table and button hidden on screen. The downloaded problem list is never filtered.
    • secondary buttons: Download problem list (shown whenever exception_count > 0)  [COPY: Print cut sheet]
    • "Which items" select: All items / one per listing (exports that listing only, rows renumbered from 1)
    • ▸ [COPY: Settings]  (disclosure, closed by default)

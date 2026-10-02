@@ -95,12 +95,12 @@ test('fx05_exceptions: How many column reads "0, counted as 1" / "Duplicate, lef
   assert.equal(res.problems.length, 7, "7 problem rows");
   assert.deepEqual(res.problems.map(howManyLabel), ["0, counted as 1", "1", "1", "1", "1", "1", "Duplicate, left out"]);
   assert.equal(res.problems.reduce((n, p) => n + p.counted, 0), 6);
-  assert.deepEqual(summaryView(res, false), {
-    countLine: "3 ready for LightBurn · 6 need a look",
-    note: "Items that need a look are left out of the merge file. The problem list says why.",
-    warning: null,
-    showProblems: true,
-  });
+  const v = summaryView(res, false);
+  assert.equal(v.countLine, "3 ready for LightBurn · 6 need a look");
+  assert.equal(v.note, "Items that need a look are left out of the merge file. The problem list says why.");
+  assert.equal(v.warning, null);
+  assert.equal(v.showProblems, true);
+  assert.equal(v.problems.length, 7);
 });
 
 test("fx05_exceptions__include_flagged: problem list + button visible and warning shown", () => {
@@ -178,6 +178,39 @@ test('How many: blank quantity reads "Blank, counted as 1"', () => {
   const row = head.map((h, i) => (i === qi ? "" : h === "Order ID" ? "1000009991" : h === "Transaction ID" ? "2000009991" : h === "Listing ID" ? "3000009991" : h === "Item Name" ? "Test" : h === "Variations" ? "Personalization:Amy" : ""));
   const res = emProcess(head.join(",") + nl + row.join(",") + nl);
   assert.equal(res.problems.map(howManyLabel)[0], "Blank, counted as 1");
+});
+
+test('"Which items" pick: on-screen table rows reconcile with the count (fx05, each listing)', () => {
+  const text = read("fx05_exceptions.csv");
+  const all = emProcess(text);
+  const expected = {
+    "3000000005": { countLine: "1 ready for LightBurn · 5 need a look", rows: 6, labels: ["1", "1", "1", "1", "1", "Duplicate, left out"] },
+    "3000000006": { countLine: "2 ready for LightBurn · 1 need a look", rows: 1, labels: ["0, counted as 1"] },
+  };
+  for (const { lid } of all.listings) {
+    for (const incl of [false, true]) {
+      const res = emProcess(text, { listing: lid, settings: { includeFlagged: incl }, explicit: ["includeFlagged"] });
+      const v = summaryView(res, incl);
+      assert.ok(v.problems.every((p) => p.inScope), `${lid}: only this listing's rows`);
+      const counted = v.problems.reduce((n, p) => n + p.counted, 0);
+      assert.equal(counted, incl ? res.stats.flagged_in_merge_items : res.stats.held_items, `${lid} incl=${incl}: table adds up to the count`);
+      assert.equal(res.stats.ready_items + res.stats.held_items, res.stats.total_items);
+      assert.equal(exceptionsCsv(res), read("expected/fx05_exceptions/expected_exceptions.csv"), "downloaded problem list is never filtered");
+      if (!incl) {
+        assert.equal(v.countLine, expected[lid].countLine);
+        assert.equal(v.problems.length, expected[lid].rows);
+        assert.deepEqual(v.problems.map(howManyLabel), expected[lid].labels);
+        assert.equal(v.showProblems, true);
+      }
+    }
+  }
+  // a pick with no problem rows: table + button hidden; "Everything is ready." only because that pick has none
+  const stats = { exception_count: 2, ready_items: 2, held_items: 0, flagged_in_merge_items: 0 };
+  const other = { dup: false, badQty: false, qty: "1", counted: 1, held: true, inScope: false, problems: ["x"] };
+  const empty = summaryView({ stats, problems: [other, { ...other, dup: true, counted: 0 }] }, false);
+  assert.equal(empty.showProblems, false);
+  assert.equal(empty.problems.length, 0);
+  assert.equal(empty.note, "Everything is ready.");
 });
 
 test("AT-02 Sold Orders file → WRONG_FILE, no outputs", () => {
