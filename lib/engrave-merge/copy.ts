@@ -34,6 +34,11 @@ export const COPY = {
   summaryCounts: (ready: number, held: number) => `${ready} ready for LightBurn · ${held} need a look`,
   summaryHeldNote: "Items that need a look are left out of the merge file. The problem list says why.",
   summaryAllReady: "Everything is ready.",
+  /** One listing picked, it has 0 problems, but other lines in the file do. n = other problem lines. */
+  summaryPickReadyOthers: (n: number) =>
+    n === 1
+      ? "This item is ready. 1 other line in your file has a problem. Pick All items to see them."
+      : `This item is ready. ${n} other lines in your file have problems. Pick All items to see them.`,
   /** The ONLY problems are duplicates (either include-anyway mode). n = duplicate lines. */
   summaryDuplicatesOnly: (n: number) =>
     n === 1

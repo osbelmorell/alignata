@@ -205,13 +205,40 @@ test('"Which items" pick: on-screen table rows reconcile with the count (fx05, e
       }
     }
   }
-  // a pick with no problem rows: table + button hidden; "Everything is ready." only because that pick has none
+  // a pick with no problem rows while other lines have problems: table hidden, download still shown
   const stats = { exception_count: 2, ready_items: 2, held_items: 0, flagged_in_merge_items: 0 };
   const other = { dup: false, badQty: false, qty: "1", counted: 1, held: true, inScope: false, problems: ["x"] };
   const empty = summaryView({ stats, problems: [other, { ...other, dup: true, counted: 0 }] }, false);
   assert.equal(empty.showProblems, false);
+  assert.equal(empty.showDownload, true);
   assert.equal(empty.problems.length, 0);
-  assert.equal(empty.note, "Everything is ready.");
+  assert.equal(empty.note, "This item is ready. 2 other lines in your file have problems. Pick All items to see them.");
+  const one = summaryView({ stats: { ...stats, exception_count: 1 }, problems: [other] }, true);
+  assert.equal(one.note, "This item is ready. 1 other line in your file has a problem. Pick All items to see them.");
+  // whole file clean → the only time "Everything is ready." shows
+  const clean = summaryView({ stats: { ...stats, exception_count: 0 }, problems: [] }, false);
+  assert.equal(clean.note, "Everything is ready.");
+  assert.equal(clean.showDownload, false);
+});
+
+test("fx03_multiline_commas__no_split, Keychain picked: download shows, no \"Everything is ready.\"", () => {
+  const text = read("fx03_multiline_commas.csv");
+  const all = emProcess(text, { settings: { splitLines: false }, explicit: ["splitLines"] });
+  assert.equal(all.stats.exception_count, 2);
+  const key = all.listings.find((l) => /keychain/i.test(l.itemName));
+  assert.ok(key, "fx03 has a Keychain listing");
+  for (const incl of [false, true]) {
+    const st = { splitLines: false, includeFlagged: incl };
+    const res = emProcess(text, { settings: st, explicit: Object.keys(st), listing: key.lid });
+    const v = summaryView(res, incl);
+    assert.equal(v.problems.length, 0, "Keychain itself has no problems");
+    assert.equal(v.showProblems, false, "empty table hidden");
+    assert.equal(v.showDownload, true, "Download problem list still shown");
+    assert.notEqual(v.note, "Everything is ready.");
+    assert.equal(v.note, "This item is ready. 2 other lines in your file have problems. Pick All items to see them.");
+    assert.equal(exceptionsCsv(res), read("expected/fx03_multiline_commas__no_split/expected_exceptions.csv"), "download unfiltered");
+    console.log(`# fx03 no_split Keychain incl=${incl}: ${v.countLine} | ${v.note}`);
+  }
 });
 
 // Synthetic duplicate-only files built from fx01 (no real problems): d = 1 and d = 3.
@@ -285,6 +312,8 @@ test("Sweep: no count line reads 0 while the on-screen table has rows (all cases
         } else {
           assert.equal(v.showProblems, false);
         }
+        assert.equal(v.showDownload, res.stats.exception_count > 0, `${name} pick=${listing}: download follows the whole file`);
+        assert.equal(v.note === "Everything is ready.", res.stats.exception_count === 0, `${name} pick=${listing}: "Everything is ready." only for a clean file`);
         checked++;
       }
     }

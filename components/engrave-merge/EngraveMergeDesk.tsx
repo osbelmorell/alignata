@@ -334,7 +334,7 @@ export function EngraveMergeDesk() {
             </div>
           )}
           <div className="flex flex-wrap gap-2">
-            {view.showProblems && (
+            {view.showDownload && (
               <button type="button" className={secondaryBtn} onClick={onProblems}>
                 {COPY.downloadProblems}
               </button>
