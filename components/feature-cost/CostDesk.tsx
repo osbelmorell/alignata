@@ -48,7 +48,7 @@ export function CostDesk() {
         setStatus(`No events parsed from ${file.name}.`);
         return;
       }
-      persist(parsed, `Ingested ${parsed.length} events from ${file.name}.`);
+      persist(parsed, `Loaded ${parsed.length} events from ${file.name}.`);
     };
     reader.readAsText(file);
   }
@@ -61,7 +61,7 @@ export function CostDesk() {
       );
       return;
     }
-    persist(parsed, `Ingested ${parsed.length} events from paste.`);
+    persist(parsed, `Loaded ${parsed.length} events from your paste.`);
   }
 
   if (!hydrated) {

@@ -102,7 +102,7 @@ export function BurnDigestDesk() {
       }
       persist(
         parsed,
-        `Ingested ${parsed.length} row(s) from ${file.name}.`,
+        `Loaded ${parsed.length} row(s) from ${file.name}.`,
         text,
         true,
       );
@@ -118,7 +118,7 @@ export function BurnDigestDesk() {
       );
       return;
     }
-    persist(parsed, `Ingested ${parsed.length} row(s) from paste.`, paste, true);
+    persist(parsed, `Loaded ${parsed.length} row(s) from your paste.`, paste, true);
   }
 
   function addManual() {
@@ -189,7 +189,7 @@ export function BurnDigestDesk() {
       </header>
 
       <section className={`mb-6 space-y-3 p-3 sm:mb-8 sm:p-4 ${cardClass}`}>
-        <h2 className="text-sm font-medium text-[var(--cb-ink)]">Ingest</h2>
+        <h2 className="text-sm font-medium text-[var(--cb-ink)]">Your usage list</h2>
         <textarea
           value={paste}
           onChange={(e) => setPaste(e.target.value)}
@@ -377,7 +377,7 @@ export function BurnDigestDesk() {
         </div>
         {!digest || !digest.rows.length ? (
           <p className="px-3 py-8 text-center text-sm text-[var(--cb-ink-muted)] sm:px-4">
-            No rows yet — load sample or ingest a usage list.
+            No rows yet. Load the sample or paste a usage list.
           </p>
         ) : (
           <div className="min-w-0 overflow-x-auto">

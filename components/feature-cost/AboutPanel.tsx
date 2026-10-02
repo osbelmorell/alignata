@@ -10,7 +10,7 @@ const WHY =
   "Spot a heavy feature early (alert when one takes 40% or more of cost). Stays in this browser — no accounts.";
 const HOW = [
   "Open the app, or Load sample to see a week with an alert.",
-  "Upload a file or paste your spend rows, then ingest.",
+  "Upload a file or paste your spend rows, then tap Show the bill by feature.",
   "Each row needs a feature name and a cost in dollars (date, tokens, and model are optional).",
   "Read the totals and the daily table by feature.",
   "Alert means that feature is 40% or more of spend — dig in or cut.",

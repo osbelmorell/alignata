@@ -331,7 +331,7 @@ export function WhatChangedForm(props: {
             placeholder='{"service":"api","kind":"deploy","ts":"2026-09-16T08:00:00Z","version":"1.0.0"}'
           />
           <button type="button" onClick={onPasteIngest} className={secondaryBtn}>
-            Ingest paste
+            Add these events
           </button>
         </section>
       )}

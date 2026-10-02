@@ -29,7 +29,7 @@ export function CostDeskIngest({
 }) {
   return (
     <section className={`mb-6 space-y-3 p-3 sm:mb-8 sm:p-4 ${cardClass}`}>
-      <h2 className="text-sm font-medium text-[var(--cb-ink)]">Ingest</h2>
+      <h2 className="text-sm font-medium text-[var(--cb-ink)]">Your spend rows</h2>
       <textarea
         value={paste}
         onChange={(e) => setPaste(e.target.value)}

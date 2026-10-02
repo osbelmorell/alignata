@@ -156,10 +156,10 @@ a.fx-pill:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
   text-decoration: underline; text-underline-offset: 5px; }
 .fx-all-link:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
 
-/* Homepage (SPEC §5a v1.5, reference home.html): display line 31/1.05 on phone (3 lines in both engines at 390) (no max-width), 80/0.95 on desktop;
+/* Homepage (SPEC §5a v1.5, reference home.html): display line 29/1.05 on phone (UX Lead Oct 2: 3 lines at 360–430 in both engines) (no max-width), 80/0.95 on desktop;
    two pills (black Tools = the one primary, outlined Daily Digest), 48px tall, 120px+ wide. No fade-in on the top. */
 .fx-home-head { padding-top: 24px; }
-.fx-home-head .fx-display { font-size: 31px; line-height: 1.05; max-width: none; }
+.fx-home-head .fx-display { font-size: 29px; line-height: 1.05; max-width: none; }
 .fx-home-cta { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 12px; }
 .fx-home-cta a.fx-pill { width: auto; min-width: 120px; padding: 0 28px; }
 a.fx-pill.fx-pill-outline, a.fx-pill.fx-pill-outline:visited, a.fx-pill.fx-pill-outline:hover { background: transparent; color: var(--ink);

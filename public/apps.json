@@ -46,7 +46,7 @@
       "why": "Spot concentration early (alert at \u226540% share). Note: brand.content_draft spend is CUT (board override) \u2014 don\u2019t treat that feature as an active spend lane in planning.",
       "how": [
         "Open the app \u2014 or hit Load sample to see a week where research trips the \u226540% alert.",
-        "Ingest real data: Upload file (NDJSON / JSONL / CSV) or paste into the textarea and click Ingest paste.",
+        "Upload a file (NDJSON, JSONL or CSV), or paste rows into the box and tap Show the bill by feature.",
         "Each event needs feature + costUsd (optional: ts, tokens, model). CSV needs a header row.",
         "Read the header tiles (Events / Total cost / \u226540% alerts) and the Daily rollup by feature table (cost, share, events, days).",
         "Amber rows / alert banner = that feature is \u226540% of spend \u2014 dig in or cut.",
@@ -81,8 +81,8 @@
       "what": "Hobby quotas get chewed by whichever project is redeploying the most. The usage CSV doesn\u2019t shout the top burner at you.",
       "why": "Know which repo burned the window this week, with a one-liner you can drop in chat without rebuilding a spreadsheet.",
       "how": [
-        "Open the app (sample projects load on first visit) or paste CSV into the Ingest box.",
-        "Click Parse paste or Upload CSV. Flexible headers: project/name, builds/deploys/count, optional gb_hours.",
+        "Open the app (sample projects load on first visit) or paste CSV into the box.",
+        "Tap Show which projects used the quota, or Upload file. Flexible headers: project/name, builds/deploys/count, optional gb_hours.",
         "Or add a Manual row: Project name + Deploys + optional GB-hours \u2192 Add / update.",
         "Read the digest table (sorted by burn; top burner highlighted) and the Weekly one-liner banner.",
         "Copy one-liner, Copy markdown, or Export JSON. Save digest keeps it in Recent digests.",

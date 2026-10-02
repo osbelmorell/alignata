@@ -251,7 +251,7 @@ export function WhatChangedDesk() {
     }
     setEvents(parsed);
     setMode("sample");
-    setStatus(`Ingested ${parsed.length} events from paste.`);
+    setStatus(`Added ${parsed.length} events from your paste.`);
   }
 
   if (!hydrated) {

@@ -10,7 +10,7 @@ const WHY =
   "Know which project burned the window this week, with a one-liner you can drop in chat without rebuilding a spreadsheet. Stays in this browser.";
 const HOW = [
   "Open the app (sample projects load first) or paste your usage list.",
-  "Parse paste or upload the file. Flexible columns: project name, deploy count, optional hours.",
+  "Tap Show which projects used the quota, or upload the file. Columns are flexible: project name, deploy count, optional hours.",
   "Or add a row by hand: project name, deploys, optional hours.",
   "Read the table (top burner highlighted) and the weekly one-liner.",
   "Copy the one-liner or save the digest.",

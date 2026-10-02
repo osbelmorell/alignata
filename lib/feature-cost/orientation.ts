@@ -12,7 +12,7 @@ export const ORIENTATION: OrientationCopy = {
   why: `Spot concentration early (alert at ≥40% share). Note: brand.content_draft spend is CUT (board override) — don’t treat that feature as an active spend lane in planning.`,
   how: [
     `Open the app — or hit Load sample to see a week where research trips the ≥40% alert.`,
-    `Ingest real data: Upload file (NDJSON / JSONL / CSV) or paste into the textarea and click Ingest paste.`,
+    `Upload a file (NDJSON, JSONL or CSV), or paste rows into the box and tap Show the bill by feature.`,
     `Each event needs feature + costUsd (optional: ts, tokens, model). CSV needs a header row.`,
     `Read the header tiles (Events / Total cost / ≥40% alerts) and the Daily rollup by feature table (cost, share, events, days).`,
     `Amber rows / alert banner = that feature is ≥40% of spend — dig in or cut.`,

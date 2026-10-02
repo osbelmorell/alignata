@@ -136,31 +136,6 @@ export function OpportunityForm({
         </p>
 
         <div>
-          <p className="mb-2 text-sm font-semibold text-[var(--cb-ink-muted)]">
-            Decide
-          </p>
-          {/* Full-width stacked CTAs — no H-clip / horizontal scroll */}
-          <div className="flex w-full min-w-0 flex-col gap-2">
-            {DECISION_STATES.map((state) => {
-              const meta = STATE_META[state];
-              return (
-                <button
-                  key={state}
-                  type="button"
-                  onClick={() => onDecide(state)}
-                  className={`w-full min-h-11 min-w-0 rounded-[var(--cb-radius-pill)] border px-3 py-3.5 text-sm font-semibold ${meta.btn}`}
-                >
-                  {meta.label}
-                </button>
-              );
-            })}
-          </div>
-          <p className="mt-2 text-base text-[var(--cb-ink-muted)]">
-            Appends to the local decision log. Ticker required.
-          </p>
-        </div>
-
-        <div>
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-semibold text-[var(--cb-ink-muted)]">
               Checklist
@@ -233,6 +208,30 @@ export function OpportunityForm({
           </ul>
         </div>
 
+        <div>
+          <p className="mb-2 text-sm font-semibold text-[var(--cb-ink-muted)]">
+            Decide
+          </p>
+          {/* Full-width stacked CTAs — no H-clip / horizontal scroll */}
+          <div className="flex w-full min-w-0 flex-col gap-2">
+            {DECISION_STATES.map((state) => {
+              const meta = STATE_META[state];
+              return (
+                <button
+                  key={state}
+                  type="button"
+                  onClick={() => onDecide(state)}
+                  className={`w-full min-h-11 min-w-0 rounded-[var(--cb-radius-pill)] border px-3 py-3.5 text-sm font-semibold ${meta.btn}`}
+                >
+                  {meta.label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-base text-[var(--cb-ink-muted)]">
+            Appends to the local decision log. Ticker required.
+          </p>
+        </div>
       </div>
     </section>
   );
