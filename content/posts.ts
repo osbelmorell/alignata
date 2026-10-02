@@ -46,6 +46,7 @@ export const posts: Post[] = [
     slug: "reuse-the-same-key-when-a-tool-retries",
     title: "Reuse the same key when a tool retries",
     dek: "Prevents double-charges on payment or deploy retries.",
+    cardDek: "Reuse one request ID on retries so payments and deploys don't run twice.",
     date: "2026-09-16",
     paragraphs: [
       "## The technique",
@@ -58,6 +59,7 @@ export const posts: Post[] = [
     slug: "require-held-out-lift-before-shipping-harness-edits",
     title: "Require held-out lift before shipping harness edits",
     dek: "Stops train-only tweaks that fail on new cases.",
+    cardDek: "Only ship a setup tweak if it also helps on cases it wasn't tuned on.",
     date: "2026-09-16",
     paragraphs: [
       "## The technique",
@@ -70,6 +72,7 @@ export const posts: Post[] = [
     slug: "load-only-the-tools-this-turn-needs",
     title: "Load only the tools this turn needs",
     dek: "Cuts prompt size without losing the needed tool.",
+    cardDek: "Give the agent only the tools this turn needs, so prompts stay small.",
     date: "2026-09-16",
     paragraphs: [
       "## The technique",
@@ -82,6 +85,7 @@ export const posts: Post[] = [
     slug: "refuse-answers-that-dont-match-tool-results",
     title: "Refuse answers that don’t match tool results",
     dek: "Stops invented “CI green” or fake search hits from shipping as done.",
+    cardDek: "Catch answers that claim results the tools never returned.",
     date: "2026-09-23",
     paragraphs: [
       "## The technique",
@@ -94,6 +98,7 @@ export const posts: Post[] = [
     slug: "bind-every-claim-to-a-real-citation",
     title: "Bind every claim to a real citation",
     dek: "Blocks unsupported or mis-cited final answers.",
+    cardDek: "Tie every claim to a real source, or leave it out.",
     date: "2026-09-23",
     paragraphs: [
       "## The technique",
@@ -106,6 +111,7 @@ export const posts: Post[] = [
     slug: "compare-models-only-under-a-locked-setup",
     title: "Compare models only under a locked setup",
     dek: "Stops harness help from looking like model skill.",
+    cardDek: "Test every model on the same setup, so the score reflects the model.",
     date: "2026-09-23",
     paragraphs: [
       "## The technique",
@@ -118,6 +124,7 @@ export const posts: Post[] = [
     slug: "block-done-if-code-changed-after-tests",
     title: "Block “done” if code changed after tests",
     dek: "Stops untested edits from being reported as finished.",
+    cardDek: "Don't call it done if code changed after the last test run.",
     date: "2026-09-24",
     paragraphs: [
       "## The technique",
@@ -130,6 +137,7 @@ export const posts: Post[] = [
     slug: "trim-long-logs-from-both-ends",
     title: "Trim long logs from both ends",
     dek: "Keeps the error codes the model needs when logs get cut.",
+    cardDek: "Cut long logs from both ends so the error lines survive.",
     date: "2026-09-24",
     paragraphs: [
       "## The technique",
@@ -142,6 +150,7 @@ export const posts: Post[] = [
     slug: "prove-it-before-irreversible-actions",
     title: "Prove it before irreversible actions",
     dek: "Blocks send, delete, and force-push without fresh proof.",
+    cardDek: "Get fresh proof before a send, delete, or overwrite you can't undo.",
     date: "2026-09-25",
     paragraphs: [
       "## The technique",
@@ -154,6 +163,7 @@ export const posts: Post[] = [
     slug: "tell-failed-tools-what-to-try-next",
     title: "Tell failed tools what to try next",
     dek: "Turns vague errors into a short list of safe fixes.",
+    cardDek: "Turn vague errors into a short list of safe next steps.",
     date: "2026-09-25",
     paragraphs: [
       "## The technique",
@@ -166,6 +176,7 @@ export const posts: Post[] = [
     slug: "dont-blind-retry-sends-or-charges",
     title: "Don't blind-retry sends or charges",
     dek: "Stops duplicate emails and double charges after timeouts.",
+    cardDek: "Check before retrying so a timeout doesn't send or charge twice.",
     date: "2026-09-25",
     paragraphs: [
       "## The technique",
@@ -178,6 +189,7 @@ export const posts: Post[] = [
     slug: "laya-ai-deep-dive",
     title: "Laya AI deep dive — open typed decisions, not a chat model",
     dek: "Full board brief: Laya is ConvAI’s open System-1 decision model (not the community mirror). How to run it, when it fits. Cross-links Jev.",
+    cardDek: "What Laya is, how to run it, and when it beats a chat model.",
     date: "2026-09-25",
     tag: "Deep dive",
     paragraphs: [
@@ -254,6 +266,7 @@ export const posts: Post[] = [
     slug: "system-one-and-jev-deep-dive",
     title: "System One & Jev — TypeSafe’s hosted typed-decision model",
     dek: "Full board brief on TypeSafe’s System One category and Jev (Almeida): how the API works, when it beats LLMs, vs open Laya.",
+    cardDek: "How TypeSafe's hosted decision model works and when it beats a chat model.",
     date: "2026-09-25",
     tag: "Deep dive",
     paragraphs: [
@@ -329,6 +342,7 @@ export const posts: Post[] = [
     slug: "paperclip-deep-dive",
     title: "Paperclip deep dive — control plane for multi-agent companies",
     dek: "Full board brief on Paperclip (from NetworkChuck’s Sep 24 video): org-layer for AI agent teams, install path, risks (skills/CVEs/budgets), vs OpenClaw.",
+    cardDek: "A tool for running teams of AI agents, with setup, risks, and how it compares.",
     date: "2026-09-25",
     tag: "Deep dive",
     paragraphs: [
@@ -437,6 +451,7 @@ export const posts: Post[] = [
     slug: "keep-hard-rules-sticky",
     title: "Keep hard rules sticky",
     dek: "Soft reminders fade in long chats. Re-inject the non-negotiables every turn.",
+    cardDek: "Repeat the must-follow rules every turn so long chats don't forget them.",
     date: "2026-09-28",
     sourceNote: "based on hub digest 2026-09-24 technique test",
     paragraphs: [
@@ -453,6 +468,7 @@ export const posts: Post[] = [
     slug: "refuse-answers-sources-do-not-support",
     title: "Refuse answers sources do not support",
     dek: "Stops shipping answers that look cited but are not backed.",
+    cardDek: "Don't ship an answer unless its sources actually back it.",
     date: "2026-09-28",
     paragraphs: [
       "## The technique",
@@ -465,6 +481,7 @@ export const posts: Post[] = [
     slug: "do-not-swap-tools-on-a-hunch",
     title: "Do not swap tools on a hunch",
     dek: "Blocks risky mid-flight tool swaps without proof.",
+    cardDek: "Don't let an agent switch tools mid-task without proof it needs to.",
     date: "2026-09-28",
     paragraphs: [
       "## The technique",
@@ -477,6 +494,7 @@ export const posts: Post[] = [
     slug: "check-each-tool-step-before-next",
     title: "Check each tool step before next",
     dek: "Stops bad tool steps from cascading into the rest of the run.",
+    cardDek: "Check each step's result so one bad step doesn't spoil the run.",
     date: "2026-09-28",
     paragraphs: [
       "## The technique",
@@ -489,6 +507,7 @@ export const posts: Post[] = [
     slug: "ask-before-doing-what-wasnt-asked",
     title: "Ask before doing what wasn't asked",
     dek: "Stops agents from doing helpful extras nobody asked for.",
+    cardDek: "Make agents ask before adding extras you didn't request.",
     date: "2026-09-29",
     paragraphs: [
       "## The technique",
@@ -508,6 +527,7 @@ export const posts: Post[] = [
     slug: "test-search-before-saying-none",
     title: "Test search before saying none",
     dek: "A broken search tool can return the same clean empty list as a real \"nothing found.\" One lookup you know should hit tells them apart.",
+    cardDek: "Run one search you know should hit before you trust an empty result.",
     date: "2026-09-29",
     paragraphs: [
       "The problem",
@@ -535,6 +555,7 @@ export const posts: Post[] = [
     slug: "make-routers-pick-from-a-fixed-list",
     title: "Make routers pick from a fixed list",
     dek: "Stops chatty router replies from sending tickets to the wrong queue.",
+    cardDek: "Give the sorting step a fixed list so tickets land in the right queue.",
     date: "2026-09-29",
     paragraphs: [
       "## The technique",
@@ -554,6 +575,7 @@ export const posts: Post[] = [
     slug: "dont-follow-orders-in-tool-text",
     title: "Don't follow orders in tool text",
     dek: "Tool replies are data, not instructions. Check them for commands before the agent plans its next step.",
+    cardDek: "Treat tool replies as data, so hidden commands can't steer your agent.",
     date: "2026-10-01",
     paragraphs: [
       "## The problem",
@@ -579,6 +601,7 @@ export const posts: Post[] = [
     slug: "the-ai-safety-paradox",
     title: "The AI Safety Paradox",
     dek: "Asking the inmates to guard the prison.",
+    cardDek: "Asking the inmates to guard the prison.",
     date: "2026-10-01",
     tag: "Essay",
     hero: {
@@ -607,6 +630,7 @@ export const posts: Post[] = [
     slug: "break-loops-when-progress-stalls",
     title: "Break loops when progress stalls",
     dek: "A busy agent isn't always a working one. Check progress every few steps, and force a change of course when it stalls.",
+    cardDek: "Check progress every few steps, and change course when an agent stalls.",
     date: "2026-10-02",
     paragraphs: [
       "## The problem",
