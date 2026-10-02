@@ -19,6 +19,7 @@ import {
   type CutItem,
   type ListingRecipe,
   type ProblemCode,
+  type ProblemItem,
   type ProcessResult,
   type Recipe,
   type Settings,
@@ -248,7 +249,10 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
   const mergeHeader = [...MERGE_FIXED, ...Array.from({ length: ncols }, (_, i) => `Line ${i + 1}`)];
   const mergeRows: string[][] = [];
   const excRows: string[][] = [];
+  const problems: ProblemItem[] = [];
   const cut: CutItem[] = [];
+  let totalItems = 0;
+  let heldItems = 0;
   for (const it of items) {
     const r = it.r;
     const itemName = itemNameOf(r);
@@ -262,8 +266,17 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
         pyStrip(decodeEntities(r["Variations"])).replace(/\n/g, " / "),
       ]);
     }
-    if (it.dup) continue;
     const flagged = it.codes.length > 0;
+    const held = it.dup || (flagged && !cfg.includeFlagged);
+    if (flagged) {
+      problems.push({ order: orderId, item: itemName, fn, qty: it.qRaw, problems: sortedCodes.map(([c]) => PROBLEMS[c]), held });
+    }
+    if (it.dup) continue;
+    const copies = it.qty || 1;
+    if (!opts.listing || it.lid === opts.listing) {
+      totalItems += copies;
+      if (held) heldItems += copies;
+    }
     const lr = it.lr;
     const slots = ["", "", ""];
     const used = new Set<number>();
@@ -289,7 +302,6 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
       .map((p, pi) => (used.has(pi) ? null : `${p.label}: ${flat(p.value)}`))
       .filter((x): x is string => x !== null)
       .join("; ");
-    const copies = it.qty || 1;
     const lines = (it.lines || []).slice(0, ncols);
     const c: CutItem = {
       item: itemName, lid: it.lid, order: orderId, fn, qty: copies, pairs: it.pairs,
@@ -332,7 +344,7 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
   }
 
   return {
-    mergeHeader, mergeRows, excRows, cut, orderIds,
+    mergeHeader, mergeRows, excRows, problems, cut, orderIds,
     listings: [...lmap.values()],
     garbled: text.includes("\ufffd"),
     stats: {
@@ -342,6 +354,9 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
       merge_row_count: mergeRows.length,
       hidden_shipped: totalRows - kept.length,
       order_count: orderIds.length,
+      total_items: totalItems,
+      ready_items: mergeRows.length,
+      held_items: heldItems,
     },
   };
 }

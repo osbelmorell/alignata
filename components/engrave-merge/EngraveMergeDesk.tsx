@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { COPY } from "@/lib/engrave-merge/copy";
 import { cutsheetHtml, printCutsheet } from "@/lib/engrave-merge/cutsheet";
@@ -46,6 +45,8 @@ interface FileState {
   text: string;
   fingerprint: string | null;
   orderCount: number;
+  /** Shown on screen only; never sent anywhere. */
+  name: string;
 }
 
 export function EngraveMergeDesk() {
@@ -98,7 +99,7 @@ export function EngraveMergeDesk() {
   }, [ok]);
 
   const loadText = useCallback(
-    async (text: string) => {
+    async (text: string, name: string) => {
       if (!text.trim()) {
         setFile(null);
         setStatus({ kind: "error", text: COPY.statusEmpty });
@@ -106,7 +107,7 @@ export function EngraveMergeDesk() {
       }
       const res = runProcess(text, { settings, explicit: ALL_KEYS, recipe, glyphCheck: font?.check ?? null });
       if (res.error) {
-        setFile({ text, fingerprint: null, orderCount: 0 });
+        setFile({ text, fingerprint: null, orderCount: 0, name });
         setStatus({
           kind: "error",
           text: res.soldOrdersFile ? COPY.statusWrongSoldOrders : COPY.statusWrongOther(res.missing),
@@ -114,9 +115,9 @@ export function EngraveMergeDesk() {
         return;
       }
       const fingerprint = await fingerprintOf(res.orderIds);
-      setFile({ text, fingerprint, orderCount: res.stats.order_count });
+      setFile({ text, fingerprint, orderCount: res.stats.order_count, name });
       setListing("");
-      setStatus({ kind: "info", text: COPY.statusReady(res.stats.item_count, res.stats.order_count) });
+      setStatus({ kind: "info", text: COPY.statusReady });
       sendEvent(iidRef.current, "file_processed", {
         row_count: res.stats.row_count,
         item_count: res.stats.item_count,
@@ -132,7 +133,7 @@ export function EngraveMergeDesk() {
       if (!f) return;
       setStatus({ kind: "info", text: COPY.statusReading });
       const reader = new FileReader();
-      reader.onload = () => void loadText(String(reader.result ?? ""));
+      reader.onload = () => void loadText(String(reader.result ?? ""), f.name);
       reader.onerror = () => setStatus({ kind: "error", text: COPY.statusUnreadable });
       reader.readAsText(f, "utf-8");
     },
@@ -148,7 +149,7 @@ export function EngraveMergeDesk() {
     }
     downloadText(mergeFileName(), mergeCsv(ok));
     sendEvent(iidRef.current, "merge_downloaded", { ...fileProps(), merge_row_count: ok.stats.merge_row_count });
-    setStatus({ kind: "info", text: COPY.statusDownloaded(ok.stats.merge_row_count) });
+    setStatus({ kind: "info", text: COPY.statusDownloaded(ok.stats.ready_items) });
     summaryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -173,7 +174,7 @@ export function EngraveMergeDesk() {
   const onSample = async () => {
     try {
       const res = await fetch(SAMPLE_URL);
-      await loadText(await res.text());
+      await loadText(await res.text(), SAMPLE_URL.split("/").pop() || "sample.csv");
     } catch {
       setStatus({ kind: "error", text: COPY.statusUnreadable });
     }
@@ -226,23 +227,17 @@ export function EngraveMergeDesk() {
     setL(lid, { textFields: next });
   };
 
-  const needLook = ok ? new Set(ok.excRows.map((r) => r[1] + "|" + r[0])).size : 0;
-
   return (
     <div className="mx-auto w-full max-w-2xl min-w-0 px-4 pb-16 pt-1 text-base text-[var(--cb-ink)]">
-      <Link
-        href="/apps"
-        className="inline-flex min-h-[44px] items-center gap-1 text-base font-medium text-[var(--cb-ink)] underline-offset-4 hover:underline"
-      >
-        <span aria-hidden="true">←</span> {COPY.backLink}
-      </Link>
-
-      <h1 className="mt-1 text-[30px] font-semibold leading-[40px] tracking-tight">{COPY.title}</h1>
+      <h1 className="mt-3 text-[30px] font-semibold leading-[40px] tracking-tight">{COPY.title}</h1>
       <p className="mt-1 text-base leading-6">{COPY.intro}</p>
       <p className={`text-base leading-6 ${muted}`}>{COPY.privacy}</p>
 
-      <div
-        className={`mt-4 rounded-[var(--cb-radius-card-sm)] border-2 border-dashed bg-[var(--cb-surface)] px-4 py-3 text-center focus-within:ring-2 focus-within:ring-[var(--cb-ink)] ${
+      {/* The whole dashed box is the file picker's label: every point of it opens the chooser. */}
+      <label
+        data-dropzone
+        htmlFor="em-file"
+        className={`mt-4 flex min-h-[160px] w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-[var(--cb-radius-card-sm)] border-2 border-dashed bg-[var(--cb-surface)] px-4 py-4 text-center focus-within:ring-2 focus-within:ring-[var(--cb-ink)] ${
           dragOver ? "border-[var(--cb-ink)]" : "border-[var(--cb-ink-muted)]"
         }`}
         onDragOver={(e) => {
@@ -256,37 +251,26 @@ export function EngraveMergeDesk() {
           readFile(e.dataTransfer.files?.[0]);
         }}
       >
-        <label
-          data-dropzone
-          htmlFor="em-file"
-          className="flex min-h-[112px] cursor-pointer flex-col items-center justify-center gap-1"
-        >
-          <span className="text-[18px] font-semibold leading-6">{COPY.dropTitle}</span>
-          <span className={`text-base ${muted}`}>
-            {ok ? COPY.dropChosen(ok.stats.row_count) : COPY.dropSub}
-          </span>
-          <input
-            id="em-file"
-            ref={fileInput}
-            type="file"
-            accept=".csv,text/csv"
-            className="sr-only"
-            onChange={(e) => {
-              readFile(e.target.files?.[0]);
-              e.target.value = "";
-            }}
-          />
-        </label>
-        <button
-          type="button"
-          className={`${textBtn} justify-center`}
-          aria-expanded={showWhere}
-          onClick={() => setShowWhere((v) => !v)}
-        >
-          {COPY.whereLink}
-        </button>
-        {showWhere && <p className="pb-2 text-left text-base leading-6">{COPY.whereBody}</p>}
-      </div>
+        <span className="text-[18px] font-semibold leading-6">{COPY.dropTitle}</span>
+        <span className={`text-base [overflow-wrap:anywhere] ${muted}`}>
+          {ok && file ? COPY.dropChosen(file.name, ok.stats.item_count) : COPY.dropSub}
+        </span>
+        <input
+          id="em-file"
+          ref={fileInput}
+          type="file"
+          accept=".csv,text/csv"
+          className="sr-only"
+          onChange={(e) => {
+            readFile(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
+      </label>
+      <button type="button" className={textBtn} aria-expanded={showWhere} onClick={() => setShowWhere((v) => !v)}>
+        {COPY.whereLink}
+      </button>
+      {showWhere && <p className="pb-2 text-base leading-6">{COPY.whereBody}</p>}
 
       <button type="button" data-primary className={`mt-4 ${primaryBtn}`} onClick={onPrimary}>
         {COPY.primary}
@@ -303,20 +287,48 @@ export function EngraveMergeDesk() {
       {ok && (
         <section ref={summaryRef} aria-label="Summary" className="mt-6 scroll-mt-4 space-y-4">
           <p className="text-base leading-6">
-            {[
-              COPY.summaryToMake(ok.stats.item_count),
-              COPY.summaryNeedLook(needLook),
-              ok.stats.hidden_shipped ? COPY.summaryShipped(ok.stats.hidden_shipped) : null,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
+            <span data-count-line className="font-semibold">
+              {COPY.summaryCounts(ok.stats.ready_items, ok.stats.held_items)}
+            </span>
             <br />
-            <span className={muted}>{COPY.summaryInFile(ok.stats.merge_row_count)}</span>
+            <span className={muted}>{ok.stats.held_items > 0 ? COPY.summaryHeldNote : COPY.summaryAllReady}</span>
           </p>
+          {ok.stats.held_items > 0 && (
+            <div className="space-y-2">
+              <h2 className="text-base font-semibold">{COPY.problemListTitle}</h2>
+              <div className="overflow-x-auto rounded-xl border border-[var(--cb-line)] bg-[var(--cb-surface)]">
+                <table data-problem-list className="w-full border-collapse text-left text-base leading-6">
+                  <thead>
+                    <tr className="border-b border-[var(--cb-line)]">
+                      <th scope="col" className="px-3 py-2 font-semibold">{COPY.problemColItem}</th>
+                      <th scope="col" className="px-3 py-2 text-right font-semibold whitespace-nowrap">
+                        {COPY.problemColHowMany}
+                      </th>
+                      <th scope="col" className="px-3 py-2 font-semibold">{COPY.problemColProblem}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ok.problems.map((p, i) => (
+                      <tr key={i} className="border-b border-[var(--cb-line)] align-top last:border-b-0">
+                        <td className="px-3 py-2">
+                          {p.item}
+                          <span className={`block ${muted}`}>{COPY.problemOrder(p.order, p.fn)}</span>
+                        </td>
+                        <td className="px-3 py-2 text-right tabular-nums">{p.qty}</td>
+                        <td className="px-3 py-2">{p.problems.join(" · ")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
           <div className="flex flex-wrap gap-2">
-            <button type="button" className={secondaryBtn} onClick={onProblems}>
-              {COPY.downloadProblems(ok.stats.exception_count)}
-            </button>
+            {ok.stats.held_items > 0 && (
+              <button type="button" className={secondaryBtn} onClick={onProblems}>
+                {COPY.downloadProblems}
+              </button>
+            )}
             <button type="button" className={secondaryBtn} onClick={onPrint}>
               {COPY.printCutsheet}
             </button>

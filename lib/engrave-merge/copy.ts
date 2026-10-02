@@ -4,15 +4,15 @@
  * Rule: no jargon on the face — say "file", "problem list", "settings file".
  */
 export const COPY = {
-  backLink: "All tools",
   title: "Engrave Merge",
   intro: "Turn your Etsy orders file into a LightBurn merge file and a cut sheet.",
   privacy: "Your file stays on this device.",
   dogfoodNote: "Test mode: your runs are not counted.",
 
-  dropTitle: 'Drop your Etsy "Sold Order Items" file',
+  dropTitle: 'Drop your Etsy "Order Items" file',
   dropSub: "or tap to choose it",
-  dropChosen: (rows: number) => `File loaded (${rows} ${rows === 1 ? "row" : "rows"}). Tap to choose another.`,
+  dropChosen: (fileName: string, items: number) =>
+    `${fileName} · ${items} ${items === 1 ? "item" : "items"}. Tap to choose another.`,
   whereLink: "Where do I find this file?",
   whereBody:
     'In Etsy, go to Shop Manager → Settings → Options → Download Data. Pick "Order Items", choose the month, and tap Download CSV. The file is named like EtsySoldOrderItems2026-9.csv.',
@@ -21,23 +21,26 @@ export const COPY = {
 
   statusIdle: "Choose your file to start.",
   statusReading: "Reading your file…",
-  statusReady: (items: number, orders: number) =>
-    `Ready: ${items} ${items === 1 ? "item" : "items"} from ${orders} ${orders === 1 ? "order" : "orders"}`,
-  statusDownloaded: (rows: number) => `Merge file downloaded: ${rows} ${rows === 1 ? "row" : "rows"}.`,
+  statusReady: 'File loaded. Tap "Make merge file" to get your LightBurn file.',
+  statusDownloaded: (n: number) => `Merge file downloaded with ${n} ${n === 1 ? "item" : "items"}.`,
   statusWrongSoldOrders:
-    'This looks like Etsy\'s "Sold Orders" file. Please download "Order Items" instead.',
-  statusWrongOther: (missing: string[]) =>
-    `This doesn't look like Etsy's "Sold Order Items" file. Missing: ${missing.join(", ")}.`,
+    'This is Etsy\'s "Orders" file. On the same Download Data page, pick "Order Items" instead.',
+  statusWrongOther: (missing: string[]) => `This isn't Etsy's "Order Items" file. It's missing: ${missing.join(", ")}`,
   statusEmpty: "That file is empty.",
   statusUnreadable: "Couldn't open that file. Please try again.",
   garbled: "Some letters look garbled. Download the file again from Etsy and don't open it in Excel first.",
 
-  summaryToMake: (n: number) => `${n} ${n === 1 ? "item" : "items"} to make`,
-  summaryNeedLook: (n: number) => `${n} need a look`,
-  summaryShipped: (n: number) => `${n} already shipped (hidden)`,
-  summaryInFile: (n: number) => `${n} ${n === 1 ? "row" : "rows"} in your merge file`,
+  /** The ONLY count on screen. ready + held = total items to make (one per merge row). */
+  summaryCounts: (ready: number, held: number) => `${ready} ready for LightBurn · ${held} need a look`,
+  summaryHeldNote: "Items that need a look are left out of the merge file. The problem list says why.",
+  summaryAllReady: "Everything is ready.",
 
-  downloadProblems: (n: number) => `Download problem list (${n})`,
+  problemListTitle: "Problem list",
+  problemColItem: "Item",
+  problemColHowMany: "How many",
+  problemColProblem: "Problem",
+  problemOrder: (order: string, name: string) => (name ? `Order ${order} · ${name}` : `Order ${order}`),
+  downloadProblems: "Download problem list",
   printCutsheet: "Print cut sheet",
   cutsheetTitle: "Cut sheet",
 

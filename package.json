@@ -9,7 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test:engrave": "node --import tsx --test scripts/assert-engrave-merge.mjs",
-    "engrave:kpis": "node scripts/engrave-merge-kpis.mjs",
+    "engrave:kpis": "node --import tsx scripts/engrave-merge-kpis.mjs",
     "lint:engrave": "eslint app/engrave-merge app/api/engrave-merge components/engrave-merge lib/engrave-merge scripts/assert-engrave-merge.mjs scripts/engrave-merge-kpis.mjs"
   },
   "dependencies": {

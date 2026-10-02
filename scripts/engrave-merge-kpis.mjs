@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Engrave Merge kill-bar + outcome metrics (SPEC §8.5, §8.6). READ-ONLY.
 //
-//   node scripts/engrave-merge-kpis.mjs                 # reads Upstash Redis (em:ev:<day> lists)
-//   node scripts/engrave-merge-kpis.mjs --file log.jsonl # reads a JSON-lines event log instead
+//   npm run engrave:kpis                       # reads Upstash Redis (em:ev:<day> lists)
+//   npm run engrave:kpis -- --file log.jsonl   # reads a JSON-lines event log instead
 //   add --json for machine-readable output
 //
 // Store env vars (same names the Vercel Marketplace Upstash/KV integration injects):
@@ -12,18 +12,16 @@
 //
 // Excluded everywhere: dogfood installs (dog- ids / dogfood:true), hosts other than
 // alignata.com (previews, localhost), and bundled fixture fingerprints.
+//
+// KPI rule (CEO): T0 = the first real file_processed, INCLUDING a small file (< 3 orders,
+// sent as small_file: true with no fingerprint). Small files start the 14-day clock but do
+// NOT count toward the 15 distinct real files (only fingerprints are counted).
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+// The ONE fixture-fingerprint list (shared with the server event filter). Needs tsx: npm run engrave:kpis.
+import { isFixtureFingerprint } from "../lib/engrave-merge/fixtures.ts";
 
 export const PROD_HOST = "alignata.com";
-export const FIXTURE_FINGERPRINTS = new Set([
-  "290fd4eb011e98dbdbacd8768b45631fc8c776861dc865fa46735c87d93a1b7d",
-  "f90375c1c03ae72ca2e0376d6fcb963f5e5a40380a299d41aac6c9ce2abd85c5",
-  "1201ee2515fcdbe4b5da02d900ffc328da87aaee4ca19e0bc8ab5ee7f085a4ff",
-  "89aac1e4f1352665284e1eae239431eea53b36d916513c371ba1cacfcdf8e474",
-  "9efedfb15b6fed116716e22dc3d80528bc2f5cf768b67580db0088cf22369aab",
-  "ac87337fa7b8e903c6f300cfb1510edb50049dd2a1c79117bc3a8042f3fca5b2",
-]);
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const WINDOW_DAYS = 14;
 export const BAR = { distinctRealFiles: 15, returningInstalls: 3, proInterestTaps: 1 };
@@ -51,16 +49,18 @@ export function computeKpis(events, now = Date.now()) {
   for (const e of events) {
     if (e.dogfood === true || String(e.iid || "").startsWith("dog-")) excluded.dogfood++;
     else if (e.host !== PROD_HOST) excluded.nonProdHost++;
-    else if (FIXTURE_FINGERPRINTS.has(fpOf(e))) excluded.fixture++;
+    else if (isFixtureFingerprint(fpOf(e))) excluded.fixture++;
     else real.push(e);
   }
   real.sort((a, b) => a.ts - b.ts);
+  // Any real file starts the clock, small files included (CEO rule).
   const firstFile = real.find((e) => e.event === "file_processed");
   const t0 = firstFile ? firstFile.ts : null;
   const end = t0 === null ? null : t0 + WINDOW_DAYS * DAY_MS;
   const inWin = t0 === null ? [] : real.filter((e) => e.ts >= t0 && e.ts < end);
 
   const files = inWin.filter((e) => e.event === "file_processed");
+  // Distinct real files = fingerprints only; small files never count here.
   const fps = new Set(files.map(fpOf).filter(Boolean));
   const smallFiles = files.filter((e) => e.props && e.props.small_file === true).length;
 

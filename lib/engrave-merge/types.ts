@@ -66,6 +66,24 @@ export interface Stats {
   merge_row_count: number;
   hidden_shipped: number;
   order_count: number;
+  /** Physical items to make in scope (one per merge row; duplicates dropped; "Which items" filter applied). */
+  total_items: number;
+  /** Physical items in the merge file (= merge_row_count). */
+  ready_items: number;
+  /** Physical items held out of the merge file (problem list). ready_items + held_items = total_items. */
+  held_items: number;
+}
+
+/** One on-screen problem-list row per source row that has problems. */
+export interface ProblemItem {
+  order: string;
+  item: string;
+  fn: string;
+  /** Raw Quantity cell (same as the problem list file). */
+  qty: string;
+  problems: string[];
+  /** true = left out of the merge file. */
+  held: boolean;
 }
 
 export interface ProcessOk {
@@ -73,6 +91,8 @@ export interface ProcessOk {
   mergeHeader: string[];
   mergeRows: string[][];
   excRows: string[][];
+  /** On-screen problem list (same rows as excRows, grouped per source row). */
+  problems: ProblemItem[];
   cut: CutItem[];
   stats: Stats;
   /** Unique trimmed non-blank Order IDs over ALL rows, sorted as strings (fingerprint input). */

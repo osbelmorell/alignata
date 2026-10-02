@@ -1,7 +1,7 @@
 # Engrave Merge: build spec (private dogfood scaffold)
 
 **Status:** Handoff to Eng Ops · written 2026-10-02 (ET) · **Scope:** PRIVATE DOGFOOD only. No payments, no public launch.
-**Route:** `alignata.com/engrave-merge` · **Repo:** `enterprise-app-hub` (Next.js on Vercel), same pattern as `/license-gate` and `/stripe-cleaver`.
+**Route:** `alignata.com/engrave-merge` · **Repo:** `osbelmorell/alignata` (Next.js on Vercel), same pattern as `/license-gate` and `/stripe-cleaver`.
 **Executable source of truth for parsing:** `fixtures/parse_reference.py` + `fixtures/cases.json` + `fixtures/expected/`. Where this doc and the reference parser disagree, the golden files win. Raise it, don't guess.
 
 ---
@@ -15,13 +15,13 @@
 
 **WHY.** Laser-engraving Etsy sellers hand-copy personalization text from orders into LightBurn one at a time. That's slow, and typos mean remakes. Etsy's export holds all the text, but it's buried inside one `Variations` cell ("Size:8 x 10 inches,Style:Style 6,Personalization:…"). Turning that cell into clean columns is the whole job.
 
-**HOW.** Everything happens in the browser: FileReader, then the parser, then Blob downloads. **The file content and buyer data never leave the device.** No upload, no server parsing, no localStorage except one random install id (§8). The only network calls the tool makes are anonymous count events whose fields are fixed by an allow-list (§8).
+**HOW.** Everything happens in the browser: FileReader, then the parser, then Blob downloads. **The file content and buyer data never leave the device.** No upload, no server parsing, no localStorage except one random install id (§8). The only network calls the tool makes are anonymous count events whose fields are fixed by an allow-list (§8). Prefetch GETs that Next.js makes for links in the shared site header (e.g. `/apps`) are fine: they carry no file data.
 
 ## 2. Route, page shell, privacy posture
 
 - `app/engrave-merge/page.tsx` (server component, metadata) renders `components/engrave-merge/EngraveMergeDesk.tsx` (client). Logic lives in `lib/engrave-merge/` (`csv.ts`, `variations.ts`, `process.ts`, `outputs.ts`, `cutsheet.ts`, `recipe.ts`, `glyphs.ts`, `track.ts`). Follow the stripe-cleaver file layout.
 - Metadata: `title: "Engrave Merge"`, `robots: { index: false, follow: false }` (private dogfood). **Do not** add it to the public tool index, sitemap, or nav until the board approves launch. Whether to add an unlisted entry in `lib/apps.ts` is Eng Ops' call, as long as it isn't shown publicly.
-- Back link at the top: `← All tools` → `/`.
+- Back link at the top: `← All tools` → `/apps`. It is the shared tool bar (`components/HubChrome.tsx`, tap target ≥ 44 px); the page has no back link of its own.
 - Read `node_modules/next/dist/docs/` first (repo AGENTS.md: "This is NOT the Next.js you know", Next 16.3.5 / React 19.2.8).
 - Dependencies: a CSV parser that handles **quoted multi-line cells** (about half the rows in a public sample have newlines inside `Variations`). Use either `papaparse` or an in-repo RFC 4180 parser; the stripe-cleaver line-split approach is **not** enough. `opentype.js`, loaded with dynamic `import()` only when the seller adds a font. Nothing loads from a CDN.
 
@@ -43,16 +43,21 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
 │  merge file and a cut sheet.]                  (48px) │
 │ [COPY: Your file stays on this device.]        (24px) │  16px, muted but AA (#5c5a54 on #f6f1ea = 6.1:1)
 │ ┌───────────────────────────────────────────────────┐ │
-│ │  [COPY: Drop your Etsy "Sold Order Items" file]   │ │  drop zone, min-h 160px,
+│ │  Drop your Etsy "Order Items" file                │ │  drop zone, min-h 160px,
 │ │  [COPY: or tap to choose it]                      │ │  whole box is a <label> for
-│ │  [COPY: Where do I find this file?] (link)        │ │  <input type=file accept=.csv>
+│ │                                                   │ │  <input type=file accept=.csv>
 │ └───────────────────────────────────────────────────┘ │
+│ Where do I find this file? (text button, below box)   │
 │ (( [COPY: Make merge file] ))                  (52px) │  ONE black pill, full width, white label
-│ status line (aria-live=polite)                 (24px) │  e.g. [COPY: Ready: 14 items from 9 orders]
+│ status line (aria-live=polite)                 (24px) │  e.g. File loaded. Tap "Make merge file" to get your LightBurn file.
 └────────────────────── ≈ 470–520px ────────────────────┘  (budget 660px)
    below the fold (after a file is loaded):
-   • summary: [COPY: 14 items to make · 2 need a look · 3 already shipped (hidden)]
-   • secondary buttons: [COPY: Download problem list (2)]  [COPY: Print cut sheet]
+   • summary (the ONLY count on screen): `{ready} ready for LightBurn · {held} need a look`, then
+     "Items that need a look are left out of the merge file. The problem list says why." (or "Everything is ready." when held = 0).
+     Unit = physical items, one per merge row (Quantity 3 = 3). ready = items in the merge file; held = items held out;
+     ready + held = total items to make (duplicates dropped; "Which items" filter applied).
+   • on-screen problem list (when held > 0): Item · How many (raw Quantity) · Problem
+   • secondary buttons: Download problem list (hidden when held = 0)  [COPY: Print cut sheet]
    • "Which items" select: All items / one per listing (exports that listing only, rows renumbered from 1)
    • ▸ [COPY: Settings]  (disclosure, closed by default)
        - [COPY: Include orders already shipped]                 toggle, off
@@ -232,12 +237,14 @@ How multi-line quoted cells render (we avoid them), and whether a BOM would leak
 
 | event | props | fired when |
 |---|---|---|
-| `file_processed` | `row_count` (data rows in file), `item_count` (physical items after the shipped filter, held ones included, duplicates dropped), `exception_count` (problem-list rows), `file_fingerprint` | a new file is parsed (not on settings changes) |
-| `merge_downloaded` | `file_fingerprint`, `merge_row_count` | primary button download |
-| `exceptions_downloaded` | `file_fingerprint`, `exception_count` | problem list download |
-| `cutsheet_printed` | `file_fingerprint` | Print cut sheet tapped |
+| `file_processed` | `row_count` (data rows in file), `item_count` (physical items after the shipped filter, held ones included, duplicates dropped), `exception_count` (problem-list rows), `file_fingerprint` or `small_file` | a new file is parsed (not on settings changes) |
+| `merge_downloaded` | `file_fingerprint` or `small_file`, `merge_row_count` | primary button download |
+| `exceptions_downloaded` | `file_fingerprint` or `small_file`, `exception_count` | problem list download |
+| `cutsheet_printed` | `file_fingerprint` or `small_file` | Print cut sheet tapped |
 | `pro_interest_tap` | none | "I'd pay for unlimited batches" tapped (once per page load; button then shows thanks) |
 | `page_open` *(optional)* | none | page load: visits denominator |
+
+**small_file** = `true`, sent **instead of** `file_fingerprint` when the file has fewer than 3 distinct Order IDs (a 1–2 order fingerprint could be brute-forced back to an Order ID). Every file event carries exactly one of the two.
 
 Envelope: `{ v: 1, event, iid, dogfood: boolean, props }`. The server adds `ts` (server time) and `day` (America/New_York date) and keeps `host`.
 
@@ -245,7 +252,7 @@ Envelope: `{ v: 1, event, iid, dogfood: boolean, props }`. The server adds `ts` 
 
 ### 8.3 Excluding our own runs
 1. Opening the page with `?dogfood=1` rewrites `em_iid` to `dog-<new uuid>` (still just a random id, so the localStorage rule holds). `?dogfood=0` gives a fresh non-dog id. Events from `dog-` ids get `dogfood: true`.
-2. The server drops fingerprints listed in `fixture_fingerprints.json` (the sample-file button uses a fixture, so it's excluded automatically). Ship the list as a constant.
+2. The server drops fingerprints listed in `fixture_fingerprints.json` (the sample-file button uses a fixture, so it's excluded automatically). Ship the list as ONE constant in `lib/engrave-merge/fixtures.ts`; the server event filter and `npm run engrave:kpis` both import it (no duplicate lists).
 3. Analysis counts only `host === "alignata.com"`, which excludes previews and localhost.
 4. Osbel and Eng Ops dogfood **only** with `?dogfood=1`.
 
@@ -260,8 +267,8 @@ Envelope: `{ v: 1, event, iid, dogfood: boolean, props }`. The server adds `ts` 
 **Weekly engaged sellers** = non-dogfood install ids with `merge_downloaded` on a real (non-fixture) fingerprint on **≥ 2 different America/New_York days** within the same Mon–Sun week. Reported weekly from day 1. Target: [BOARD: set target].
 
 ### 8.6 Kill bar (14 days)
-Clock **T0** = server `ts` of the first `file_processed` that is real (non-dogfood, host alignata.com, fingerprint not a fixture). Window [T0, T0 + 14 days). **Kill if ANY:**
-1. **< 15** distinct real `file_fingerprint`s processed, **OR**
+Clock **T0** = server `ts` of the first `file_processed` that is real (non-dogfood, host alignata.com, fingerprint not a fixture). **A real small file (fewer than 3 orders, `small_file: true`) STARTS the clock (CEO rule).** Window [T0, T0 + 14 days). **Kill if ANY:**
+1. **< 15** distinct real `file_fingerprint`s processed (small files do **not** count toward the 15), **OR**
 2. **< 3** install ids that processed real files on **≥ 2 different days** with **≥ 2 different fingerprints** ("came back for a second batch on another day"), **OR**
 3. **0** `pro_interest_tap` from non-dogfood ids. This stands in for paid signups/pre-orders while payments are deferred.
 
@@ -283,12 +290,12 @@ Caveat: an install id is a browser, not a seller. Cleared storage or a second de
 - AT-11: every visible text node in `<main>` has computed font-size ≥ 16 px.
 - AT-12: axe-core: 0 violations at serious/critical, 0 `color-contrast` violations (before and after a file is loaded).
 - AT-13: exactly one element matches `[data-primary]`. Its computed background is rgb(18,20,16) and its color is rgb(255,255,255).
-- AT-14: `← All tools` is present, links to `/`, and has a tap target ≥ 44 px.
+- AT-14: `← All tools` (shared tool bar) is present, links to `/apps`, and has a tap target ≥ 44 px.
 - AT-15: keyboard-only: Tab reaches the drop zone input, the primary button and the settings. The status line is `aria-live`.
 - AT-16: `robots` meta = `noindex,nofollow`. The page is not linked from the public index or sitemap.
 
 **Privacy and tracking**
-- AT-20: Playwright records **every** request after page load while processing fx05, downloading all 3 outputs and tapping pro interest. Assert: (a) no request URL or body contains any of `Fakename`, `Placeholder`, `Buyerson`, `Nowhereville`, `Grandpa`, `Zoë`, `1000000501`, `2000000501`, `3000000005`, `EM-TEST`, `fx05`; (b) the only non-static request is `POST /api/engrave-merge/e`; (c) every body's keys ⊆ the §8.2 allow-list; (d) `file_processed.props.file_fingerprint` = the fx05 value.
+- AT-20: Playwright records **every** request after page load while processing fx05, downloading all 3 outputs and tapping pro interest. Assert: (a) no request URL or body contains any of `Fakename`, `Placeholder`, `Buyerson`, `Nowhereville`, `Grandpa`, `Zoë`, `1000000501`, `2000000501`, `3000000005`, `EM-TEST`, `fx05`; (b) the only non-static request is `POST /api/engrave-merge/e` (prefetch GETs from the shared header are fine); (c) every body's keys ⊆ the §8.2 allow-list; (d) `file_processed.props.file_fingerprint` = the fx05 value.
 - AT-21: localStorage holds only `em_iid`. No cookies, sessionStorage or IndexedDB are written by the tool.
 - AT-22: `?dogfood=1` → iid starts `dog-` and events carry `dogfood:true`. The server/KPI script excludes them. Fixture fingerprints are dropped.
 - AT-23: The API rejects (400) unknown keys, strings in count fields, and bodies > 1 KB.

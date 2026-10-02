@@ -59,6 +59,19 @@ test(`AT-01 golden cases (${cases.length})`, async (t) => {
   assert.equal(passed, cases.length);
 });
 
+test("Counts: ready + held = total items for every case (one per merge row)", () => {
+  for (const c of cases) {
+    const { stats, mergeRows, problems } = runCase(c);
+    assert.equal(stats.ready_items, mergeRows.length, `${c.name} ready = merge rows`);
+    assert.equal(stats.ready_items + stats.held_items, stats.total_items, `${c.name} ready + held = total`);
+    if (!c.config?.listing) {
+      assert.equal(stats.total_items, stats.item_count, `${c.name} total = items to make`);
+      if (stats.held_items > 0) assert.ok(problems.some((p) => p.held), `${c.name} held items have problem rows`);
+    }
+    console.log(`# ${c.name}: ${stats.ready_items} ready for LightBurn · ${stats.held_items} need a look (total ${stats.total_items})`);
+  }
+});
+
 test("AT-02 Sold Orders file → WRONG_FILE, no outputs", () => {
   const res = emProcess(read("fx07_wrong_file_SoldOrders.csv"));
   assert.equal(res.error, "WRONG_FILE");
@@ -141,6 +154,28 @@ test("AT-23 event API validation", async () => {
   assert.equal((await post(JSON.stringify({ ...ok, props: { ...ok.props, row_count: "9" } }))).status, 400);
   assert.equal((await post(JSON.stringify({ ...ok, pad: "x".repeat(1100) }))).status, 400, "> 1 KB");
   assert.equal((await post("not json")).status, 400);
+});
+
+test("KPI rule: a real small file starts T0 but does not count as a distinct real file", () => {
+  const H = 60 * 60 * 1000;
+  const t = Date.parse("2026-10-05T14:00:00Z");
+  const ev = (i, event, props, h) => ({ v: 1, event, iid: `0b9d2c1e-1111-4222-8333-00000000000${i}`, dogfood: false, props, ts: t + h * H, day: "2026-10-05", host: "alignata.com", prod: true });
+  const events = [
+    ev(1, "file_processed", { row_count: 2, item_count: 2, exception_count: 0, small_file: true }, 0),
+    ev(2, "file_processed", { row_count: 9, item_count: 9, exception_count: 0, file_fingerprint: "b".repeat(64) }, 5),
+    ev(3, "file_processed", { row_count: 9, item_count: 9, exception_count: 0, file_fingerprint: "c".repeat(64) }, 6),
+    ev(4, "file_processed", { row_count: 1, item_count: 1, exception_count: 0, small_file: true }, 7),
+  ];
+  const k = computeKpis(events, t + 24 * H);
+  assert.equal(k.t0, new Date(t).toISOString(), "small file starts the clock");
+  assert.equal(k.windowEnd, new Date(t + 14 * 24 * H).toISOString());
+  assert.equal(k.killBar.distinctRealFiles, 2, "small files are not distinct real files");
+  assert.equal(k.smallFiles, 2);
+  assert.equal(k.status, "IN_WINDOW");
+  // only small files → clock still starts, 0 distinct real files
+  const only = computeKpis([events[0]], t + H);
+  assert.equal(only.t0, new Date(t).toISOString());
+  assert.equal(only.killBar.distinctRealFiles, 0);
 });
 
 test("AT-24 KPI script on a synthetic event log", () => {
