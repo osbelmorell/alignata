@@ -3,7 +3,9 @@ import type { Metadata } from "next";
 import { getPost, posts } from "@/content/posts";
 import { notFound } from "next/navigation";
 import { ArticleBody } from "@/components/daily-digest/ArticleBody";
+import { PostCard } from "@/components/fantasy/PostCard";
 import { toPlainText } from "@/lib/daily-digest/blocks";
+import { nextPost, postHero, postTag, readMinutes, shortDate } from "@/lib/daily-digest/meta";
 
 export const dynamicParams = false;
 
@@ -37,6 +39,10 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * SPEC §8 article: centred meta (tag · date · read time), H1 and dek first, then the 16:9 hero; body column max 680.
+ * Ends with one "Next article" card (index style) and an "All articles" link.
+ */
 export default async function DailyDigestPostPage({
   params,
 }: {
@@ -45,42 +51,51 @@ export default async function DailyDigestPostPage({
   const { slug } = await params;
   const post = getPost(slug);
   if (!post) notFound();
+  const hero = postHero(post);
+  const next = nextPost(post.slug);
 
   return (
-    <article className="space-y-8">
-      <p>
-        <Link
-          href="/daily-digest"
-          className="text-[13px]"
-          style={{ color: "var(--cb-ink-muted)" }}
-        >
-          ← Daily Digest
-        </Link>
-      </p>
-
-      <header className="space-y-3">
-        <time
-          className="text-[12px]"
-          style={{ color: "var(--cb-ink-muted)" }}
-          dateTime={post.date}
-        >
-          {post.date}
-        </time>
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          {post.title}
-        </h1>
-        <p className="text-[17px]" style={{ color: "var(--cb-ink-muted)" }}>
-          {toPlainText(post.dek)}
-        </p>
-      </header>
-
-      <ArticleBody paragraphs={post.paragraphs} sections={post.sections} />
-
-      {post.sourceNote ? (
-        <p className="text-[12px]" style={{ color: "var(--cb-ink-muted)" }}>
-          {post.sourceNote}
-        </p>
-      ) : null}
-    </article>
+    <main>
+      <article>
+        <header className="fx-wrap">
+          <div className="fx-a-head">
+            <p className="fx-meta">
+              <span className="fx-dot" aria-hidden="true" />
+              <span>
+                {postTag(post)} · <time dateTime={post.date}>{shortDate(post.date)}</time> · {readMinutes(post)} min read
+              </span>
+            </p>
+            <h1>{post.title}</h1>
+            <p className="fx-intro">{toPlainText(post.dek)}</p>
+          </div>
+          <figure className="fx-hero fx-art fx-reveal">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`/art/${hero.image}-1280.webp`}
+              srcSet={`/art/${hero.image}-640.webp 640w, /art/${hero.image}-1280.webp 1280w`}
+              sizes="(min-width: 1280px) 1184px, calc(100vw - 40px)"
+              alt={hero.alt}
+              width={1280}
+              height={720}
+              fetchPriority="high"
+              decoding="async"
+            />
+          </figure>
+        </header>
+        <div className="fx-wrap">
+          <ArticleBody paragraphs={post.paragraphs} sections={post.sections} pullQuote={post.pullQuote} />
+          {post.sourceNote ? <p className="fx-prose fx-note">{post.sourceNote}</p> : null}
+        </div>
+      </article>
+      <div className="fx-wrap">
+        <aside className="fx-next" aria-label="Next article">
+          <h2>Next article</h2>
+          {next ? <PostCard post={next} heading="h3" /> : null}
+          <Link className="fx-all-link" href="/daily-digest">
+            All articles
+          </Link>
+        </aside>
+      </div>
+    </main>
   );
 }

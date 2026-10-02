@@ -1,7 +1,6 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { getPostsNewestFirst } from "@/content/posts";
-import { toPlainText } from "@/lib/daily-digest/blocks";
+import { PostCard } from "@/components/fantasy/PostCard";
 
 export const metadata: Metadata = {
   title: "Daily Digest",
@@ -19,47 +18,22 @@ export const metadata: Metadata = {
   },
 };
 
+/** SPEC §7 /daily-digest: newest first; on desktop the newest is a full-width feature, then a 3-up grid. */
 export default function DailyDigestIndexPage() {
   const posts = getPostsNewestFirst();
-
   return (
-    <div className="space-y-8">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Daily Digest</h1>
-        <p className="text-[15px]" style={{ color: "var(--cb-ink-muted)" }}>
+    <main className="fx-wrap">
+      <section className="fx-page-head">
+        <h1 className="fx-display">Daily Digest</h1>
+        <p className="fx-intro">
           Proven AI techniques, deep dives, and the occasional essay, tested and written in plain English.
         </p>
-      </header>
-
-      <ul className="space-y-4">
-        {posts.map((post) => (
-          <li key={post.slug}>
-            <Link
-              href={`/daily-digest/${post.slug}`}
-              className="block p-6 transition-shadow hover:shadow-[var(--cb-shadow)]"
-              style={{
-                background: "var(--cb-surface)",
-                borderRadius: "var(--cb-radius-card-sm)",
-                border: "1px solid var(--cb-line)",
-              }}
-            >
-              <time
-                className="text-[12px]"
-                style={{ color: "var(--cb-ink-muted)" }}
-                dateTime={post.date}
-              >
-                {post.date}
-              </time>
-              <h2 className="mt-1 text-xl font-semibold tracking-tight">
-                {post.title}
-              </h2>
-              <p className="mt-2 text-[15px]" style={{ color: "var(--cb-ink-muted)" }}>
-                {toPlainText(post.dek)}
-              </p>
-            </Link>
-          </li>
+      </section>
+      <section className="fx-posts" aria-label="All articles">
+        {posts.map((post, i) => (
+          <PostCard key={post.slug} post={post} feature={i === 0} dot={i === 0} eager={i === 0} />
         ))}
-      </ul>
-    </div>
+      </section>
+    </main>
   );
 }

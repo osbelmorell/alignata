@@ -9,11 +9,33 @@
  * Optional: `sections: [{ heading: "Why it matters", body: ["Short intro.", "- first point"] }]`
  * renders after `paragraphs`, each heading as <h2>.
  */
+export type PostTag = "Technique" | "Deep dive" | "Essay";
+
+/**
+ * Hero art (SPEC §11). `image` is a base name under public/art/: ship `<image>-1280.webp` and `<image>-640.webp`
+ * (16:9; centre-safe for the 4:3 card crop). `alt` is required: one plain sentence describing the picture.
+ * Leave `hero` out and the article uses the shared fallback tile (lib/daily-digest/meta.ts → FALLBACK_HERO).
+ */
+export type PostHero = { image: string; alt: string };
+
+/**
+ * Pull quote (SPEC §8, v1.2): `text` must be a verbatim line from this article's body (the test suite checks it).
+ * It renders right after the paragraph that contains it. `cite` is shown in meta type under the quote.
+ */
+export type PostPullQuote = { text: string; cite?: string };
+
 export type Post = {
   slug: string;
   title: string;
   dek: string;
   date: string;
+  /** Index + article meta tag. Omitted = "Technique". */
+  tag?: PostTag;
+  /** Optional per-article art. Omitted = fallback tile. */
+  hero?: PostHero;
+  /** Optional shorter one-line dek for index / Next article cards. Omitted = `dek`. */
+  cardDek?: string;
+  pullQuote?: PostPullQuote;
   sourceNote?: string;
   paragraphs: string[];
   sections?: { heading: string; body: string[] }[];
@@ -157,6 +179,7 @@ export const posts: Post[] = [
     title: "Laya AI deep dive — open typed decisions, not a chat model",
     dek: "Full board brief: Laya is ConvAI’s open System-1 decision model (not the community mirror). How to run it, when it fits. Cross-links Jev.",
     date: "2026-09-25",
+    tag: "Deep dive",
     paragraphs: [
       "Board brief on Laya: what it actually is, how to run it, and when it helps. Companion piece: System One / Jev by TypeSafe AI.",
       "## What it is (verified)",
@@ -232,6 +255,7 @@ export const posts: Post[] = [
     title: "System One & Jev — TypeSafe’s hosted typed-decision model",
     dek: "Full board brief on TypeSafe’s System One category and Jev (Almeida): how the API works, when it beats LLMs, vs open Laya.",
     date: "2026-09-25",
+    tag: "Deep dive",
     paragraphs: [
       "Board brief on TypeSafe AI’s System One category and flagship model Jev (Diogo Almeida / TypeSafe). Companion piece: open-weight Laya.",
       "## What it is (verified)",
@@ -306,6 +330,7 @@ export const posts: Post[] = [
     title: "Paperclip deep dive — control plane for multi-agent companies",
     dek: "Full board brief on Paperclip (from NetworkChuck’s Sep 24 video): org-layer for AI agent teams, install path, risks (skills/CVEs/budgets), vs OpenClaw.",
     date: "2026-09-25",
+    tag: "Deep dive",
     paragraphs: [
       "Board brief on Paperclip (Paperclip Labs): what it is, how the NetworkChuck demo used it, how to install, when it fits, and security caveats. Optional companion framing: typed decisions (Laya / Jev) vs agent org charts (this piece).",
       "## The video that triggered this brief",
@@ -555,6 +580,12 @@ export const posts: Post[] = [
     title: "The AI Safety Paradox",
     dek: "Asking the inmates to guard the prison.",
     date: "2026-10-01",
+    tag: "Essay",
+    hero: {
+      image: "the-ai-safety-paradox",
+      alt: "A frosted safe with its door open, a dark egg-shaped object inside and a key hanging on its side.",
+    },
+    pullQuote: { text: "It's like asking the inmates to design the locks.", cite: "— Osbel Morell" },
     paragraphs: [
       "Anthropic's IPO filing landed like a confession. According to Reuters, which reviewed the confidential draft, it has roughly eighty pages of risk factors in a two-hundred-sixty-one-page main body — nearly double the forty-eight pages they gave to describing their actual business. Buried in there: a warning that advanced AI could pose \"catastrophic or existential risks to humanity.\" Models that could \"resist shutdown.\" That \"conceal or manipulate information.\" Behavior \"resembling blackmail.\"",
       "A company reportedly chasing a two-trillion-dollar valuation just told investors its product might end us. That's not a footnote. That's the moment the industry admitted the gap out loud.",

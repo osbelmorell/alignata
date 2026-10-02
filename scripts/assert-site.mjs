@@ -263,3 +263,63 @@ test("/apps (v1.4): 11 tools, Cleaver 01 and License Gate 02 with custom art, th
   for (let i = 1; i <= 11; i++) assert.ok(html.includes(`${String(i).padStart(2, "0")} /`), `number ${i}`);
 });
 const SLUG_RE_OK = (s) => validateSiteEvent({ v: 1, event: "tool_open", sid: SID, vid: VID, dogfood: false, props: { slug: s, position: 1 } }).ok;
+
+test("Daily Digest (v1.4): tags, real read time, hero art + alt, verbatim pull quotes, Next article chain", async () => {
+  const { existsSync } = await import("node:fs");
+  const { posts, getPostsNewestFirst } = await import("../content/posts.ts");
+  const meta = await import("../lib/daily-digest/meta.ts");
+  const { toPlainText } = await import("../lib/daily-digest/blocks.ts");
+  assert.equal(posts.length, 24);
+  assert.equal(new Set(posts.map((p) => p.slug)).size, posts.length, "unique slugs");
+  const byTag = (t) => posts.filter((p) => meta.postTag(p) === t).map((p) => p.slug).sort();
+  assert.deepEqual(byTag("Essay"), ["the-ai-safety-paradox"]);
+  assert.deepEqual(byTag("Deep dive"), ["laya-ai-deep-dive", "paperclip-deep-dive", "system-one-and-jev-deep-dive"]);
+  assert.equal(byTag("Technique").length, posts.length - 4);
+  for (const p of posts) {
+    const w = meta.wordCount(p);
+    assert.ok(w > 0, p.slug);
+    assert.equal(meta.readMinutes(p), Math.max(1, Math.round(w / 230)), p.slug);
+    assert.match(meta.postMeta(p), /^(Technique|Deep dive|Essay) · [A-Z][a-z]{2} \d{1,2} · \d+ min read$/);
+    const hero = meta.postHero(p);
+    for (const size of [640, 1280]) assert.ok(existsSync(`public/art/${hero.image}-${size}.webp`), `${p.slug}: ${hero.image}-${size}.webp`);
+    assert.match(hero.alt, /^[A-Z].{10,200}\.$/, `${p.slug}: alt is one plain sentence`);
+    if (p.pullQuote) {
+      const paras = meta.bodyBlocks(p).filter((b) => b.kind === "paragraph").map((b) => toPlainText(b.text));
+      assert.ok(paras.some((t) => t.includes(p.pullQuote.text)), `${p.slug}: pull quote is verbatim from the body`);
+      if (p.pullQuote.cite) assert.ok(paras.includes(p.pullQuote.cite), `${p.slug}: cite is the article's own byline`);
+    }
+  }
+  assert.equal(meta.postHero(posts.find((p) => p.slug === "the-ai-safety-paradox")).image, "the-ai-safety-paradox");
+  assert.equal(posts.filter((p) => p.hero).length, 1, "only the Safety Paradox has its own art for now");
+  assert.equal(meta.shortDate("2026-10-02"), "Oct 2");
+  assert.equal(meta.shortDate("2026-09-16"), "Sep 16");
+  // Next article: the next older one, oldest wraps to newest; following it visits every article once.
+  const list = getPostsNewestFirst();
+  list.forEach((p, i) => assert.equal(meta.nextPost(p.slug).slug, list[(i + 1) % list.length].slug));
+  const seen = new Set();
+  for (let s = list[0].slug; !seen.has(s); s = meta.nextPost(s).slug) seen.add(s);
+  assert.equal(seen.size, list.length);
+});
+
+test("Daily Digest pages render: index cards (feature first, one lime dot, no Open), article head order, 01. list, Next card", async () => {
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { getPostsNewestFirst, getPost } = await import("../content/posts.ts");
+  const { PostCard } = await import("../components/fantasy/PostCard.tsx");
+  const { ArticleBody } = await import("../components/daily-digest/ArticleBody.tsx");
+  const list = getPostsNewestFirst();
+  const cards = list.map((p, i) => renderToStaticMarkup(createElement(PostCard, { post: p, feature: i === 0, dot: i === 0 }))).join("");
+  assert.equal((cards.match(/data-post-card=/g) || []).length, 24);
+  assert.equal((cards.match(/fx-feature/g) || []).length, 1);
+  assert.equal((cards.match(/fx-dot/g) || []).length, 1);
+  assert.ok(!/>Open</.test(cards), "no Open pill on the digest");
+  assert.equal((cards.match(/<a class="fx-stretch" href="\/daily-digest\/[a-z0-9-]+">/g) || []).length, 24, "title is the link");
+  const tech = getPost("break-loops-when-progress-stalls");
+  const body = renderToStaticMarkup(createElement(ArticleBody, { paragraphs: tech.paragraphs }));
+  assert.match(body, /<h2>Try it<\/h2><ol start="1" style="counter-reset:fx-ol 0"><li>After each tool step/);
+  const essay = getPost("the-ai-safety-paradox");
+  const eb = renderToStaticMarkup(createElement(ArticleBody, { paragraphs: essay.paragraphs, pullQuote: essay.pullQuote }));
+  assert.equal((eb.match(/data-pullquote/g) || []).length, 1);
+  assert.match(eb, /design the locks\. And not just design them[^<]*<\/p><figure class="fx-pullquote" data-pullquote="true" aria-hidden="true">/);
+  assert.match(eb, /<p class="fx-byline">— Osbel Morell<\/p><\/div>$/);
+});
