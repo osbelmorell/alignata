@@ -9,10 +9,11 @@ export const SITE_EVENT_PROPS = {
   apps_view: [],
   tool_open: ["slug", "position"],
   article_view: ["slug", "n"],
+  home_click: ["target"],
 } as const;
 
 export type SiteEventName = keyof typeof SITE_EVENT_PROPS;
-export type SiteEventProps = { path?: string; slug?: string; position?: number; n?: number };
+export type SiteEventProps = { path?: string; slug?: string; position?: number; n?: number; target?: string };
 
 export interface SiteEventEnvelope {
   v: 1;
@@ -29,6 +30,12 @@ export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f
 /** A route path only: starts with "/", no query, no fragment, ≤ 200 chars. */
 export const PATH_RE = /^\/[A-Za-z0-9._~\-/]{0,199}$/;
 export const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,99}$/;
+/**
+ * home_click targets on the homepage `/`: the two hero pills, a tool or article card, the see-all links,
+ * or a nav link (short kebab name). Nothing else is accepted.
+ */
+export const HOME_TARGET_RE =
+  /^(?:tools-pill|digest-pill|all-tools|all-articles|tool:[a-z0-9][a-z0-9-]{0,99}|article:[a-z0-9][a-z0-9-]{0,99}|nav:[a-z0-9][a-z0-9-]{0,39})$/;
 export const MAX_POSITION = 500;
 export const MAX_ARTICLE_N = 10000;
 
@@ -73,6 +80,10 @@ export function validateSiteEvent(raw: unknown): SiteValidated {
   if ("n" in props) {
     if (!isInt(props.n, 1, MAX_ARTICLE_N)) return { ok: false, reason: "bad_n" };
     out.n = props.n as number;
+  }
+  if ("target" in props) {
+    if (typeof props.target !== "string" || !HOME_TARGET_RE.test(props.target)) return { ok: false, reason: "bad_target" };
+    out.target = props.target;
   }
   return { ok: true, event: { v: 1, event, sid: raw.sid, vid: raw.vid, dogfood: raw.dogfood, props: out } };
 }

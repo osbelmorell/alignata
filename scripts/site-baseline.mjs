@@ -4,7 +4,8 @@
 //   views per route (page_view), /apps views (apps_view) and /apps sessions, sessions with ≥1 tool_open,
 //   /apps → tool_open conversion, tool_open rate (tool_open / /apps page_view), tool_open per card slug,
 //   distinct Daily Digest readers (distinct vid with article_view), second-article rate
-//   (sessions whose article n reached ≥ 2 / sessions with ≥ 1 article_view).
+//   (sessions whose article n reached ≥ 2 / sessions with ≥ 1 article_view),
+//   homepage home_click per target, sessions/visitors, and / sessions with ≥ 1 tap.
 // Excluded: dogfood events and non-alignata.com hosts (owner device and automated browsers never send).
 //
 // Usage:
@@ -51,11 +52,17 @@ function bucket(events) {
   let appsViews = 0;
   let toolOpens = 0;
   let articleViews = 0;
+  let homeClicks = 0;
+  const homeSessions = new Set();
+  const homeClickSessions = new Set();
+  const homeClickVisitors = new Set();
+  const homeByTarget = {};
   for (const e of events) {
     const p = e.props || {};
     if (e.event === "page_view") {
       views[p.path] = (views[p.path] || 0) + 1;
       if (p.path === "/apps") appsPageViews++;
+      if (p.path === "/") homeSessions.add(e.sid);
     } else if (e.event === "apps_view") {
       appsViews++;
       appsSessions.add(e.sid);
@@ -67,6 +74,11 @@ function bucket(events) {
       articleViews++;
       readers.add(e.vid);
       articleMaxN.set(e.sid, Math.max(articleMaxN.get(e.sid) || 0, Number(p.n) || 0));
+    } else if (e.event === "home_click") {
+      homeClicks++;
+      homeClickSessions.add(e.sid);
+      homeClickVisitors.add(e.vid);
+      homeByTarget[p.target] = (homeByTarget[p.target] || 0) + 1;
     }
   }
   const appsToTool = [...appsSessions].filter((s) => toolSessions.has(s)).length;
@@ -90,6 +102,13 @@ function bucket(events) {
     articleSessions,
     secondArticleSessions,
     secondArticleRate: ratio(secondArticleSessions, articleSessions),
+    homeSessions: homeSessions.size,
+    homeClicks,
+    homeClickSessions: homeClickSessions.size,
+    homeClickVisitors: homeClickVisitors.size,
+    homeSessionsWithClick: [...homeSessions].filter((s) => homeClickSessions.has(s)).length,
+    homeClickRate: ratio([...homeSessions].filter((s) => homeClickSessions.has(s)).length, homeSessions.size),
+    homeClickByTarget: Object.fromEntries(Object.entries(homeByTarget).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))),
     visitors: new Set(events.map((e) => e.vid)).size,
     sessions: new Set(events.map((e) => e.sid)).size,
   };
@@ -171,6 +190,9 @@ function printBucket(label, b) {
   for (const [slug, n] of Object.entries(b.toolOpenBySlug)) console.log(`    ${String(n).padStart(6)}  ${slug}`);
   console.log(`  Daily Digest: ${b.digestReaders} distinct readers, ${b.articleViews} article views`);
   console.log(`    second-article rate: ${pct(b.secondArticleRate)} (${b.secondArticleSessions}/${b.articleSessions} sessions)`);
+  console.log(`  Homepage: ${b.homeClicks} home_click from ${b.homeClickSessions} sessions, ${b.homeClickVisitors} visitors`);
+  console.log(`    / sessions with ≥1 tap: ${pct(b.homeClickRate)} (${b.homeSessionsWithClick}/${b.homeSessions} sessions)`);
+  for (const [t, n] of Object.entries(b.homeClickByTarget)) console.log(`    ${String(n).padStart(6)}  ${t}`);
 }
 
 async function main() {

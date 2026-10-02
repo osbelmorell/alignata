@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Analytics, type BeforeSendEvent } from "@vercel/analytics/next";
-import { SID_KEY, VID_KEY, dogfoodSession, getOrCreateId, routeEvents, sendSiteEvent, shouldSkip } from "@/lib/site/client";
+import { SID_KEY, VID_KEY, dogfoodSession, getOrCreateId, homeClickTarget, routeEvents, sendSiteEvent, shouldSkip } from "@/lib/site/client";
 
 const safe = <T,>(f: () => T): T | null => {
   try {
@@ -27,7 +27,7 @@ const beforeSend = (event: BeforeSendEvent) => (excluded() ? null : event);
  * Before-baseline tracking for the redesign (renders nothing visible):
  * Vercel Web Analytics pageviews, plus first-party site events to /api/site/e —
  * page_view on every route, apps_view on /apps, tool_open when an /apps card or its Open is tapped,
- * article_view {slug, n} on a Daily Digest article. Ids: sid (sessionStorage), vid (localStorage).
+ * article_view {slug, n} on a Daily Digest article, home_click {target} when a link on `/` is tapped. Ids: sid (sessionStorage), vid (localStorage).
  */
 export function SiteTracker() {
   const pathname = usePathname();
@@ -48,7 +48,22 @@ export function SiteTracker() {
   useEffect(() => {
     // Capture phase, no preventDefault: the tap navigates exactly as before.
     const onClick = (e: MouseEvent) => {
-      if (skip.current || !ids.current || location.pathname !== "/apps") return;
+      if (skip.current || !ids.current) return;
+      if (location.pathname === "/") {
+        const link = (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+        if (!link) return;
+        let path: string | null = null;
+        try {
+          const u = new URL(link.href, location.href);
+          if (u.origin === location.origin) path = u.pathname;
+        } catch {
+          path = null;
+        }
+        const target = homeClickTarget(link.getAttribute("data-home-target"), path);
+        if (target) sendSiteEvent(ids.current, "home_click", { target });
+        return;
+      }
+      if (location.pathname !== "/apps") return;
       const a = (e.target as Element | null)?.closest?.("a[data-tool-slug]");
       if (!a) return;
       const slug = a.getAttribute("data-tool-slug") || "";

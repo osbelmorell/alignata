@@ -8,6 +8,7 @@ import {
   articleSlug,
   dogfoodSession,
   getOrCreateId,
+  homeClickTarget,
   noteArticle,
   randomId,
   routeEvents,
@@ -26,14 +27,21 @@ const mem = (init = {}) => {
   return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), m };
 };
 
-test("validator: the four allow-listed events with exactly their props", () => {
-  assert.deepEqual(Object.keys(SITE_EVENT_PROPS), ["page_view", "apps_view", "tool_open", "article_view"]);
+test("validator: the five allow-listed events with exactly their props", () => {
+  assert.deepEqual(Object.keys(SITE_EVENT_PROPS), ["page_view", "apps_view", "tool_open", "article_view", "home_click"]);
   for (const [ev, props] of [
     ["page_view", { path: "/" }],
     ["page_view", { path: "/daily-digest/break-loops-when-progress-stalls" }],
     ["apps_view", {}],
     ["tool_open", { slug: "engrave-merge", position: 11 }],
     ["article_view", { slug: "break-loops-when-progress-stalls", n: 2 }],
+    ["home_click", { target: "tools-pill" }],
+    ["home_click", { target: "digest-pill" }],
+    ["home_click", { target: "all-tools" }],
+    ["home_click", { target: "all-articles" }],
+    ["home_click", { target: "tool:engrave-merge" }],
+    ["home_click", { target: "article:break-loops-when-progress-stalls" }],
+    ["home_click", { target: "nav:daily-digest" }],
   ]) {
     const v = validateSiteEvent(env(ev, props));
     assert.equal(v.ok, true, `${ev} ${JSON.stringify(props)}`);
@@ -236,4 +244,53 @@ test("baseline reader: only SCAN MATCH site:ev:* and LRANGE site:ev:<day>; never
   }
   assert.deepEqual(sent, [["SCAN", "0", "MATCH", "site:ev:*", "COUNT", "1000"], ["LRANGE", "site:ev:2026-10-02", "0", "-1"]]);
   await assert.rejects(readStore({}), /No event store configured/);
+});
+
+test("home_click: only allow-listed targets validate; extra or missing props are rejected", () => {
+  for (const t of ["Tools-pill", "tools", "tool:", "tool:Engrave", "article:a b", "nav:", "https://evil.com", "tool:x?y=1", "nav:" + "a".repeat(41), "x".repeat(300)]) {
+    const v = validateSiteEvent(env("home_click", { target: t }));
+    assert.equal(v.ok, false, t);
+    assert.equal(v.reason, "bad_target", t);
+  }
+  assert.equal(validateSiteEvent(env("home_click", { target: 7 })).reason, "bad_target");
+  assert.equal(validateSiteEvent(env("home_click", {})).reason, "missing_prop:target");
+  assert.equal(validateSiteEvent(env("home_click", { target: "tools-pill", slug: "x" })).reason, "unknown_prop:slug");
+  assert.equal(validateSiteEvent(env("tool_open", { slug: "x", position: 1, target: "tools-pill" })).reason, "unknown_prop:target");
+});
+
+test("home_click target: explicit data-home-target wins; otherwise derived from the same-site path", () => {
+  assert.equal(homeClickTarget("tools-pill", "/apps"), "tools-pill");
+  assert.equal(homeClickTarget("digest-pill", "/daily-digest"), "digest-pill");
+  assert.equal(homeClickTarget("all-tools", "/apps"), "all-tools");
+  assert.equal(homeClickTarget("nav:wordmark", "/"), "nav:wordmark");
+  assert.equal(homeClickTarget("bogus target", "/apps"), null, "an invalid explicit target is never sent");
+  assert.equal(homeClickTarget(null, "/apps"), "nav:apps");
+  assert.equal(homeClickTarget(null, "/daily-digest/"), "nav:daily-digest");
+  assert.equal(homeClickTarget(null, "/"), "nav:home");
+  assert.equal(homeClickTarget(null, "/daily-digest/break-loops-when-progress-stalls"), "article:break-loops-when-progress-stalls");
+  assert.equal(homeClickTarget(null, "/engrave-merge"), "tool:engrave-merge");
+  assert.equal(homeClickTarget(null, null), null, "external link");
+  assert.equal(homeClickTarget(null, "/a/b/c"), null);
+  assert.equal(homeClickTarget(null, "/Weird_Path"), null);
+});
+
+test("baseline summary: home_click per target, sessions, visitors and / tap rate; dogfood and non-prod excluded", () => {
+  const T = Date.parse("2026-10-02T21:00:00Z");
+  const ev = (event, sid, vid, props = {}, extra = {}) => ({ v: 1, event, sid, vid, dogfood: false, props, ts: T, day: "2026-10-02", host: "alignata.com", prod: true, ...extra });
+  const s = summarize([
+    ev("page_view", "h1", "v1", { path: "/" }), ev("home_click", "h1", "v1", { target: "tools-pill" }), ev("home_click", "h1", "v1", { target: "nav:daily-digest" }),
+    ev("page_view", "h2", "v1", { path: "/" }), ev("home_click", "h2", "v1", { target: "tools-pill" }),
+    ev("page_view", "h3", "v2", { path: "/" }),
+    ev("page_view", "h4", "v3", { path: "/" }),
+    ev("home_click", "d", "vd", { target: "tools-pill" }, { dogfood: true }),
+    ev("home_click", "p", "vp", { target: "digest-pill" }, { host: "alignata-git-main.vercel.app", prod: false }),
+  ]).window;
+  assert.equal(s.homeClicks, 3);
+  assert.equal(s.homeClickSessions, 2);
+  assert.equal(s.homeClickVisitors, 1);
+  assert.equal(s.homeSessions, 4);
+  assert.equal(s.homeSessionsWithClick, 2);
+  assert.equal(s.homeClickRate, 0.5);
+  assert.deepEqual(s.homeClickByTarget, { "tools-pill": 2, "nav:daily-digest": 1 });
+  assert.equal(summarize([]).window.homeClickRate, null);
 });

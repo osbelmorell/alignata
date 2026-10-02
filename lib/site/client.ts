@@ -1,5 +1,5 @@
 import { EXCLUDED_IIDS } from "@/lib/engrave-merge/fixtures";
-import { type SiteEventName, type SiteEventProps, UUID_RE } from "./events";
+import { HOME_TARGET_RE, type SiteEventName, type SiteEventProps, UUID_RE } from "./events";
 
 /** Browser side of the site tracker. Pure helpers take their storage/env so they can be unit-tested. */
 export const SITE_EVENT_URL = "/api/site/e";
@@ -97,6 +97,31 @@ export function routeEvents(path: string, session: KV | null): { event: SiteEven
   const slug = articleSlug(path);
   if (slug) out.push({ event: "article_view", props: { slug, n: noteArticle(session, slug) } });
   return out;
+}
+
+/**
+ * home_click target for a tapped link on `/`, or null (not counted). An explicit `data-home-target`
+ * wins; otherwise it is derived from the link's same-site path: /apps → nav:apps,
+ * /daily-digest → nav:daily-digest, / → nav:home, /daily-digest/<slug> → article:<slug>,
+ * /<slug> → tool:<slug>. External links and anything that would not validate → null.
+ */
+export function homeClickTarget(explicit: string | null | undefined, path: string | null | undefined): string | null {
+  if (explicit) return HOME_TARGET_RE.test(explicit) ? explicit : null;
+  if (!path) return null;
+  const p = path.replace(/\/+$/, "") || "/";
+  let t: string | null = null;
+  if (p === "/") t = "nav:home";
+  else if (p === "/apps") t = "nav:apps";
+  else if (p === "/daily-digest") t = "nav:daily-digest";
+  else {
+    const art = articleSlug(p);
+    if (art) t = `article:${art}`;
+    else {
+      const m = /^\/([a-z0-9][a-z0-9-]{0,99})$/.exec(p);
+      if (m) t = `tool:${m[1]}`;
+    }
+  }
+  return t && HOME_TARGET_RE.test(t) ? t : null;
 }
 
 /** Fire-and-forget; never blocks navigation (sendBeacon, then fetch keepalive). Failures are silent. */

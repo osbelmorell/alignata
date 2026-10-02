@@ -27,6 +27,7 @@ export default function HomePage() {
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href="/apps"
+            data-home-target="tools-pill"
             className="cb-open-pill inline-flex items-center rounded-full px-5 py-2.5 text-[14px] font-medium text-white"
             style={{ background: "#121410", color: "#ffffff" }}
           >
@@ -34,6 +35,7 @@ export default function HomePage() {
           </Link>
           <Link
             href="/daily-digest"
+            data-home-target="digest-pill"
             className="inline-flex items-center rounded-full px-5 py-2.5 text-[14px] font-medium"
             style={{
               background: "var(--cb-surface)",
@@ -50,6 +52,7 @@ export default function HomePage() {
         Tools live on this site at{" "}
         <Link
           href="/apps"
+          data-home-target="all-tools"
           className="underline underline-offset-2"
           style={{ color: "var(--cb-ink)" }}
         >
