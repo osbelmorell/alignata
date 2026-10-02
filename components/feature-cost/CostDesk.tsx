@@ -102,10 +102,6 @@ export function CostDesk() {
       <CostDeskTable rollup={rollup} />
 
       <AboutPanel />
-
-      <footer className="pt-6 text-center text-sm text-[var(--cb-ink-muted)]">
-        Client-side only · robots noindex · main branch only on Vercel
-      </footer>
     </div>
   );
 }

@@ -286,10 +286,6 @@ export function EnvDiffDesk() {
       </section>
 
       <AboutPanel />
-
-      <footer className="pt-2 text-center text-sm text-[var(--cb-ink-muted)]">
-        This browser only · robots noindex · main branch only on Vercel
-      </footer>
     </div>
   );
 }

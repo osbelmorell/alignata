@@ -268,10 +268,6 @@ export function CleaverDesk() {
           )}
         </section>
       ) : null}
-
-      <footer className="pt-6 text-center text-sm text-[var(--cb-ink-muted)]">
-        This browser only · no share card · robots noindex · main on Vercel
-      </footer>
     </div>
   );
 }

@@ -312,10 +312,6 @@ export function LicenseGateDesk() {
         {status}
       </p>
       <AboutPanel />
-
-      <footer className="pt-6 text-center text-sm text-[var(--cb-ink-muted)]">
-        This browser only · robots noindex · main on Vercel
-      </footer>
     </div>
   );
 }
