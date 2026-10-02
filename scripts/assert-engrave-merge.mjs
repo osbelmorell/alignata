@@ -90,7 +90,7 @@ test("Summary + on-screen problem list reconcile for every case", () => {
   }
 });
 
-test("fx05_exceptions: How many column reads 0 (counted as 1) / dropped (duplicate) and adds up to 6 held", () => {
+test('fx05_exceptions: How many column reads "0, counted as 1" / "Duplicate, left out" and adds up to 6 held', () => {
   const res = runCase(cases.find((c) => c.name === "fx05_exceptions"));
   assert.equal(res.problems.length, 7, "7 problem rows");
   assert.deepEqual(res.problems.map(howManyLabel), ["0, counted as 1", "1", "1", "1", "1", "1", "Duplicate, left out"]);
@@ -116,12 +116,13 @@ test("fx05_exceptions__include_flagged: problem list + button visible and warnin
 
 test("Include-anyway warning: singular when exactly 1 item has a problem", () => {
   const stats = { exception_count: 1, ready_items: 3, held_items: 0, flagged_in_merge_items: 1 };
-  const v = summaryView({ stats }, true);
+  const problems = [{ dup: false, badQty: false, qty: "1", counted: 1, held: false, inScope: true, problems: ["x"] }];
+  const v = summaryView({ stats, problems }, true);
   assert.equal(v.countLine, "3 in your merge file · 1 with problems");
   assert.equal(v.warning, "1 of these has a problem. Check the problem list before you engrave.");
   assert.equal(v.showProblems, true);
   // OFF mode, zero problems → the only time "Everything is ready." shows
-  assert.equal(summaryView({ stats: { ...stats, exception_count: 0, flagged_in_merge_items: 0 } }, false).note, "Everything is ready.");
+  assert.equal(summaryView({ stats: { ...stats, exception_count: 0, flagged_in_merge_items: 0 }, problems: [] }, false).note, "Everything is ready.");
 });
 
 test("Duplicate-only file: problem list shows, nothing held, no warning", () => {
@@ -138,11 +139,45 @@ test("Duplicate-only file: problem list shows, nothing held, no warning", () => 
   assert.equal(res.stats.ready_items, base.stats.ready_items);
   assert.equal(v.showProblems, true);
   assert.equal(v.warning, null);
-  assert.equal(v.note, "Items that need a look are left out of the merge file. The problem list says why.");
+  const n = res.problems.length;
+  assert.equal(v.note, `${n} duplicate lines were left out. The problem list shows it.`);
   assert.ok(res.problems.every((p) => howManyLabel(p) === "Duplicate, left out"));
   const on = summaryView(emProcess(head + nl + body + nl + body + nl, { settings: { includeFlagged: true }, explicit: ["includeFlagged"] }), true);
   assert.equal(on.showProblems, true);
-  assert.notEqual(on.note, "Everything is ready.");
+  assert.equal(on.warning, null);
+  assert.equal(on.note, `${n} duplicate lines were left out. The problem list shows it.`);
+});
+
+test("Duplicate-only line: singular and plural, both include-anyway modes (synthetic)", () => {
+  const dup = { dup: true, badQty: false, qty: "1", counted: 0, held: true, inScope: true, problems: ["Same item appears twice in the file"] };
+  const stats = (k) => ({ exception_count: k, ready_items: 4, held_items: 0, flagged_in_merge_items: 0 });
+  for (const incl of [false, true]) {
+    const one = summaryView({ stats: stats(1), problems: [dup] }, incl);
+    assert.equal(one.note, "1 duplicate line was left out. The problem list shows it.");
+    assert.equal(one.warning, null);
+    assert.equal(one.showProblems, true);
+    const three = summaryView({ stats: stats(3), problems: [dup, dup, dup] }, incl);
+    assert.equal(three.note, "3 duplicate lines were left out. The problem list shows it.");
+    assert.notEqual(three.note, "Everything is ready.");
+  }
+  // mixed problems → not the duplicate-only line
+  const mixed = summaryView({ stats: { ...stats(2), held_items: 1 }, problems: [dup, { ...dup, dup: false, counted: 1 }] }, false);
+  assert.equal(mixed.note, "Items that need a look are left out of the merge file. The problem list says why.");
+});
+
+test('How many: blank quantity reads "Blank, counted as 1"', () => {
+  const p = { dup: false, badQty: true, qty: "", counted: 1, held: true, inScope: true, problems: [] };
+  assert.equal(howManyLabel(p), "Blank, counted as 1");
+  assert.equal(howManyLabel({ ...p, qty: "0" }), "0, counted as 1");
+  assert.equal(howManyLabel({ ...p, badQty: false, dup: true, counted: 0 }), "Duplicate, left out");
+  // real file: blank Quantity cell
+  const raw = read("fx01_simple.csv");
+  const nl = raw.includes("\r\n") ? "\r\n" : "\n";
+  const head = raw.split(nl)[0].split(",");
+  const qi = head.indexOf("Quantity");
+  const row = head.map((h, i) => (i === qi ? "" : h === "Order ID" ? "1000009991" : h === "Transaction ID" ? "2000009991" : h === "Listing ID" ? "3000009991" : h === "Item Name" ? "Test" : h === "Variations" ? "Personalization:Amy" : ""));
+  const res = emProcess(head.join(",") + nl + row.join(",") + nl);
+  assert.equal(res.problems.map(howManyLabel)[0], "Blank, counted as 1");
 });
 
 test("AT-02 Sold Orders file → WRONG_FILE, no outputs", () => {

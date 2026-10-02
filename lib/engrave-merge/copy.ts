@@ -34,6 +34,11 @@ export const COPY = {
   summaryCounts: (ready: number, held: number) => `${ready} ready for LightBurn · ${held} need a look`,
   summaryHeldNote: "Items that need a look are left out of the merge file. The problem list says why.",
   summaryAllReady: "Everything is ready.",
+  /** The ONLY problems are duplicates (either include-anyway mode). n = duplicate lines. */
+  summaryDuplicatesOnly: (n: number) =>
+    n === 1
+      ? "1 duplicate line was left out. The problem list shows it."
+      : `${n} duplicate lines were left out. The problem list shows it.`,
   /** "Put items that need a look in the merge file anyway" ON: count line. n = items with problems (same unit). */
   summaryCountsIncluded: (inFile: number, n: number) => `${inFile} in your merge file · ${n} with problems`,
   /** "Include anyway" ON and some items in the file have problems. n = items. */
@@ -47,7 +52,7 @@ export const COPY = {
   problemColHowMany: "How many",
   problemColProblem: "Problem",
   howManyDuplicate: "Duplicate, left out",
-  howManyBadQty: (raw: string) => `${raw === "" ? "blank" : raw}, counted as 1`,
+  howManyBadQty: (raw: string) => `${raw === "" ? "Blank" : raw}, counted as 1`,
   problemOrder: (order: string, name: string) => (name ? `Order ${order} · ${name}` : `Order ${order}`),
   downloadProblems: "Download problem list",
   printCutsheet: "Print cut sheet",

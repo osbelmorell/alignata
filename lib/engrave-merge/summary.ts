@@ -22,8 +22,10 @@ export interface SummaryView {
  * What the summary shows. `includeFlagged` = "Put items that need a look in the merge file anyway".
  * Units are items (one per merge row), so the warning's n matches the "How many" column.
  */
-export function summaryView(ok: Pick<ProcessOk, "stats">, includeFlagged: boolean): SummaryView {
+export function summaryView(ok: Pick<ProcessOk, "stats" | "problems">, includeFlagged: boolean): SummaryView {
   const s = ok.stats;
+  const dupLines = ok.problems.filter((p) => p.dup).length;
+  const duplicatesOnly = ok.problems.length > 0 && dupLines === ok.problems.length;
   const hasProblems = s.exception_count > 0;
   const n = s.flagged_in_merge_items;
   const countLine = includeFlagged
@@ -31,7 +33,8 @@ export function summaryView(ok: Pick<ProcessOk, "stats">, includeFlagged: boolea
     : COPY.summaryCounts(s.ready_items, s.held_items);
   const warning = includeFlagged && n > 0 ? COPY.summaryIncludedWarning(n) : null;
   let note: string | null = null;
-  if (!hasProblems) note = COPY.summaryAllReady;
-  else if (!warning) note = COPY.summaryHeldNote; // e.g. held items, or only a duplicate (left out)
-  return { countLine, note, warning, showProblems: hasProblems };
+  if (!hasProblems && ok.problems.length === 0) note = COPY.summaryAllReady;
+  else if (duplicatesOnly) note = COPY.summaryDuplicatesOnly(dupLines);
+  else if (!warning) note = COPY.summaryHeldNote;
+  return { countLine, note, warning, showProblems: hasProblems || ok.problems.length > 0 };
 }
