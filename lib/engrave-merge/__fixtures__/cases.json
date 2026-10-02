@@ -19,6 +19,9 @@
     {"name": "fx10_zero_ready_listing", "fixture": "fx10_zero_ready_listing.csv"},
     {"name": "fx10_zero_ready_listing__listing_b", "fixture": "fx10_zero_ready_listing.csv", "config": {"listing": "3000000011"}},
     {"name": "fx10_zero_ready_listing__listing_a", "fixture": "fx10_zero_ready_listing.csv", "config": {"listing": "3000000010"}},
-    {"name": "fx10_zero_ready_listing__listing_b_include_flagged", "fixture": "fx10_zero_ready_listing.csv", "config": {"listing": "3000000011", "include_flagged": true}}
+    {"name": "fx10_zero_ready_listing__listing_b_include_flagged", "fixture": "fx10_zero_ready_listing.csv", "config": {"listing": "3000000011", "include_flagged": true}},
+    {"name": "fx11_shipped_listing_pick", "fixture": "fx11_shipped_listing_pick.csv"},
+    {"name": "fx11_shipped_listing_pick__shipped_listing", "fixture": "fx11_shipped_listing_pick.csv", "config": {"listing": "3000000012"}},
+    {"name": "fx11_shipped_listing_pick__shipped_listing_include_shipped", "fixture": "fx11_shipped_listing_pick.csv", "config": {"listing": "3000000012", "include_shipped": true}}
   ]
 }

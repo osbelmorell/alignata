@@ -4,6 +4,8 @@ import { type SummaryView, howManyLabel } from "@/lib/engrave-merge/summary";
 
 const secondaryBtn =
   "inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[var(--cb-ink)] bg-[var(--cb-surface)] px-4 text-base font-medium text-[var(--cb-ink)] hover:bg-[var(--cb-bg)]";
+/** Same look, block-level, for the stacked both-zero / shipped-pick buttons (8px apart, never side by side). */
+const stackBtn = secondaryBtn.replace("inline-flex", "flex w-fit");
 const fieldClass =
   "min-h-[44px] rounded-xl border border-[var(--cb-ink-muted)] bg-[var(--cb-surface)] px-3 text-base text-[var(--cb-ink)]";
 const muted = "text-[var(--cb-ink-muted)]";
@@ -31,6 +33,11 @@ export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function 
   { view, updated = false, listings, listing, onListing, onProblems, onPrint, onIncludeShipped = () => {} },
   ref,
 ) {
+  /** Show all items: picker back to All items, focus moves to the picker. */
+  const showAll = (e?: { currentTarget?: HTMLElement | null }) => {
+    onListing("");
+    e?.currentTarget?.closest("section")?.querySelector<HTMLSelectElement>("[data-which-items]")?.focus();
+  };
   const picked = listings.find((l) => l.lid === listing);
   // full title of the current pick (option text is capped to one line)
   const selectedTitle = picked ? COPY.whichOne(picked.itemName, picked.lid) : COPY.whichAll;
@@ -56,9 +63,9 @@ export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function 
       </label>
       )}
       <div>
-        {view.bothZero ? (
-          // Both-zero: no count line (never "0 ready"); this block sits in its spot.
-          <div data-both-zero role="status" className="space-y-2">
+        {view.bothZero || view.shippedPick ? (
+          // Both-zero / all-shipped listing pick: no count line (never "0 ready"); this block sits in its spot.
+          <div {...(view.bothZero ? { "data-both-zero": true } : { "data-shipped-pick": true })} role="status" className="space-y-2">
             <p className="text-base font-semibold leading-6">{view.countLine}</p>
             {view.note && (
               <p data-note-line className={`text-base leading-6 ${muted}`}>
@@ -69,7 +76,7 @@ export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function 
               <button
                 type="button"
                 data-include-shipped
-                className={secondaryBtn}
+                className={stackBtn}
                 onClick={(e) => {
                   const section = e?.currentTarget?.closest("section");
                   onIncludeShipped();
@@ -78,6 +85,16 @@ export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function 
                 }}
               >
                 {COPY.includeShippedButton}
+              </button>
+            )}
+            {view.othersNote && (
+              <p data-others-note className={`text-base leading-6 ${muted}`}>
+                {view.othersNote}
+              </p>
+            )}
+            {view.shippedPick && view.showAllButton && (
+              <button type="button" data-show-all className={stackBtn} onClick={showAll}>
+                {COPY.showAllItems}
               </button>
             )}
           </div>
@@ -101,14 +118,14 @@ export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function 
             {COPY.downloadProblems}
           </button>
         )}
-        {!view.noReady && (
+        {!view.nothingToMake && (
           <button type="button" className={secondaryBtn} onClick={onPrint}>
             {COPY.printCutsheet}
           </button>
         )}
       </div>
       )}
-      {!view.bothZero && (view.warning || view.note || view.showAllButton) && (
+      {!view.bothZero && !view.shippedPick && (view.warning || view.note || view.showAllButton) && (
         <div className="space-y-2">
           {(view.warning || view.note) && (
             <p className="text-base leading-6">
@@ -129,14 +146,7 @@ export const SummaryPanel = forwardRef<HTMLElement, SummaryPanelProps>(function 
               type="button"
               data-show-all
               className={secondaryBtn}
-              onClick={(e) => {
-                onListing("");
-                // focus moves to the picker
-                e?.currentTarget
-                  ?.closest("section")
-                  ?.querySelector<HTMLSelectElement>("[data-which-items]")
-                  ?.focus();
-              }}
+              onClick={showAll}
             >
               {COPY.showAllItems}
             </button>

@@ -77,7 +77,7 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
      Unit = physical items, one per merge row (Quantity 3 = 3). ready = items in the merge file; held = items held out;
      ready + held = total items to make (duplicates dropped; "Which items" filter applied).
      With "Put items that need a look in the merge file anyway" ON the count line is
-     `{inFile} in your merge file · {n} with problems` (n = items with problems), and when n > 0 the warning
+     `{inFile} in your merge file · {n} with problems` (n = items with problems; n = 1: "· 1 with a problem"), and when n > 0 the warning
      "{n} of these have problems. Check the problem list before you engrave." (n = 1: "1 of these has a problem. …").
      "Everything is ready." only when the problem list is empty, in either mode.
      Duplicate-only (no real problems, d ≥ 1 duplicate lines in the table): the count line never shows a 0 next to the table:
@@ -109,6 +109,18 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
      line reads "{n} items need a look" (n = 1: "1 item needs a look"), and under it "Nothing is ready to engrave yet. The
      problem list says why." (Copy, final). Make merge file, its "File loaded. Tap Make merge file…" hint and Print cut
      sheet are hidden; Download problem list and the table stay. No event fires. Make merge file never builds a 0-row file.
+     RULE (Product Experience): nothing to make (0 merge rows) → no Make merge file, no hint, no Print cut sheet, and
+     nothing on that screen fires an event on its own (cutsheet_printed / merge_downloaded are guarded at 0 rows).
+     All-shipped listing pick (fixture fx11, pick 3000000012: the shipped filter hides every order of the picked listing,
+     so 0 ready AND 0 problems for the pick, while the file has other items): the picker stays; in the count line's spot,
+     role="status": "Nothing to engrave in this listing." / "Orders already shipped are hidden."; under that, stacked 8 px
+     apart: outlined 44px "Include shipped orders", then "{n} other items need a look." (n = 1: "1 other item needs a
+     look."; this shorter note is ONLY for this screen, the clean-pick screen keeps its line; if the rest are only
+     duplicates, the duplicate note; nothing when nothing else needs a look), then outlined 44px "Show all items". No black
+     pill. The 20px "Updated" slot stays. Download problem list behaves as on a clean pick (shown when the file has
+     problems; tapping it is a real download and sends exceptions_downloaded, like everywhere). Include shipped orders →
+     re-runs, focus to the count line ("2 ready for LightBurn" + the clean-pick note), "Settings · 1 changed". Show all
+     items → All items, focus on the picker.
      Both-zero = 0 ready rows AND 0 problem rows in the file; it only happens when the shipped filter hides everything
      (fixture fx08). Blank-text unshipped items are still ready rows (fx09: "5 ready for LightBurn", NOT both-zero).
      Both-zero screen (Product Experience, final): STAYS header, drop zone, Settings row, Start over. HIDDEN: Which items,
@@ -360,8 +372,8 @@ Caveat: an install id is a browser, not a seller. Cleared storage or a second de
 ## 9. Acceptance tests (Eng Ops must pass all before handing back)
 
 **Parsing (golden)**
-- AT-01: `scripts/assert-engrave-merge.mjs` (node:test, like `assert-stripe-cleaver.mjs`) runs `lib/engrave-merge` over **every case in `cases.json`** and compares merge and problem-list bytes with `expected/<case>/`. All 19 cases must match (12 original + fx08 default, fx08 include-shipped, fx09, and fx10 all / Pet ID Tag /
-Recipe Box / Recipe Box include-anyway). Copy `fixtures/` into the repo (e.g. `public/fixtures/engrave-merge/`; all synthetic).
+- AT-01: `scripts/assert-engrave-merge.mjs` (node:test, like `assert-stripe-cleaver.mjs`) runs `lib/engrave-merge` over **every case in `cases.json`** and compares merge and problem-list bytes with `expected/<case>/`. All 22 cases must match (12 original + fx08 default, fx08 include-shipped, fx09, fx10 all / Pet ID Tag /
+Recipe Box / Recipe Box include-anyway, and fx11 all / Slate Coaster pick / Slate Coaster pick + include shipped). Copy `fixtures/` into the repo (e.g. `public/fixtures/engrave-merge/`; all synthetic).
 - AT-02: `fx07_wrong_file_SoldOrders.csv` → wrong-file message, no download offered.
 - AT-03: A fixture saved with a UTF-8 BOM and with LF-only endings gives identical outputs.
 - AT-04: The fingerprint of each fixture equals `fixture_fingerprints.json`.

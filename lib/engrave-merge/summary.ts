@@ -34,6 +34,16 @@ export interface SummaryView {
    */
   noReady: boolean;
   /**
+   * A listing pick whose orders are all hidden by the shipped filter: 0 ready AND 0 problems for the pick, while the
+   * file has other items. Picker stays; "Nothing to engrave in this listing." / "Orders already shipped are hidden.",
+   * Include shipped orders, othersNote, Show all items. No Make merge file / hint / Print cut sheet.
+   */
+  shippedPick: boolean;
+  /** shippedPick only: "{n} other items need a look." (or the duplicate note), null when nothing else needs a look. */
+  othersNote: string | null;
+  /** The merge file would have 0 rows: no Make merge file, no hint, no Print cut sheet, no event. */
+  nothingToMake: boolean;
+  /**
    * On-screen table rows: the rows for the "Which items" pick (all rows for "All items").
    * A row belongs to a pick by its Listing ID (duplicates included); rows with a blank
    * Listing ID only show under "All items". The downloaded problem list is never filtered.
@@ -64,7 +74,15 @@ export function summaryView(ok: Pick<ProcessOk, "stats" | "problems">, includeFl
   const nothing = bothZero || parts.length === 0;
   // 0 ready rows for this pick but it has problems: nothing to make here; the line points to the problem list.
   const noReady = !bothZero && s.ready_items === 0 && hasProblems && rightN > 0 && !includeFlagged;
-  const countLine = noReady ? COPY.countNoReady(rightN) : nothing ? COPY.countNothing : parts.join(" · ");
+  // a listing whose orders are all shipped (hidden): only a pick can get here without being both-zero
+  const shippedPick = !bothZero && s.ready_items === 0 && !hasProblems && s.hidden_shipped > 0;
+  const countLine = noReady
+    ? COPY.countNoReady(rightN)
+    : shippedPick
+      ? COPY.countNothingListing
+      : nothing
+        ? COPY.countNothing
+        : parts.join(" · ");
   const warning = includeFlagged && n > 0 ? COPY.summaryIncludedWarning(n) : null;
   const others = ok.problems.filter((p) => !p.inScope);
   const otherItems = others.reduce((sum, p) => sum + p.counted, 0); // items, like "need a look" (duplicates count 0)
@@ -81,16 +99,27 @@ export function summaryView(ok: Pick<ProcessOk, "stats" | "problems">, includeFl
   // Nothing to engrave: never "Everything is ready."; if the shipped-orders setting hid rows, say so.
   if (nothing) note = s.hidden_shipped > 0 ? COPY.countShippedHidden : note === COPY.summaryAllReady ? null : note;
   if (noReady) note = COPY.noReadyNote;
+  if (shippedPick) note = COPY.countShippedHidden;
+  const othersNote = !shippedPick
+    ? null
+    : otherItems > 0
+      ? COPY.shippedPickOthers(otherItems)
+      : otherDupLines > 0
+        ? COPY.summaryDuplicatesOnly(otherDupLines)
+        : null;
   return {
     countLine,
     note,
     warning,
     showProblems: hasProblems,
     showDownload: fileHasProblems && !bothZero,
-    showAllButton: cleanPick && !nothing,
-    showIncludeShipped: bothZero && s.hidden_shipped > 0,
+    showAllButton: (cleanPick && !nothing) || shippedPick,
+    showIncludeShipped: (bothZero || shippedPick) && s.hidden_shipped > 0,
     bothZero,
     noReady,
+    shippedPick,
+    othersNote,
+    nothingToMake: bothZero || noReady || shippedPick || s.merge_row_count === 0,
     problems: shown,
   };
 }

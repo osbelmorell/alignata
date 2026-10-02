@@ -193,7 +193,7 @@ export function EngraveMergeDesk() {
   };
 
   const onPrint = () => {
-    if (!ok) return;
+    if (!ok || ok.stats.merge_row_count === 0) return; // nothing to make: no cut sheet, no event (button is hidden)
     printCutsheet(cutsheetHtml(ok.cut, COPY.cutsheetTitle));
     sendEvent(iidRef.current, "cutsheet_printed", fileProps());
   };
@@ -295,8 +295,8 @@ export function EngraveMergeDesk() {
   /** "Include shipped orders" button: exactly the Settings toggle (re-runs in place, flashes Updated, no event). */
   const onIncludeShipped = () => setS("includeShipped", true);
 
-  /** Nothing to make (both-zero, or 0 ready rows for this pick): Make merge file is hidden, so is its hint. */
-  const nothingToMake = !!view && (view.bothZero || view.noReady);
+  /** Nothing to make (0 merge rows: both-zero, 0-ready pick, all-shipped listing pick): no Make merge file, no hint. */
+  const nothingToMake = !!view && view.nothingToMake;
   /** ...and the hint's empty line takes no space. */
   const hideHint = nothingToMake && status.text === COPY.statusReady;
 
@@ -508,7 +508,7 @@ export function EngraveMergeDesk() {
         </div>
       </details>
 
-      {/* Nothing to make (both-zero, or 0 ready rows for this pick): no Make merge file. */}
+      {/* Nothing to make (0 merge rows): no Make merge file. */}
       {!nothingToMake && (
         <button type="button" data-primary className={`mt-4 ${primaryBtn}`} onClick={onPrimary}>
           {COPY.primary}

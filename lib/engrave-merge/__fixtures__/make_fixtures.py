@@ -61,6 +61,9 @@ PLAQUE = ("3000000008", "Engraved Birth Announcement Plaque", "EM-TEST-PLAQUE")
 TRAY = ("3000000009", "Plain Wooden Serving Tray", "EM-TEST-TRAY")
 PETTAG = ("3000000010", "Engraved Pet ID Tag", "EM-TEST-PETTAG")
 RECIPE = ("3000000011", "Personalized Engraved Wooden Recipe Box with Family Name - Fake Test Item", "EM-TEST-RECIPE")
+SLATE = ("3000000012", "Engraved Slate Coaster", "EM-TEST-SLATE")
+STAND = ("3000000013", "Engraved Bamboo Phone Stand", "EM-TEST-STAND")
+PEN = ("3000000014", "Custom Engraved Pen", "EM-TEST-PEN")
 
 def L(x):  # listing tuple -> kwargs
     return dict(listing=x[0], item=x[1], sku=x[2])
@@ -150,6 +153,19 @@ FIXTURES = {
         row("1000001004", "2000001005", variations="Wood type:Maple,Personalization:", buyer="faux", price="48.00", **L(RECIPE)),
         row("1000001005", "2000001006", variations="Wood type:Walnut,Personalization:Grandma\nRose\nFake\nKitchen\nEst\n1970\nYum", buyer="dummy", price="48.00", **L(RECIPE)),
         row("1000001006", "2000001007", variations="Wood type:Cherry,Personalization:The Testersons", buyer="gift", qty="0", price="48.00", **L(RECIPE)),
+    ],
+    # 11. SHIPPED LISTING PICK: listing 3000000012 (Slate Coaster) is ALL shipped; 3000000013 (Phone
+    #     Stand) has 2 problems (BLANK_TEXT placeholder, BAD_QUANTITY) + 1 ready; 3000000014 (Pen) is
+    #     clean. 6 orders, no emoji. Default + pick 3000000012 -> 0 items in scope, header-only merge,
+    #     problem list still has the other listing's 2 rows. Include shipped + pick -> 2 ready rows.
+    "fx11_shipped_listing_pick.csv": [
+        row("1000001101", "2000001101", variations="Shape:Square,Personalization:The Fakenames", buyer="testy", price="16.00", shipped="09/25/2026", sale="09/19/26", paid="09/19/2026", **L(SLATE)),
+        row("1000001102", "2000001102", variations="Shape:Round,Personalization:Ima & Testy", buyer="ima", price="16.00", shipped="09/26/2026", sale="09/20/26", paid="09/20/2026", **L(SLATE)),
+        row("1000001103", "2000001103", variations="Color:Natural,Personalization:Sample", buyer="sample", price="22.00", **L(STAND)),
+        row("1000001104", "2000001104", variations="Color:Dark,Personalization:Not requested on this item.", buyer="faux", price="22.00", **L(STAND)),
+        row("1000001105", "2000001105", variations="Color:Natural,Personalization:Dummy Desk", buyer="dummy", qty="0", price="22.00", **L(STAND)),
+        row("1000001106", "2000001106", variations="Ink color:Black,Personalization:Giftee R.", buyer="gift", qty="2", price="9.00", **L(PEN)),
+        row("1000001103", "2000001107", variations="Ink color:Blue,Personalization:Sample B.", buyer="sample", price="9.00", **L(PEN)),
     ],
 }
 

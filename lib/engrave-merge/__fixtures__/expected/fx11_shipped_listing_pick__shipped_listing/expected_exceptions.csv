@@ -1,0 +1,3 @@
+Order ID,Transaction ID,Listing ID,Item,First name,Quantity,Problem,Problem code,Details,Personalization,Variations
+1000001104,2000001104,3000000013,Engraved Bamboo Phone Stand,Faux,1,No personalization text,BLANK_TEXT,Etsy says personalization was not requested,,"Color:Dark,Personalization:Not requested on this item."
+1000001105,2000001105,3000000013,Engraved Bamboo Phone Stand,Dummy,0,Quantity looks wrong,BAD_QUANTITY,"Quantity is ""0""",Dummy Desk,"Color:Natural,Personalization:Dummy Desk"

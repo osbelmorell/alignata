@@ -127,7 +127,7 @@ test("Include-anyway warning: singular when exactly 1 item has a problem", () =>
   const stats = { exception_count: 1, ready_items: 3, held_items: 0, flagged_in_merge_items: 1 };
   const problems = [{ dup: false, badQty: false, qty: "1", counted: 1, held: false, inScope: true, problems: ["x"] }];
   const v = summaryView({ stats, problems }, true);
-  assert.equal(v.countLine, "3 in your merge file · 1 with problems");
+  assert.equal(v.countLine, "3 in your merge file · 1 with a problem");
   assert.equal(v.warning, "1 of these has a problem. Check the problem list before you engrave.");
   assert.equal(v.showProblems, true);
   // OFF mode, zero problems → the only time "Everything is ready." shows
@@ -817,7 +817,7 @@ test("Both-zero (fx08: every order shipped) vs fx09 (5 ready rows with blank tex
   assert.ok(!html.includes("data-count-line"), "count line hidden (never 0 ready)");
   assert.ok(html.indexOf("data-both-zero") < html.indexOf("data-updated"), "20px Updated slot kept, under the block");
   assert.equal((html.match(/data-include-shipped/g) || []).length, 1);
-  assert.match(deskSrc, /const nothingToMake = !!view && \(view\.bothZero \|\| view\.noReady\);/);
+  assert.match(deskSrc, /const nothingToMake = !!view && view\.nothingToMake;/);
   assert.match(deskSrc, /const hideHint = nothingToMake && status\.text === COPY\.statusReady;/, "hint hidden on both-zero");
   assert.match(deskSrc, /\{hideHint \? "" : status\.text\}/);
   // the desk hides Make merge file in this state and never downloads/counts a 0-row merge file
@@ -1035,4 +1035,96 @@ test("Picker labels: whole label (with … (id)) ≤ 40 characters and ≤ one l
   }
   assert.ok(n >= 15, `${n} labels checked`);
   assert.equal(COPY.whichOneShort("Personalized Engraved Wooden Recipe Box with Family Name - Fake Test Item", "3000000011"), "Personalized Engraved… (3000000011)");
+});
+
+
+test('Include-anyway ON: "1 with a problem" (n = 1), "{n} with problems" (n = 2)', async () => {
+  const { COPY } = await import("../lib/engrave-merge/copy.ts");
+  assert.equal(COPY.countWithProblems(1), "1 with a problem");
+  assert.equal(COPY.countWithProblems(2), "2 with problems");
+  const one = (lid) => summaryView(emProcess(synthNoReady(1), { listing: lid, settings: { includeFlagged: true }, explicit: ["includeFlagged"] }), true).countLine;
+  const two = (lid) => summaryView(emProcess(synthNoReady(2), { listing: lid, settings: { includeFlagged: true }, explicit: ["includeFlagged"] }), true).countLine;
+  assert.equal(one(undefined), "3 in your merge file · 1 with a problem");
+  assert.equal(two(undefined), "4 in your merge file · 2 with problems");
+  // fx06 has exactly one problem item
+  assert.equal(summaryView(emProcess(read("fx06_multifield_GUESS.csv"), { settings: { includeFlagged: true }, explicit: ["includeFlagged"] }), true).countLine, "3 in your merge file · 1 with a problem");
+});
+
+test("fx11 shipped listing pick (3000000012): Nothing to engrave in this listing; no Make merge file / hint / Print; 0 events", async () => {
+  const { COPY } = await import("../lib/engrave-merge/copy.ts");
+  assert.equal(COPY.shippedPickOthers(1), "1 other item needs a look.");
+  assert.equal(COPY.shippedPickOthers(2), "2 other items need a look.");
+  const c = cases.find((x) => x.name === "fx11_shipped_listing_pick__shipped_listing");
+  const res = runCase(c);
+  assert.equal(res.stats.ready_items, 0);
+  assert.equal(res.stats.merge_row_count, 0);
+  assert.equal(mergeCsv(res), read("expected/fx11_shipped_listing_pick__shipped_listing/expected_merge.csv"));
+  const v = summaryView(res, false);
+  assert.equal(v.shippedPick, true);
+  assert.equal(v.bothZero, false);
+  assert.equal(v.noReady, false);
+  assert.equal(v.nothingToMake, true);
+  assert.equal(v.countLine, "Nothing to engrave in this listing.");
+  assert.equal(v.note, "Orders already shipped are hidden.");
+  assert.equal(v.othersNote, "2 other items need a look.", "short note, this screen only");
+  assert.equal(v.showIncludeShipped, true);
+  assert.equal(v.showAllButton, true);
+  assert.equal(v.showDownload, true, "as on a clean pick: the file has problems");
+  assert.equal(v.showProblems, false);
+  assert.equal(v.warning, null);
+  // include-anyway ON: same screen (nothing in this listing either way)
+  const vin = summaryView(emProcess(read(c.fixture), { listing: "3000000012", settings: { includeFlagged: true }, explicit: ["includeFlagged"] }), true);
+  assert.equal(vin.shippedPick, true);
+  assert.equal(vin.countLine, "Nothing to engrave in this listing.");
+  const html = renderToStaticMarkup(createElement(SummaryPanel, { view: v, listings: res.listings, listing: "3000000012", onListing() {}, onProblems() {}, onPrint() {} }));
+  const order = ["data-which-items", 'data-shipped-pick="true" role="status"', "Nothing to engrave in this listing.", "Orders already shipped are hidden.", "data-include-shipped", "data-others-note", "data-show-all", "data-updated", "data-download-problems"].map((k) => html.indexOf(k));
+  assert.ok(order.every((i) => i >= 0), `all present: ${order}`);
+  assert.deepEqual([...order].sort((a, b) => a - b), order, "picker → status block (2 lines, Include shipped orders, note, Show all items) → Updated slot → Download problem list");
+  const block = html.slice(html.indexOf("data-shipped-pick"), html.indexOf("data-updated"));
+  assert.match(block, /class="space-y-2"/, "stacked 8px apart");
+  for (const k of ["data-include-shipped", "data-show-all"]) assert.match(block, new RegExp(`<button type="button" ${k}="true" class="flex w-fit min-h-\\[44px\\][^"]*border border-\\[var\\(--cb-ink\\)\\] bg-\\[var\\(--cb-surface\\)\\]`), `${k}: outlined 44px, not a pill`);
+  assert.ok(!html.includes("data-count-line"), "no count line");
+  assert.ok(!html.includes("Print cut sheet"));
+  assert.ok(!html.includes("data-both-zero"));
+  assert.ok(!/rounded-full|bg-\[var\(--cb-ink\)\]/.test(html), "no black pill on the panel");
+  assert.match(html, /data-updated="true" aria-live="polite" class="h-5 /, "20px Updated slot kept");
+  const visible = html.replace(/<select[\s\S]*?<\/select>/, "").replace(/<[^>]+>/g, " ");
+  assert.doesNotMatch(visible, /(^|[^\d])0([^\d]|$)/, "no 0 count visible");
+  assert.equal((html.match(/Everything you picked is ready/g) || []).length, 0, "the clean-pick line is not on this screen");
+  // after Include shipped orders: 2 ready + the clean-pick note; the file matches the golden
+  const on = runCase(cases.find((x) => x.name === "fx11_shipped_listing_pick__shipped_listing_include_shipped"));
+  const von = summaryView(on, false);
+  assert.equal(von.shippedPick, false);
+  assert.equal(von.countLine, "2 ready for LightBurn");
+  assert.equal(von.note, "Everything you picked is ready. 2 other items in your file need a look.");
+  assert.equal(mergeCsv(on), read("expected/fx11_shipped_listing_pick__shipped_listing_include_shipped/expected_merge.csv"));
+  // All items and the other picks are normal
+  const all = summaryView(runCase(cases.find((x) => x.name === "fx11_shipped_listing_pick")), false);
+  assert.equal(all.shippedPick, false);
+  assert.equal(all.countLine, "4 ready for LightBurn · 2 need a look");
+  // only this pick (default + include-anyway) is a shipped pick across all cases
+  for (const x of cases) {
+    const r = runCase(x);
+    if (!r.listings) continue;
+    assert.equal(summaryView(r, !!x.config?.include_flagged).shippedPick, x.name === "fx11_shipped_listing_pick__shipped_listing", x.name);
+  }
+  // desk: Make merge file / hint follow nothingToMake; Print cut sheet never fires cutsheet_printed on a 0-row merge
+  assert.match(deskSrc, /if \(!ok \|\| ok\.stats\.merge_row_count === 0\) return; \/\/ nothing to make: no cut sheet, no event/);
+});
+
+test("RULE: nothing to make → no Make merge file, no Print cut sheet (every case, every pick, both modes)", () => {
+  for (const c of cases) {
+    const { text, settings } = caseInput(c);
+    const base = emProcess(text, { settings, explicit: Object.keys(settings) });
+    if (!base.listings) continue;
+    for (const lid of [undefined, ...base.listings.map((l) => l.lid)]) {
+      for (const incl of [false, true]) {
+        const r = emProcess(text, { listing: lid, settings: { ...settings, includeFlagged: incl }, explicit: [...Object.keys(settings), "includeFlagged"] });
+        const v = summaryView(r, incl);
+        assert.equal(v.nothingToMake, r.stats.merge_row_count === 0, `${c.name} ${lid} ${incl}`);
+        const html = renderToStaticMarkup(createElement(SummaryPanel, { view: v, listings: r.listings, listing: lid ?? "", onListing() {}, onProblems() {}, onPrint() {} }));
+        assert.equal(html.includes("Print cut sheet"), r.stats.merge_row_count > 0, `${c.name} ${lid} ${incl}: Print cut sheet`);
+      }
+    }
+  }
 });

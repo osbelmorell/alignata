@@ -55,10 +55,14 @@ export const COPY = {
   countReady: (n: number) => `${n} ready for LightBurn`,
   countInFile: (n: number) => `${n} in your merge file`,
   countNeedLook: (n: number) => (n === 1 ? "1 needs a look" : `${n} need a look`),
-  countWithProblems: (n: number) => `${n} with problems`,
+  countWithProblems: (n: number) => (n === 1 ? "1 with a problem" : `${n} with problems`),
   countDupLeftOut: (d: number) => (d === 1 ? "1 duplicate left out" : `${d} duplicates left out`),
   /** Both parts would be 0. */
   countNothing: "Nothing to engrave in this file.",
+  /** A listing pick whose orders are all shipped (hidden), while the file has other items. */
+  countNothingListing: "Nothing to engrave in this listing.",
+  /** That screen only (the clean-pick screen keeps summaryPickReadyOthers). n = items, as in "need a look". */
+  shippedPickOthers: (n: number) => (n === 1 ? "1 other item needs a look." : `${n} other items need a look.`),
   /** Second line under countNothing when the shipped-orders setting hid rows (stats.hidden_shipped > 0). */
   countShippedHidden: "Orders already shipped are hidden.",
   /** Outlined 44px button under that line: turns on "Include orders already shipped". */
