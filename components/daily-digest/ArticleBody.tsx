@@ -1,8 +1,37 @@
+import { Fragment } from "react";
 import {
   parseArticle,
+  parseInline,
   parseSections,
   type ArticleSection,
 } from "@/lib/daily-digest/blocks";
+
+/**
+ * Inline text with safe Markdown links ("[label](https://…)", http(s) only).
+ * External links open in a new tab. Olive-deep text on the warm paper keeps
+ * strong contrast on phone; the clay underline marks it as a link.
+ */
+function InlineText({ text }: { text: string }) {
+  return (
+    <>
+      {parseInline(text).map((seg, i) =>
+        seg.kind === "link" ? (
+          <a
+            key={i}
+            href={seg.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-[var(--cb-olive-deep)] underline decoration-[var(--cb-clay-deep)] decoration-[1.5px] underline-offset-[3px] transition-colors hover:text-[var(--cb-ink)] hover:decoration-[var(--cb-olive-deep)] focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cb-olive)]"
+          >
+            {seg.text}
+          </a>
+        ) : (
+          <Fragment key={i}>{seg.text}</Fragment>
+        ),
+      )}
+    </>
+  );
+}
 
 /**
  * Clay Board article body — phone-first. Olive-deep headings with a small
@@ -45,7 +74,7 @@ export function ArticleBody({
                     paddingTop: i === 0 ? 0 : "0.25rem",
                   }}
                 >
-                  {block.text}
+                  <InlineText text={block.text} />
                 </h3>
               );
             }
@@ -63,7 +92,7 @@ export function ArticleBody({
                   className="inline-block h-[3px] w-5 shrink-0 rounded-full"
                   style={{ background: "var(--cb-clay-deep)" }}
                 />
-                {block.text}
+                <InlineText text={block.text} />
               </h2>
             );
           case "ul":
@@ -74,7 +103,7 @@ export function ArticleBody({
               >
                 {block.items.map((item, j) => (
                   <li key={j} className="pl-1">
-                    {item}
+                    <InlineText text={item} />
                   </li>
                 ))}
               </ul>
@@ -88,7 +117,7 @@ export function ArticleBody({
               >
                 {block.items.map((item, j) => (
                   <li key={j} className="pl-1">
-                    {item}
+                    <InlineText text={item} />
                   </li>
                 ))}
               </ol>
@@ -102,7 +131,7 @@ export function ArticleBody({
               />
             );
           default:
-            return <p key={i}>{block.text}</p>;
+            return <p key={i}><InlineText text={block.text} /></p>;
         }
       })}
     </div>

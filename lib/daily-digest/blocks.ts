@@ -93,3 +93,48 @@ export function parseSections(sections: ArticleSection[]): ArticleBlock[] {
     ...parseArticle(s.body),
   ]);
 }
+
+/**
+ * Inline Markdown links inside a block's text: "[label](https://…)".
+ * Only absolute http(s) URLs are accepted; anything else (other schemes,
+ * relative paths, malformed syntax) stays as literal text. Labels and URLs are
+ * returned as plain strings and rendered by React, so nothing is injected as HTML.
+ */
+export type InlineSegment =
+  | { kind: "text"; text: string }
+  | { kind: "link"; text: string; href: string };
+
+const INLINE_LINK_RE = /\[([^\[\]\n]+)\]\((https?:\/\/[^\s()<>"'`]+)\)/gi;
+
+function safeHttpUrl(raw: string): string | null {
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
+export function parseInline(text: string): InlineSegment[] {
+  const out: InlineSegment[] = [];
+  let cursor = 0;
+  for (const m of text.matchAll(INLINE_LINK_RE)) {
+    const start = m.index ?? 0;
+    const label = m[1].trim();
+    const href = safeHttpUrl(m[2]);
+    if (!href || !label) continue;
+    if (start > cursor) out.push({ kind: "text", text: text.slice(cursor, start) });
+    out.push({ kind: "link", text: label, href });
+    cursor = start + m[0].length;
+  }
+  if (cursor < text.length) out.push({ kind: "text", text: text.slice(cursor) });
+  return out;
+}
+
+/** Plain-text form of a block's text: links collapse to their label only. */
+export function toPlainText(text: string): string {
+  return parseInline(text)
+    .map((s) => s.text)
+    .join("");
+}

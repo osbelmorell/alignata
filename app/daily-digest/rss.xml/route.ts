@@ -1,4 +1,5 @@
 import { getPostsNewestFirst } from "@/content/posts";
+import { toPlainText } from "@/lib/daily-digest/blocks";
 
 export const dynamic = "force-static";
 
@@ -25,11 +26,11 @@ export function GET() {
       const url = `${SITE}/daily-digest/${post.slug}`;
       return [
         "    <item>",
-        `      <title>${esc(post.title)}</title>`,
+        `      <title>${esc(toPlainText(post.title))}</title>`,
         `      <link>${url}</link>`,
         `      <guid isPermaLink="true">${url}</guid>`,
         `      <pubDate>${rfc822(post.date)}</pubDate>`,
-        `      <description>${esc(post.dek)}</description>`,
+        `      <description>${esc(toPlainText(post.dek))}</description>`,
         "    </item>",
       ].join("\n");
     })

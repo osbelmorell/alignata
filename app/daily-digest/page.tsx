@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getPostsNewestFirst } from "@/content/posts";
+import { toPlainText } from "@/lib/daily-digest/blocks";
 
 export const metadata: Metadata = {
   title: "Daily Digest",
@@ -53,7 +54,7 @@ export default function DailyDigestIndexPage() {
                 {post.title}
               </h2>
               <p className="mt-2 text-[15px]" style={{ color: "var(--cb-ink-muted)" }}>
-                {post.dek}
+                {toPlainText(post.dek)}
               </p>
             </Link>
           </li>

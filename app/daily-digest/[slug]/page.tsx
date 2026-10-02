@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getPost, posts } from "@/content/posts";
 import { notFound } from "next/navigation";
 import { ArticleBody } from "@/components/daily-digest/ArticleBody";
+import { toPlainText } from "@/lib/daily-digest/blocks";
 
 export const dynamicParams = false;
 
@@ -20,7 +21,7 @@ export async function generateMetadata({
   if (!post) return {};
   return {
     title: post.title,
-    description: post.dek,
+    description: toPlainText(post.dek),
     alternates: {
       canonical: `/daily-digest/${post.slug}`,
       types: { "application/rss+xml": "/daily-digest/rss.xml" },
@@ -28,7 +29,7 @@ export async function generateMetadata({
     openGraph: {
       type: "article",
       title: post.title,
-      description: post.dek,
+      description: toPlainText(post.dek),
       url: `/daily-digest/${post.slug}`,
       siteName: "Alignata",
       publishedTime: post.date,
@@ -69,7 +70,7 @@ export default async function DailyDigestPostPage({
           {post.title}
         </h1>
         <p className="text-[17px]" style={{ color: "var(--cb-ink-muted)" }}>
-          {post.dek}
+          {toPlainText(post.dek)}
         </p>
       </header>
 
