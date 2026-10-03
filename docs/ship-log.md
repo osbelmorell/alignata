@@ -45,3 +45,21 @@
     since 1:21:04 PM ET Oct 2, so the whole restyle happens early in its window.
 - **Tracking:** site events (`page_view`, `apps_view`, `tool_open`, `article_view`, `home_click`) and Engrave Merge's
   `em:*` events are unchanged by the restyle and now carry the after-numbers for the Monday read-back.
+
+## v2 App Store layout + v3 sticker art live (SPEC v2)
+
+- **What shipped:** the v2 App Store "Today" layout (feed, story cards, /apps rows, tool and article stories, sticky
+  Open, motion) and the v3 sticker-art restyle for all tools and all 24 Daily Digest articles (`40256f5` … `3dce732`).
+- **Restyle live:** `main` fast-forwarded to `3dce732` at 6:31 AM ET. Production deploy
+  `dpl_7HYbYQbNQaHp8cLwQKB6P1EWXcFb` READY at **6:32:01 AM ET, Sat Oct 3, 2026**, on alignata.com and www.alignata.com.
+  This is the second restyle marker: events between the 7:18:28 PM ET Oct 2 marker and this one are the v1.4 look,
+  events at or after it are the v2 look.
+- **Kill clocks it lands inside** (unchanged, still running; this date is logged only so a read-back can split each
+  window before/after this marker):
+  - **Stripe Cleaver:** 14 days after ship. Kill if under 8 real import attempts or median time-to-download over 60s.
+  - **License Gate:** its 14-day window from its soft-ship, as tracked by Product.
+  - **Engrave Merge:** T0 = first real `file_processed` (SPEC §8.6), window [T0, T0 + 14 days). Shutdown deadline
+    unchanged.
+- **Tracking:** site events and Engrave Merge's `em:*` events are unchanged by this restyle (story and sticky Opens
+  send `tool_open` since `48773f3`). The `tool_open.source` field (feed / apps / story / sticky) is not in this
+  deploy; it is on `preview/tracking-source` and has not shipped to production.
