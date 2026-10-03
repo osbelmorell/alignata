@@ -140,6 +140,35 @@ export function homeClickTarget(explicit: string | null | undefined, path: strin
   return t && HOME_TARGET_RE.test(t) ? t : null;
 }
 
+/**
+ * Pages where tapping a tool link (an Open pill: a[data-tool-slug]) counts as tool_open: /apps (the list), and a tool
+ * story /apps/<slug> (its row Opens and the sticky Open bar). A tap on an /apps row body opens the story with a plain
+ * link (no data-tool-slug), so it is never counted. The homepage keeps home_click; tool routes send nothing.
+ */
+export function toolOpenPage(path: string): boolean {
+  return path === "/apps" || /^\/apps\/[a-z0-9][a-z0-9-]{0,99}$/.test(path);
+}
+
+/**
+ * tool_open for a tap on `link` (the tapped a[data-tool-slug], or null) at `path`: same event and {slug, position}
+ * payload as the /apps Opens, position = the tool's /apps position from data-tool-pos. Not sent when the device is
+ * skipped (navigator.webdriver or an EXCLUDED_IIDS owner device) or ids aren't ready; in a dogfood session it is sent
+ * flagged dogfood: true like every other event, and the baseline drops it. Fire-and-forget via sendSiteEvent, so the
+ * link navigates exactly as before.
+ */
+export function trackToolOpen(
+  path: string,
+  link: { getAttribute(name: string): string | null } | null,
+  ids: { sid: string; vid: string; dogfood: boolean } | null,
+  skip: boolean,
+): boolean {
+  if (skip || !ids || !link || !toolOpenPage(path)) return false;
+  const slug = link.getAttribute("data-tool-slug") || "";
+  const position = Number(link.getAttribute("data-tool-pos"));
+  sendSiteEvent(ids, "tool_open", { slug, position });
+  return true;
+}
+
 /** Fire-and-forget; never blocks navigation (sendBeacon, then fetch keepalive). Failures are silent. */
 export function sendSiteEvent(
   ids: { sid: string; vid: string; dogfood: boolean },

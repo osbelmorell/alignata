@@ -14,6 +14,8 @@ import {
   randomId,
   routeEvents,
   shouldSkip,
+  toolOpenPage,
+  trackToolOpen,
 } from "../lib/site/client.ts";
 import { handleSiteEvent } from "../lib/site/handler.ts";
 import { SITE_EVENT_KEY_MATCH, SITE_KEY_PREFIX, siteEventKey } from "../lib/site/store.ts";
@@ -662,4 +664,123 @@ test("motion (SPEC v2 §7): one switch, morph names on both sides, reduced motio
   for (const d of ["app", "app/apps", "app/apps/[slug]", "app/daily-digest", "app/daily-digest/[slug]"]) {
     assert.ok(!existsSync(`${d}/loading.tsx`) && !existsSync(`${d}/loading.js`), `${d}: no loading fallback in front of the hero`);
   }
+});
+
+/* ---------- tool_open on tool stories + sitemap stories (CEO ruling, Oct 3 2026) ---------- */
+
+/** Capture what sendSiteEvent would beacon (Node has no navigator); restores the global afterwards. */
+async function captureBeacons(fn) {
+  const sent = [];
+  const had = Object.getOwnPropertyDescriptor(globalThis, "navigator");
+  Object.defineProperty(globalThis, "navigator", { value: { sendBeacon: (url, blob) => (sent.push({ url, blob }), true) }, configurable: true, writable: true });
+  try {
+    await fn();
+  } finally {
+    if (had) Object.defineProperty(globalThis, "navigator", had);
+    else delete globalThis.navigator;
+  }
+  return Promise.all(sent.map(async (b) => ({ url: b.url, body: JSON.parse(await b.blob.text()) })));
+}
+/** The <a> tags of rendered HTML as attribute maps, with a getAttribute() like the DOM's. */
+const anchors = (html) =>
+  [...html.matchAll(/<a\b([^>]*)>/g)].map((m) => {
+    const attrs = Object.fromEntries([...m[1].matchAll(/([a-zA-Z-]+)="([^"]*)"/g)].map((x) => [x[1], x[2]]));
+    return { attrs, getAttribute: (n) => (n in attrs ? attrs[n] : null) };
+  });
+
+test("tool_open: story row Opens + sticky Open count (same event + payload); row-body taps don't; skips + dogfood as today", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { createElement } = await import("react");
+  const { getApps, toolsOrder } = await import("../lib/apps.ts");
+  const { ToolsList } = await import("../components/appstore/ToolsList.tsx");
+  const mod = await import("../app/apps/[slug]/page.tsx");
+  const order = toolsOrder(getApps());
+  const ids = { sid: SID, vid: VID, dogfood: false };
+
+  assert.equal(toolOpenPage("/apps"), true);
+  assert.equal(toolOpenPage("/apps/stripe-cleaver"), true);
+  for (const p of ["/", "/stripe-cleaver", "/daily-digest", "/daily-digest/a", "/apps/a/b", "/apps/", "/appsx"]) assert.equal(toolOpenPage(p), false, `${p}: no tool_open`);
+
+  for (const { slug } of mod.generateStaticParams()) {
+    const pos = order.findIndex((a) => a.id === slug) + 1;
+    const html = renderToStaticMarkup(await mod.default({ params: Promise.resolve({ slug }) }));
+    const sticky = html.slice(html.indexOf("data-sticky-open"));
+    const tools = anchors(html).filter((a) => a.getAttribute("data-tool-slug"));
+    assert.equal(tools.length, 3, `${slug}: first-row Open, end-row Open, sticky Open`);
+    assert.equal(anchors(sticky).filter((a) => a.getAttribute("data-tool-slug")).length, 1, `${slug}: one of them is the sticky bar's`);
+    for (const a of tools) assert.ok(a.attrs.class.split(" ").includes("fx-open") && a.attrs.href === order[pos - 1].url, `${slug}: only Open pills carry data-tool-slug; plain <a href> to the tool`);
+    const sent = await captureBeacons(() => tools.forEach((a) => assert.equal(trackToolOpen(`/apps/${slug}`, a, ids, false), true)));
+    assert.equal(sent.length, 3, `${slug}: each Open sends one tool_open`);
+    for (const { url, body } of sent) {
+      assert.equal(url, "/api/site/e");
+      assert.deepEqual(body, { v: 1, event: "tool_open", sid: SID, vid: VID, dogfood: false, props: { slug, position: pos } }, `${slug}: same payload as /apps, /apps position`);
+      assert.ok(validateSiteEvent(body).ok, `${slug}: passes the existing validator`);
+    }
+    // Everything else on a story (header, All tools, Next…) has no data-tool-slug, so closest() finds nothing.
+    for (const a of anchors(html).filter((a) => !a.getAttribute("data-tool-slug"))) assert.ok(!/fx-open/.test(a.attrs.class || ""), `${slug}: untracked link is not an Open`);
+  }
+
+  // /apps: unchanged. Open pills send exactly as before; a row-body tap opens the story with a plain link and sends nothing.
+  const list = anchors(renderToStaticMarkup(createElement(ToolsList, { apps: order })));
+  const bodies = list.filter((a) => a.attrs.class === "fx-stretch" && a.attrs.href.startsWith("/apps/"));
+  assert.equal(bodies.length, 10, "10 row bodies open a story");
+  for (const b of bodies) assert.equal(b.getAttribute("data-tool-slug"), null, `${b.attrs.href}: row body has no tracking attrs`);
+  const none = await captureBeacons(() => {
+    for (const b of bodies) assert.equal(trackToolOpen("/apps", b.getAttribute("data-tool-slug") ? b : null, ids, false), false);
+  });
+  assert.equal(none.length, 0, "row-body taps send no tool_open");
+  const appsOpens = list.filter((a) => a.attrs.class === "fx-open");
+  const appsSent = await captureBeacons(() => appsOpens.forEach((a) => trackToolOpen("/apps", a, ids, false)));
+  assert.deepEqual(appsSent.map((x) => x.body.props), order.map((a, i) => ({ slug: a.id, position: i + 1 })), "/apps Opens: unchanged payloads");
+  const home = await captureBeacons(() => trackToolOpen("/", appsOpens[0], ids, false));
+  assert.equal(home.length, 0, "homepage keeps home_click (no tool_open)");
+
+  // Exclusions apply exactly as for /apps Opens: skipped devices send nothing; dogfood sends flagged, and the baseline drops it.
+  const open = anchors(renderToStaticMarkup(await mod.default({ params: Promise.resolve({ slug: "stripe-cleaver" }) }))).find((a) => a.getAttribute("data-tool-slug"));
+  for (const env of [{ webdriver: true, local: mem() }, { webdriver: false, local: mem({ em_iid: OWNER }) }]) {
+    const skip = shouldSkip(env);
+    assert.equal(skip, true);
+    const s = await captureBeacons(() => {
+      assert.equal(trackToolOpen("/apps/stripe-cleaver", open, ids, skip), false);
+      assert.equal(trackToolOpen("/apps", open, ids, skip), false, "same rule as /apps");
+    });
+    assert.equal(s.length, 0, "skipped device (webdriver / EXCLUDED_IIDS): nothing sent");
+  }
+  assert.equal(trackToolOpen("/apps/stripe-cleaver", open, null, false), false, "no ids yet: nothing sent");
+  const dog = { ...ids, dogfood: dogfoodSession("?dogfood=1", mem()) };
+  const ds = await captureBeacons(() => trackToolOpen("/apps/stripe-cleaver", open, dog, false));
+  assert.equal(ds.length, 1);
+  assert.equal(ds[0].body.dogfood, true, "dogfood session: flagged like every other event");
+  assert.equal(dogfoodHref(open.attrs.href, "https://alignata.com"), "/stripe-cleaver?dogfood=1", "the plain <a href> still gets ?dogfood=1");
+  const T = Date.parse("2026-10-03T12:00:00Z");
+  const sum = summarize([{ ...ds[0].body, ts: T, day: "2026-10-03", host: "alignata.com", prod: true }], { until: T + 1 });
+  assert.equal(sum.excluded.dogfood, 1, "baseline drops the dogfood story Open");
+  assert.equal(Object.keys(sum.window.toolOpenBySlug).length, 0);
+
+  // Wiring: the tracker marks dogfood first, then calls trackToolOpen on the tapped a[data-tool-slug]; capture phase, never preventDefault.
+  const { readFileSync } = await import("node:fs");
+  const tracker = readFileSync("components/site/SiteTracker.tsx", "utf8");
+  assert.match(tracker, /trackToolOpen\(location\.pathname, \(e\.target as Element \| null\)\?\.closest\?\.\("a\[data-tool-slug\]"\) \?\? null, ids\.current, skip\.current\);/);
+  assert.ok(tracker.indexOf("markToolLink((e.target") < tracker.indexOf("trackToolOpen(location"), "?dogfood=1 is added before tracking");
+  assert.ok(!/preventDefault\(|stopPropagation\(/.test(tracker.replace(/\/\/.*$/gm, "")), "tracking never blocks the tap");
+  assert.match(tracker, /addEventListener\("click", onClick, true\)/);
+});
+
+test("sitemap: adds exactly the tool stories (no Deploy Decision story); everything else unchanged", async () => {
+  const urls = (await import("../app/sitemap.ts")).default().map((e) => e.url);
+  const { getApps } = await import("../lib/apps.ts");
+  const { posts } = await import("../content/posts.ts");
+  const mod = await import("../app/apps/[slug]/page.tsx");
+  const S = "https://alignata.com";
+  const storySlugs = mod.generateStaticParams().map((p) => p.slug);
+  const stories = urls.filter((u) => u.startsWith(`${S}/apps/`));
+  assert.deepEqual(stories.sort(), storySlugs.map((s) => `${S}/apps/${s}`).sort(), "story URLs = the static story pages");
+  assert.equal(stories.length, 10);
+  assert.ok(!stories.includes(`${S}/apps/deploy-decision-card`), "Deploy Decision has no story");
+  const before = [S, `${S}/apps`, ...getApps().map((a) => `${S}${a.url}`), `${S}/daily-digest`, ...posts.map((p) => `${S}/daily-digest/${p.slug}`)];
+  assert.deepEqual(urls.filter((u) => !stories.includes(u)), before, "the 38 existing URLs, same order");
+  assert.equal(urls.length, 48);
+  assert.equal(new Set(urls).size, urls.length);
+  const robots = (await import("../app/robots.ts")).default();
+  assert.deepEqual(robots, { rules: { userAgent: "*", allow: "/" }, sitemap: "https://alignata.com/sitemap.xml" }, "robots unchanged");
 });

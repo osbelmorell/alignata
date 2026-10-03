@@ -881,7 +881,11 @@ test("Re-list: Engrave Merge card has the About fields; robots + sitemap list on
   assert.deepEqual(robots, { rules: { userAgent: "*", allow: "/" }, sitemap: "https://alignata.com/sitemap.xml" });
   const urls = (await import("../app/sitemap.ts")).default().map((e) => e.url);
   const { posts } = await import("../content/posts.ts");
-  assert.equal(urls.length, 2 + apps.length + 1 + posts.length);
+  // Tool stories /apps/<slug> (CEO, Oct 3): every tool with a story; Deploy Decision Card has none.
+  const stories = urls.filter((u) => /^https:\/\/alignata\.com\/apps\/[a-z0-9-]+$/.test(u));
+  assert.equal(stories.length, apps.length - 1, "one story per listed tool except Deploy Decision Card");
+  assert.ok(!stories.includes("https://alignata.com/apps/deploy-decision-card"), "no Deploy Decision story");
+  assert.equal(urls.length, 2 + apps.length + stories.length + 1 + posts.length);
   assert.equal(new Set(urls).size, urls.length, "no duplicates");
   for (const u of ["https://alignata.com", "https://alignata.com/apps", "https://alignata.com/engrave-merge", "https://alignata.com/daily-digest"]) assert.ok(urls.includes(u), u);
   for (const p of posts) assert.ok(urls.includes(`https://alignata.com/daily-digest/${p.slug}`));

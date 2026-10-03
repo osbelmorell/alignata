@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Analytics, type BeforeSendEvent } from "@vercel/analytics/next";
-import { SID_KEY, VID_KEY, dogfoodHref, dogfoodSession, getOrCreateId, homeClickTarget, routeEvents, sendSiteEvent, shouldSkip } from "@/lib/site/client";
+import { SID_KEY, VID_KEY, dogfoodHref, dogfoodSession, getOrCreateId, homeClickTarget, routeEvents, sendSiteEvent, shouldSkip, trackToolOpen } from "@/lib/site/client";
 
 const safe = <T,>(f: () => T): T | null => {
   try {
@@ -33,7 +33,7 @@ function markToolLink(a: Element | null) {
 /**
  * Before-baseline tracking for the redesign (renders nothing visible):
  * Vercel Web Analytics pageviews, plus first-party site events to /api/site/e —
- * page_view on every route, apps_view on /apps, tool_open when an /apps card or its Open is tapped,
+ * page_view on every route, apps_view on /apps, tool_open when an Open is tapped on /apps or a tool story (/apps/<slug>, incl. the sticky bar),
  * article_view {slug, n} on a Daily Digest article, home_click {target} when a link on `/` is tapped. Ids: sid (sessionStorage), vid (localStorage).
  * In a dogfood session, tool links (on / and /apps) get ?dogfood=1 so the tools' own counts skip our test runs.
  */
@@ -76,12 +76,8 @@ export function SiteTracker() {
         if (target) sendSiteEvent(ids.current, "home_click", { target });
         return;
       }
-      if (location.pathname !== "/apps") return;
-      const a = (e.target as Element | null)?.closest?.("a[data-tool-slug]");
-      if (!a) return;
-      const slug = a.getAttribute("data-tool-slug") || "";
-      const position = Number(a.getAttribute("data-tool-pos"));
-      sendSiteEvent(ids.current, "tool_open", { slug, position });
+      // tool_open: Opens on /apps and on a tool story /apps/<slug> (row Opens + sticky bar). Row-body story links carry no data-tool-slug.
+      trackToolOpen(location.pathname, (e.target as Element | null)?.closest?.("a[data-tool-slug]") ?? null, ids.current, skip.current);
     };
     // middle-click opens a new tab without a click event
     const onAux = (e: MouseEvent) => e.button === 1 && onClick(e);
