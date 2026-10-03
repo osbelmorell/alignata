@@ -36,7 +36,7 @@
 Hard requirements:
 - On a **390 px wide** viewport with Settings collapsed, the **drop zone, the Settings row and the primary button sit fully inside the first 620 px** of the page (measured `getBoundingClientRect().bottom ≤ 620` for Make merge file at scrollY 0; 604 px measured on the settings commit).
 - **All text ≥ 16 px** computed (no 11 px eyebrows or `text-xs`/`text-sm` on this page), WCAG **AA** contrast everywhere (axe: zero `color-contrast` violations).
-- **Exactly ONE black primary pill button** (`bg-[var(--cb-ink)]` #121410, explicit `text-white`, 18.5:1 contrast). Everything else is secondary (outline) or a text link.
+- **Exactly ONE black primary pill button** (`bg-[var(--cb-ink)]` #121410, explicit `text-white`, 18.5:1 contrast). Everything else is secondary (outline) or a text link, plus ONE soft pill (Oct 3 2026): the price card's "I'd pay $29" (`#ECE7DE`, radius 999, 44px tall, never black; §8.7).
 - No jargon on the face: say "file", "problem list", "settings file", never "CSV parsing", "exceptions", "recipe JSON" or "fingerprint". The exact Etsy filename can appear in help text.
 
 Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wording is a suggestion only.
@@ -320,7 +320,8 @@ How multi-line quoted cells render (we avoid them), and whether a BOM would leak
 - Only the fields below are ever sent. **Never** file names, text, names, order/listing/transaction IDs, SKUs, item names, font names, or settings content.
 - The client builds each payload from an allow-list. The server **re-validates** it and drops unknown keys and bad types: integers 0–100000, fingerprint `^[0-9a-f]{64}$`, iid `^(dog-)?[0-9a-f-]{36}$`. Body ≤ 1 KB. No IP or user-agent is stored by our code.
 - Send with `navigator.sendBeacon('/api/engrave-merge/e', blob)` (same-origin, fire-and-forget). Failures are silent and never block the tool.
-- localStorage holds exactly **one** key: `em_iid` = `crypto.randomUUID()`, created on first visit. No cookies, sessionStorage or IndexedDB from this tool.
+- localStorage holds exactly **two** keys: `em_iid` = `crypto.randomUUID()`, created on first visit, and `em_price` (Oct 3 2026, the price card, §8.7): `{"v":1,"files":0-4,"fps":[≤3 × 16 hex, only until files reaches 4],"seenDays":[≤3 device-local days],"answer":null|"pay"|"no"}`. `em_price` is never sent. The tool READS sessionStorage `site_dogfood` (written by the site for a `?dogfood=1` session) but writes no cookies, sessionStorage or IndexedDB.
+- `dogfood` on every event = the iid starts with `dog-` OR sessionStorage `site_dogfood === "1"` (Product yes, 9:43 AM ET Oct 3), the same rule the price card uses.
 
 ### 8.2 Events
 
@@ -330,7 +331,9 @@ How multi-line quoted cells render (we avoid them), and whether a BOM would leak
 | `merge_downloaded` | `file_fingerprint` or `small_file`, `merge_row_count` | primary button download |
 | `exceptions_downloaded` | `file_fingerprint` or `small_file`, `exception_count` | problem list download |
 | `cutsheet_printed` | `file_fingerprint` or `small_file` | Print cut sheet tapped |
-| `pro_interest_tap` | none | "I'd pay for unlimited batches" tapped (once per page load; button then shows thanks) |
+| `price_card_view` | none | the "I'd pay" price card is at least half on screen (or tapped first); max 1 per install per device-local day across tabs (§8.7) |
+| `price_intent` | none | "I'd pay $29" tapped on the price card |
+| `price_dismiss` | none | "No thanks" tapped on the price card |
 | `page_open` *(optional)* | none | page load: visits denominator |
 
 **small_file** = `true`, sent **instead of** `file_fingerprint` when the file has fewer than 3 distinct Order IDs (a 1–2 order fingerprint could be brute-forced back to an Order ID). Every file event carries exactly one of the two.
@@ -371,7 +374,24 @@ Envelope: `{ v: 1, event, iid, dogfood: boolean, props }`. The server adds `ts` 
 Clock **T0** = server `ts` of the first `file_processed` that is real (non-dogfood, host alignata.com, fingerprint not a fixture). **A real small file (fewer than 3 orders, `small_file: true`) STARTS the clock (CEO rule).** Window [T0, T0 + 14 days). **Kill if ANY:**
 1. **< 15** distinct real `file_fingerprint`s processed (small files do **not** count toward the 15), **OR**
 2. **< 3** install ids that processed real files on **≥ 2 different days** with **≥ 2 different fingerprints** ("came back for a second batch on another day"), **OR**
-3. **0** `pro_interest_tap` from non-dogfood ids. This stands in for paid signups/pre-orders while payments are deferred.
+3. **0** `price_intent` ("I'd pay $29" on the price card, §8.7) from non-dogfood ids. This stands in for paid signups/pre-orders while payments are deferred. (Moved from `pro_interest_tap` on Oct 3 2026, when the card replaced that button.) The script also prints `price_card_view` and the rate price_intent / price_card_view (distinct installs).
+
+### 8.7 Price card (Phase 1 interest test, Oct 3 2026; UX-PRICE-CARD.md + COPY-PRICE-CARD.md FINAL)
+- No checkout and no payment of any kind: an inline card below the results, AFTER the merge file is made. Never a modal. "I'd pay $29" is a SOFT pill and "No thanks" a text button; Make merge file stays the one black pill. Code: `lib/engrave-merge/price.ts`, `components/engrave-merge/PriceCard.tsx`.
+- **Placement:** below the results (after "Everything is ready."), before "How to use this in LightBurn"; `position: static`, no overlay.
+- **File count:** once per NEW upload, at the moment its merge file is made (never per re-download or settings change). Files with ≥ 3 orders are de-duplicated by `fps` (first 16 hex of `file_fingerprint`); smaller files count once per upload. Never the bundled sample (`source === "sample"` or any fixture fingerprint), never an EXCLUDED_IIDS device. Capped at 4; `fps` is emptied at 4.
+- **Dogfood run** (`dog-` iid or sessionStorage `site_dogfood === "1"`): the card never shows, no card event fires (even with 4 real files stored), nothing counts and `em_price` isn't touched.
+- **Shows** after any merge download, once the done scroll has settled (so it never moves Make merge file or the results), outside dogfood, when files ≥ 4, no answer yet, seen on fewer than 3 days and not already today (device-local day, across tabs and reloads). Storage blocked → never shows. Any answer stops it for good.
+- **Seen** = at least 50% on screen (IntersectionObserver 0.5) or a tap first. A card that never reaches 50% uses up nothing.
+- **Cross-tab bars** (QA FAIL 10:02 AM ET, room fixes 10:02 / 10:04 / 10:06 AM ET): `price_card_view` max 1 per install ID per device-local day; an answer (`price_intent` or `price_dismiss`) max 1 per install ID, ever.
+  - **View block:** right before sending, re-read `em_price`. Today already in `seenDays` → send nothing. Otherwise write today into `seenDays` first, then send.
+  - **Answer block:** right before sending, re-read `em_price.answer`. Already set (another tab) → send nothing and show the stored answer's state (`"pay"` → the thanks line, `"no"` → the card closes). Otherwise write the answer first, then send.
+  - Each block is one synchronous read → check → write → send (no `await`), run inside `navigator.locks.request("em_price", …)` when Web Locks exist, otherwise directly. A rejected lock request falls back once and never runs twice.
+  - Storage blocked: no card. If it becomes blocked while a card is open, the view and the tap send nothing (the write is verified before sending), nothing throws, and the UI still shows thanks / closes.
+  - A `storage` listener on `em_price`: when an answer lands from another tab, an open card swaps to the thanks line (`"pay"`) or closes (`"no"`) by itself. It never sends an event.
+  - Without Web Locks, two tabs firing in the same instant can each send once; Product's readback dedupe (view once per install per local day, first answer per install) is the backstop.
+- "I'd pay $29" → "Thanks, that helps. It's still free, so keep using it." (focus moves to it; it goes away when the next file is made). "No thanks" → the card just closes, nothing replaces it, focus moves to the count line.
+- **Done scroll:** after the download, Make merge file's top lands at the sticky "All tools" bar's height + 16px (390: 57 → 73; 1280: 65 → 81), with the downloaded line fully visible.
 
 Caveat: an install id is a browser, not a seller. Cleared storage or a second device over-counts sellers, and that's accepted for dogfood.
 
@@ -397,8 +417,8 @@ Recipe Box / Recipe Box include-anyway, and fx11 all / Slate Coaster pick / Slat
 - AT-16: (after listing) no `robots` noindex meta; `/apps` shows the Engrave Merge card.
 
 **Privacy and tracking**
-- AT-20: Playwright records **every** request after page load while processing fx05, downloading all 3 outputs and tapping pro interest. Assert: (a) no request URL or body contains any of `Fakename`, `Placeholder`, `Buyerson`, `Nowhereville`, `Grandpa`, `Zoë`, `1000000501`, `2000000501`, `3000000005`, `EM-TEST`, `fx05`; (b) the only non-static request is `POST /api/engrave-merge/e` (prefetch GETs from the shared header are fine); (c) every body's keys ⊆ the §8.2 allow-list; (d) `file_processed.props.file_fingerprint` = the fx05 value.
-- AT-21: localStorage holds only `em_iid`. No cookies, sessionStorage or IndexedDB are written by the tool.
+- AT-20: Playwright records **every** request after page load while processing fx05, downloading all 3 outputs and answering the price card. Assert: (a) no request URL or body contains any of `Fakename`, `Placeholder`, `Buyerson`, `Nowhereville`, `Grandpa`, `Zoë`, `1000000501`, `2000000501`, `3000000005`, `EM-TEST`, `fx05`; (b) the only non-static request is `POST /api/engrave-merge/e` (prefetch GETs from the shared header are fine); (c) every body's keys ⊆ the §8.2 allow-list; (d) `file_processed.props.file_fingerprint` = the fx05 value.
+- AT-21: localStorage holds only `em_iid` and `em_price` (§8.7). sessionStorage `site_dogfood` is read, never written, by the tool. No cookies, sessionStorage or IndexedDB are written by the tool.
 - AT-22: `?dogfood=1` → iid starts `dog-` and events carry `dogfood:true`. The server/KPI script excludes them. Fixture fingerprints are dropped.
 - AT-23: The API rejects (400) unknown keys, strings in count fields, and bodies > 1 KB.
 - AT-24: `scripts/engrave-merge-kpis.mjs` on a synthetic event log prints T0, the 3 kill-bar numbers and the weekly metric correctly (include the synthetic log as a test fixture).

@@ -462,7 +462,7 @@ test("AT-23 event API validation", async () => {
   assert.equal(validateEvent({ ...ok, props: { ...ok.props, row_count: 100001 } }).ok, false, "count range");
   assert.equal(validateEvent({ ...ok, props: { row_count: 1, small_file: true, file_fingerprint: fp } }).ok, false, "fp xor small");
   assert.equal(validateEvent({ ...ok, iid: "bob" }).ok, false, "iid");
-  assert.equal(validateEvent({ v: 1, event: "pro_interest_tap", iid: "dog-" + iid, dogfood: false, props: {} }).event.dogfood, true);
+  assert.equal(validateEvent({ v: 1, event: "price_intent", iid: "dog-" + iid, dogfood: false, props: {} }).event.dogfood, true);
   assert.equal((await post(JSON.stringify(ok))).status, 204, "valid → 204 (no store configured)");
   assert.equal((await post(JSON.stringify({ ...ok, extra: 1 }))).status, 400);
   assert.equal((await post(JSON.stringify({ ...ok, props: { ...ok.props, row_count: "9" } }))).status, 400);
@@ -501,7 +501,9 @@ test("AT-24 KPI script on a synthetic event log", () => {
       t0: k.t0,
       distinctRealFiles: k.killBar.distinctRealFiles,
       returningInstalls: k.killBar.returningInstalls,
-      proInterestTaps: k.killBar.proInterestTaps,
+      priceIntents: k.killBar.priceIntents,
+      priceCardViews: k.priceCardViews,
+      priceIntentRate: k.priceIntentRate,
       installsBackOnAnotherDay: k.installsBackOnAnotherDay,
       weeklyEngaged: k.weeklyEngaged,
       excluded: k.excluded,
@@ -517,7 +519,7 @@ test("EXCLUDED_IIDS: owner/test devices are dropped by the server and ignored by
   assert.equal(isExcludedIid(iid, [dev]), false);
   assert.equal(isExcludedIid("", [dev]), false);
   // server: excluded iid → 204, skipped-filter (nothing stored); other iids go on to the store path
-  const body = (who) => JSON.stringify({ v: 1, event: "pro_interest_tap", iid: who, dogfood: false, props: {} });
+  const body = (who) => JSON.stringify({ v: 1, event: "price_intent", iid: who, dogfood: false, props: {} });
   const req = (who) => new Request("https://alignata.com/api/engrave-merge/e", { method: "POST", body: body(who) });
   const r1 = await handleEvent(req(dev), { excludedIids: [dev] });
   assert.equal(r1.status, 204);
@@ -541,10 +543,10 @@ const handlerBody = (name) => {
   return deskSrc.slice(start, deskSrc.indexOf("\n  };\n", start));
 };
 
-test("A settings re-run sends no event; only page open, file load, downloads, print and the Pro tap do", () => {
-  // Every sendEvent call in the desk, by event name: exactly these six, once each.
+test("A settings re-run sends no event; only page open, file load, downloads, print and the price card do", () => {
+  // Every sendEvent call in the desk, by event name: exactly these eight, once each (pro_interest_tap is gone).
   const calls = [...deskSrc.matchAll(/sendEvent\(iidRef\.current, "([a-z_]+)"/g)].map((m) => m[1]).sort();
-  assert.deepEqual(calls, ["cutsheet_printed", "exceptions_downloaded", "file_processed", "merge_downloaded", "page_open", "pro_interest_tap"]);
+  assert.deepEqual(calls, ["cutsheet_printed", "exceptions_downloaded", "file_processed", "merge_downloaded", "page_open", "price_card_view", "price_dismiss", "price_intent"]);
   // The re-run path: setters, font, settings file, Updated flash, picker, Start over → no event.
   for (const h of ["markUpdated", "setS", "setL", "toggleText", "onFont", "onLoadRecipe", "onStartOver", "onIncludeShipped"])
     assert.ok(!handlerBody(h).includes("sendEvent"), `${h} sends no event`);
@@ -1266,4 +1268,298 @@ test("Event endpoint: preview deploys don't store (VERCEL_ENV=preview → 204 sk
     globalThis.fetch = realFetch;
     process.env = saved;
   }
+});
+
+/* ---------- "I'd pay" price card (Phase 1 interest test, Oct 3 2026; SPEC §8.7) ---------- */
+
+const priceMem = (init = {}) => {
+  const m = new Map(Object.entries(init));
+  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), m };
+};
+const REAL_IID = "0b9d2c1e-1111-4222-8333-000000000abc";
+
+test("price card: validator accepts price_card_view / price_intent / price_dismiss with no props; pro_interest_tap is gone", () => {
+  for (const event of ["price_card_view", "price_intent", "price_dismiss"]) {
+    const v = validateEvent({ v: 1, event, iid: REAL_IID, dogfood: false, props: {} });
+    assert.equal(v.ok, true, event);
+    assert.deepEqual(v.event.props, {});
+    assert.equal(validateEvent({ v: 1, event, iid: REAL_IID, dogfood: false, props: { answer: "pay" } }).reason, "unknown_prop:answer", `${event}: no props`);
+    assert.equal(validateEvent({ v: 1, event, iid: REAL_IID, dogfood: false, props: { files: 4 } }).ok, false, `${event}: the file count is never sent`);
+  }
+  assert.equal(validateEvent({ v: 1, event: "pro_interest_tap", iid: REAL_IID, dogfood: false, props: {} }).reason, "bad_event", "HANDOFF §1.4: removed");
+});
+
+const SAMPLE_FP = (() => {
+  const r = emProcess(readFileSync(join(root, "public/fixtures/engrave-merge/sample.csv"), "utf8"), { settings: DEFAULT_SETTINGS, explicit: Object.keys(DEFAULT_SETTINGS), recipe: { tool: "engrave-merge", recipeVersion: 1, extraLabels: [], listings: {} }, glyphCheck: null });
+  return fingerprintOf(r.orderIds);
+})();
+
+test("price card count (HANDOFF §1.3): once per new upload when its file is made; ≥3-order files de-duplicated by fp prefix; never sample/fixture/excluded; capped at 4", async () => {
+  const { countMade, isRealFile, readPrice, PRICE_KEY, SHOW_FROM_FILE } = await import("../lib/engrave-merge/price.ts");
+  assert.equal(PRICE_KEY, "em_price");
+  assert.equal(SHOW_FROM_FILE, 4);
+  const fp = (c) => c.repeat(64);
+  const up = (uploadId, f = {}) => ({ uploadId, source: "upload", fingerprint: fp("a"), orderCount: 5, ...f });
+  assert.equal(isRealFile(up(1), REAL_IID), true);
+  assert.equal(isRealFile(up(1, { source: "sample" }), REAL_IID), false, "the sample button");
+  assert.equal(isRealFile(up(1, { fingerprint: FIXTURE_FINGERPRINTS[2] }), REAL_IID), false, "a bundled fixture fingerprint");
+  assert.equal(isRealFile(up(1, { fingerprint: await SAMPLE_FP }), REAL_IID), false, "the sample file dropped by hand");
+  assert.equal(isRealFile(up(1), EXCLUDED_IIDS[0] ?? "x", EXCLUDED_IIDS.length ? undefined : ["x"]), false, "an excluded device");
+  // the mock's gates: ×5 downloads = 1, settings change = 1 (same upload), re-upload = 1, sample = 0, fixture = 0, small ×2 = 2
+  const s = priceMem();
+  const counted = new Set();
+  for (let i = 0; i < 5; i++) countMade(s, up(1), REAL_IID, counted);
+  assert.equal(readPrice(s).files, 1, "5 downloads of one upload (incl. after a settings change) = 1");
+  countMade(s, up(2), REAL_IID, counted);
+  assert.equal(readPrice(s).files, 1, "the same ≥3-order file uploaded again = still 1 (fp prefix)");
+  countMade(s, up(3, { source: "sample", fingerprint: await SAMPLE_FP }), REAL_IID, counted);
+  countMade(s, up(4, { fingerprint: FIXTURE_FINGERPRINTS[0] }), REAL_IID, counted);
+  assert.equal(readPrice(s).files, 1, "sample and fixture = 0");
+  countMade(s, up(5, { fingerprint: null, orderCount: 2 }), REAL_IID, counted);
+  countMade(s, up(6, { fingerprint: null, orderCount: 2 }), REAL_IID, counted);
+  assert.equal(readPrice(s).files, 3, "a small file counts once per upload (2 uploads = 2)");
+  assert.deepEqual(JSON.parse(s.m.get("em_price")), { v: 1, files: 3, fps: ["a".repeat(16)], seenDays: [], answer: null }, "exactly the five fields; fp prefixes only for ≥3-order files");
+  countMade(s, up(7, { fingerprint: fp("b") }), REAL_IID, counted);
+  assert.deepEqual(JSON.parse(s.m.get("em_price")), { v: 1, files: 4, fps: [], seenDays: [], answer: null }, "4th real file: fps emptied");
+  countMade(s, up(8, { fingerprint: fp("c") }), REAL_IID, counted);
+  assert.equal(readPrice(s).files, 4, "capped at 4");
+  assert.deepEqual([...s.m.keys()], ["em_price"], "one key");
+  // tampered / unknown / blocked → fresh, never throws
+  const fresh = { v: 1, files: 0, fps: [], seenDays: [], answer: null };
+  assert.deepEqual(readPrice(priceMem({ em_price: '{"v":1,"files":"9","fps":["zz",1],"seenDays":["x"],"answer":"maybe","email":"a@b.c"}' })), fresh);
+  assert.deepEqual(readPrice(priceMem({ em_price: "not json" })), fresh);
+  assert.deepEqual(readPrice(priceMem({ em_price: '{"v":2,"files":4}' })), fresh);
+  assert.deepEqual(readPrice({ getItem() { throw new Error("blocked"); } }), fresh);
+  assert.deepEqual(readPrice(priceMem({ em_price: JSON.stringify({ v: 1, files: 4, fps: ["a".repeat(16)], seenDays: [], answer: null }) })).fps, [], "fps never kept at 4");
+});
+
+test("price card show rule: files ≥ 4, no answer, < 3 seen days, not today; storage blocked → never; any answer stops it", async () => {
+  const { answerBlock, readPrice, shouldShowCard, viewBlock } = await import("../lib/engrave-merge/price.ts");
+  const markSeen = (st, d) => viewBlock(st, d, () => {});
+  const at = (files, extra = {}) => priceMem({ em_price: JSON.stringify({ v: 1, files, fps: [], seenDays: [], answer: null, ...extra }) });
+  const day = "2026-10-03";
+  assert.equal(shouldShowCard(at(3), day), false, "3 real files: no card");
+  const s = at(4);
+  assert.equal(shouldShowCard(s, day), true, "4th real file: the card");
+  markSeen(s, day);
+  assert.equal(shouldShowCard(s, day), false, "once per device-local day (across tabs and reloads)");
+  markSeen(s, "2026-10-04");
+  assert.equal(shouldShowCard(s, "2026-10-05"), true);
+  markSeen(s, "2026-10-05");
+  assert.equal(shouldShowCard(s, "2026-10-06"), false, "seen on 3 days without an answer: never again");
+  const t = at(4);
+  assert.equal(answerBlock(t, "no", () => {}).sent, true);
+  assert.deepEqual(answerBlock(t, "pay", () => {}), { sent: false, show: "no" }, "first answer wins");
+  assert.equal(readPrice(t).answer, "no");
+  assert.equal(shouldShowCard(t, "2026-10-09"), false, "any answer stops it for good");
+  const blocked = { getItem: () => JSON.stringify({ v: 1, files: 4, fps: [], seenDays: [], answer: null }), setItem() { throw new Error("QuotaExceeded"); } };
+  assert.equal(shouldShowCard(blocked, day), false, "storage blocked → the card never shows");
+  assert.equal(shouldShowCard(null, day), false, "no storage → never");
+});
+
+test("price card cross-tab view block (HANDOFF §1.3, QA FAIL 10:02): re-read, today seen → nothing; else write today FIRST, then send; 1 view per install per day", async () => {
+  const { viewBlock, readPrice, shouldShowCard } = await import("../lib/engrave-merge/price.ts");
+  const shared = priceMem({ em_price: JSON.stringify({ v: 1, files: 4, fps: [], seenDays: [], answer: null }) });
+  const day = "2026-10-03";
+  assert.equal(shouldShowCard(shared, day), true, "tab A renders the card (below the fold, not seen yet)");
+  assert.equal(shouldShowCard(shared, day), true, "tab B renders the card too");
+  const sent = [];
+  const tab = (name) => () => viewBlock(shared, day, () => sent.push([name, readPrice(shared).seenDays.includes(day)]));
+  assert.equal(tab("A")(), true, "A reaches 50% first: sends");
+  assert.deepEqual(sent, [["A", true]], "today is already written when the view goes out (write first, then send)");
+  assert.equal(tab("B")(), false, "B reaches 50% later: re-read finds today, sends nothing");
+  assert.equal(tab("A")(), false);
+  assert.equal(sent.length, 1, "1 price_card_view per install per device-local day across tabs");
+  assert.equal(viewBlock(shared, "2026-10-04", () => sent.push(["A", true])), true, "a new local day can send again");
+  assert.deepEqual(readPrice(shared).seenDays, [day, "2026-10-04"]);
+  // Storage blocked (from the start, or while the card is open): the write isn't verified → nothing is sent, nothing throws.
+  const json = JSON.stringify({ v: 1, files: 4, fps: [], seenDays: [], answer: null });
+  for (const store of [
+    { getItem: () => json, setItem() { throw new Error("QuotaExceeded"); } },
+    { getItem: () => json, setItem() {} }, // a write that silently doesn't land
+    { getItem() { throw new Error("SecurityError"); }, setItem() { throw new Error("SecurityError"); } },
+    null,
+  ]) assert.equal(viewBlock(store, day, () => sent.push(["blocked", true])), false);
+  assert.equal(sent.length, 2, "blocked storage: no view event");
+});
+
+test("price card cross-tab answer block (HANDOFF §1.3): re-read answer; set → nothing sent, stored state shown; else write first, then send; 1 answer per install ever", async () => {
+  const { answerBlock, readPrice } = await import("../lib/engrave-merge/price.ts");
+  const at = () => priceMem({ em_price: JSON.stringify({ v: 1, files: 4, fps: [], seenDays: ["2026-10-03"], answer: null }) });
+  // The §1.7 "then B taps" rows: A answers first, B's stale card taps second.
+  for (const [first, second] of [["pay", "pay"], ["no", "pay"], ["pay", "no"], ["no", "no"]]) {
+    const shared = at();
+    const sent = [];
+    const send = (tab) => (x) => sent.push([tab, x, readPrice(shared).answer]);
+    assert.deepEqual(answerBlock(shared, first, send("A")), { sent: true, show: first }, `A taps ${first}`);
+    assert.deepEqual(sent, [["A", first, first]], "the answer is stored before the event goes out");
+    assert.deepEqual(answerBlock(shared, second, send("B")), { sent: false, show: first }, `A ${first}, then B ${second}: B sends nothing and shows A's answer (${first === "pay" ? "thanks" : "card closed"})`);
+    assert.equal(sent.length, 1, "exactly 1 answer per install");
+    assert.equal(readPrice(shared).answer, first, "the first answer is kept");
+  }
+  const json = JSON.stringify({ v: 1, files: 4, fps: [], seenDays: [], answer: null });
+  for (const a of ["pay", "no"]) {
+    const sent = [];
+    const r = answerBlock({ getItem: () => json, setItem() { throw new Error("blocked"); } }, a, (x) => sent.push(x));
+    assert.deepEqual(r, { sent: false, show: a }, `storage blocked while the card is open: ${a} → no event, the UI still shows ${a === "pay" ? "thanks" : "closed"}`);
+    assert.deepEqual(answerBlock(null, a, (x) => sent.push(x)), { sent: false, show: a });
+    assert.equal(sent.length, 0);
+  }
+});
+
+test("price card lock (HANDOFF §1.3): every block runs inside navigator.locks.request('em_price') when present; a rejected request falls back once, never twice", async () => {
+  const { withPriceLock, PRICE_KEY } = await import("../lib/engrave-merge/price.ts");
+  let n = 0;
+  const names = [];
+  withPriceLock(() => n++, { request: (name, cb) => { names.push(name); return Promise.resolve(cb()); } });
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual([n, names], [1, [PRICE_KEY]], "Web Locks: the block runs once, under the em_price lock");
+  n = 0;
+  withPriceLock(() => n++, { request: () => Promise.reject(new Error("lock unavailable")) });
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(n, 1, "rejected before running → falls back once");
+  n = 0;
+  withPriceLock(() => { n++; throw new Error("block threw"); }, { request: (_name, cb) => new Promise((res) => res(cb())) });
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(n, 1, "ran under the lock, then rejected → never runs twice");
+  n = 0;
+  withPriceLock(() => n++, { request() { throw new Error("sync throw"); } });
+  assert.equal(n, 1, "a throwing request runs the block directly");
+  n = 0;
+  withPriceLock(() => n++, null);
+  assert.equal(n, 1, "no Web Locks: runs directly (the synchronous re-read is the fallback)");
+  // Serialised: two tabs' view blocks queued on one lock → 1 view.
+  const { viewBlock } = await import("../lib/engrave-merge/price.ts");
+  const shared = priceMem({ em_price: JSON.stringify({ v: 1, files: 4, fps: [], seenDays: [], answer: null }) });
+  let tail = Promise.resolve();
+  const lock = { request: (_name, cb) => (tail = tail.then(cb)) };
+  const views = [];
+  withPriceLock(() => viewBlock(shared, "2026-10-03", () => views.push("A")), lock);
+  withPriceLock(() => viewBlock(shared, "2026-10-03", () => views.push("B")), lock);
+  await tail;
+  assert.deepEqual(views, ["A"], "simultaneous views under the lock → 1 price_card_view");
+  // Same-instant answers (QA 10:38 gate B): A pays, B taps No thanks, both queued on the lock → exactly 1 answer, and
+  // B (second) sends nothing and shows A's stored answer. Also pay vs pay → 1 intent.
+  const { answerBlock } = await import("../lib/engrave-merge/price.ts");
+  for (const [a1, a2] of [["pay", "no"], ["no", "pay"], ["pay", "pay"]]) {
+    const st = priceMem({ em_price: JSON.stringify({ v: 1, files: 4, fps: [], seenDays: ["2026-10-03"], answer: null }) });
+    const answers = [];
+    const shown = {};
+    withPriceLock(() => { shown.A = answerBlock(st, a1, (x) => answers.push(["A", x])).show; }, lock);
+    withPriceLock(() => { shown.B = answerBlock(st, a2, (x) => answers.push(["B", x])).show; }, lock);
+    await tail;
+    assert.deepEqual(answers, [["A", a1]], `${a1} vs ${a2} at once, with Web Locks → exactly 1 answer`);
+    assert.deepEqual(shown, { A: a1, B: a1 }, "both tabs show the stored answer");
+  }
+  const blocks = readFileSync("lib/engrave-merge/price.ts", "utf8");
+  for (const fn of ["viewBlock", "answerBlock"]) {
+    const body = blocks.slice(blocks.indexOf(`export function ${fn}(`), blocks.indexOf("\n}\n", blocks.indexOf(`export function ${fn}(`)));
+    assert.ok(!/\bawait\b|\.then\(|async /.test(body), `${fn}: one synchronous block (no await)`);
+  }
+});
+
+test("price card Desk wiring (HANDOFF §1.3): view + answer only via the locked blocks; storage listener swaps / closes and never sends", () => {
+  const desk = readFileSync("components/engrave-merge/EngraveMergeDesk.tsx", "utf8");
+  assert.equal((desk.match(/"price_card_view"/g) || []).length, 1, "one price_card_view send site");
+  assert.match(desk, /const sendView = \(\) => viewBlock\(localArea\(\), localDay\(\), \(\) => sendEvent\(iidRef\.current, "price_card_view"\)\);/);
+  assert.match(handlerBody("onPriceSeen"), /withPriceLock\(sendView\)/, "the 50% view runs the view block under the lock");
+  const answer = handlerBody("onPriceAnswer");
+  assert.match(answer, /withPriceLock\(\(\) => \{\s*if \(needView\) sendView\(\);\s*const r = answerBlock\(/, "a tap: view (if not yet) then answer, in one locked block");
+  assert.ok(answer.includes('x === "pay" ? sendEvent(iidRef.current, "price_intent") : sendEvent(iidRef.current, "price_dismiss")') && answer.includes("showAnswer(r.show)"), "sends through answerBlock only; shows the stored or tapped answer");
+  const listener = desk.slice(desk.indexOf('window.addEventListener("storage"') - 400, desk.indexOf('window.removeEventListener("storage"'));
+  assert.ok(listener.includes("e.key !== PRICE_KEY") && listener.includes("storedAnswer(localArea())") && listener.includes("showAnswer(a)"), "storage listener on em_price");
+  assert.ok(!/sendEvent|viewBlock|answerBlock/.test(listener), "the listener never sends an event");
+});
+
+test("price card dogfood (RESOLVED 9:31 AM ET): dog- iid or site_dogfood=1 → no count, no card, no card event, em_price untouched; same flag on every event", async () => {
+  const { isDogfoodRun } = await import("../lib/engrave-merge/price.ts");
+  const sess = (v) => ({ getItem: (k) => (k === "site_dogfood" ? v : null) });
+  assert.equal(isDogfoodRun(`dog-${REAL_IID}`, sess(null)), true, "a dog- install id (also a leftover one)");
+  assert.equal(isDogfoodRun(REAL_IID, sess("1")), true, "site_dogfood only");
+  assert.equal(isDogfoodRun(REAL_IID, sess(null)), false, "control");
+  assert.equal(isDogfoodRun(REAL_IID, { getItem() { throw new Error("blocked"); } }), false, "never throws");
+  // The desk returns before counting / deciding when it's a dogfood run.
+  const primary = handlerBody("onPrimary");
+  const gate = primary.indexOf("isDogfoodRun(iidRef.current, tabSession())");
+  assert.ok(gate > 0 && gate < primary.indexOf("countMade(") && gate < primary.indexOf("shouldShowCard("), "dogfood check comes first");
+  assert.match(primary, /if \(!made \|\| isDogfoodRun\(iidRef\.current, tabSession\(\)\)\) return;/);
+  // sendEvent's dogfood flag = the same rule (Product yes 9:43 AM ET)
+  const { sendEvent } = await import("../lib/engrave-merge/track.ts");
+  const saved = { window: globalThis.window, navigator: Object.getOwnPropertyDescriptor(globalThis, "navigator") };
+  const sent = [];
+  try {
+    globalThis.window = { sessionStorage: sess("1"), localStorage: priceMem() };
+    Object.defineProperty(globalThis, "navigator", { value: { sendBeacon: (_u, blob) => (blob.text().then((t) => sent.push(JSON.parse(t))), true) }, configurable: true });
+    sendEvent(REAL_IID, "file_processed", { row_count: 3, item_count: 3, exception_count: 0, small_file: true });
+    globalThis.window = { sessionStorage: sess(null), localStorage: priceMem() };
+    sendEvent(REAL_IID, "page_open");
+    await new Promise((r) => setTimeout(r, 20));
+    assert.deepEqual(sent.map((e) => [e.event, e.dogfood]), [["file_processed", true], ["page_open", false]]);
+  } finally {
+    globalThis.window = saved.window;
+    if (saved.navigator) Object.defineProperty(globalThis, "navigator", saved.navigator);
+  }
+});
+
+test("price card UI: copy verbatim, soft pill + text button (no black pill), no sale words; old 'I'd pay for unlimited batches' gone", async () => {
+  const { PriceCard } = await import("../components/engrave-merge/PriceCard.tsx");
+  const { COPY } = await import("../lib/engrave-merge/copy.ts");
+  assert.equal(COPY.priceLine, "Engrave Merge is free for now. We're thinking of keeping your first 3 files free, then a one-time $29. Would you pay that?");
+  assert.equal(COPY.priceYes, "I'd pay $29");
+  assert.equal(COPY.priceNo, "No thanks");
+  assert.equal(COPY.priceThanks, "Thanks, that helps. It's still free, so keep using it.");
+  assert.ok(!("proButton" in COPY) && !("proThanks" in COPY), "old button copy removed");
+  const card = renderToStaticMarkup(createElement(PriceCard, { mode: "card", onSeen() {}, onAnswer() {} }));
+  assert.ok(card.includes("Engrave Merge is free for now. We&#x27;re thinking of keeping your first 3 files free, then a one-time <span class=\"whitespace-nowrap\">$29</span>. Would you pay that?"));
+  assert.ok(/<button type="button" data-price-yes="true" class="[^"]*min-h-\[44px\][^"]*bg-\[#ECE7DE\][^"]*">I&#x27;d pay \$29<\/button>/.test(card), "soft pill, ≥ 44px");
+  assert.ok(/<button type="button" data-price-no="true" class="[^"]*min-h-\[44px\][^"]*underline[^"]*">No thanks<\/button>/.test(card), "text button, ≥ 44px");
+  assert.ok(!/bg-\[var\(--cb-ink\)\]|#111110"|fx-pill|fx-primary/.test(card.replace("text-[#111110]", "")), "never black");
+  assert.ok(!/\b(buy|checkout|pay now|charge|charged|receipt|email)\b/i.test(card), "no sale words");
+  assert.equal((card.match(/\$29/g) || []).length, 2, "the line and the soft pill");
+  assert.ok(card.includes("free for now"), "'free for now' in the same card as the price");
+  assert.equal(renderToStaticMarkup(createElement(PriceCard, { mode: null, onSeen() {}, onAnswer() {} })), "");
+  assert.ok(renderToStaticMarkup(createElement(PriceCard, { mode: "thanks", onSeen() {}, onAnswer() {} })).includes(">Thanks, that helps. It&#x27;s still free, so keep using it.</p>"));
+  const html = renderToStaticMarkup(createElement(EngraveMergeDesk));
+  assert.ok(!html.includes("unlimited batches") && !html.includes("data-price-card"), "first paint: no old button, no card");
+  assert.ok(!/stripe|checkout|payment/i.test(readFileSync(join(root, "lib/engrave-merge/price.ts"), "utf8").replace(/no checkout|no payment|Nothing is sold[^\n]*/gi, "")), "no payment code");
+});
+
+test("price card wiring: counted when the file is made (once per upload), after the done scroll settles; sticky offset; answers", async () => {
+  const load = deskSrc.slice(deskSrc.indexOf("const loadText = useCallback("), deskSrc.indexOf("const readFile = useCallback("));
+  assert.ok(!/countMade|countUpload|shouldShowCard/.test(load), "loading a file never counts");
+  assert.equal((load.match(/uploadId: \+\+uploadSeq\.current/g) || []).length, 2, "every load (ok or failed) is a new upload id");
+  assert.ok(handlerBody("onSample").includes(', "sample");'), "the sample button loads with source = sample");
+  const primary = handlerBody("onPrimary");
+  const dl = primary.indexOf("downloadText(mergeFileName()");
+  const settle = primary.indexOf("scrollSettled()");
+  assert.ok(dl > 0 && primary.indexOf("window.scrollTo(") > dl && settle > primary.indexOf("window.scrollTo("), "file first, then the done scroll, then wait for it to settle");
+  assert.ok(primary.indexOf("countMade(") > settle && primary.indexOf("shouldShowCard(") > primary.indexOf("countMade("), "count, then decide, only after the scroll settled");
+  assert.ok(primary.includes("priceCounted.current"), "one count per upload id in this page");
+  assert.match(primary, /document\.querySelector\('nav\[aria-label="Apps"\]'\)\?\.getBoundingClientRect\(\)\.height/, "measures the sticky All tools bar at scroll time");
+  const { doneScrollTop } = await import("../lib/engrave-merge/price.ts");
+  assert.equal(doneScrollTop(500, 1000, 57), 1500 - 73, "390: bar 57 → Make merge file top at 73");
+  assert.equal(doneScrollTop(500, 1000, 64.2), 1500 - 81, "1280: bar ~65 → top 81 (ceil)");
+  assert.equal(doneScrollTop(10, 0, 65), 0, "never above the page top");
+  for (const h of ["markUpdated", "setS", "setL", "toggleText", "onFont", "onLoadRecipe", "onIncludeShipped", "onProblems", "onPrint", "onStartOver"])
+    assert.ok(!/countMade|shouldShowCard/.test(handlerBody(h)), `${h}: no count, no card`);
+  const answer = handlerBody("onPriceAnswer");
+  assert.ok(answer.indexOf("sendView()") < answer.indexOf("answerBlock("), "a tap before 50% still counts as seen first (views ≥ answers)");
+  assert.match(handlerBody("showAnswer"), /if \(a === "no"\) setTimeout\(\(\) => summaryRef\.current\?\.querySelector<HTMLElement>\("\[data-count-line\]"\)\?\.focus/, "No thanks → focus to the count line");
+  const card = deskSrc.indexOf("<PriceCard ");
+  assert.ok(card > deskSrc.indexOf("<SummaryPanel") && card < deskSrc.indexOf("{COPY.guide}"), "below the results, before How to use this in LightBurn");
+});
+
+test("KPI: kill bar item 3 counts price_intent (not the legacy pro_interest_tap); rate = intent / view installs", () => {
+  const t = Date.parse("2026-10-05T14:00:00Z");
+  const ev = (event, who, h, props = {}) => ({ v: 1, event, iid: who, dogfood: false, props, ts: t + h * 3600e3, day: "2026-10-05", host: "alignata.com", prod: true });
+  const a = "0b9d2c1e-1111-4222-8333-00000000000a";
+  const b = "0b9d2c1e-1111-4222-8333-00000000000b";
+  const base = [ev("file_processed", a, 0, { row_count: 9, item_count: 9, exception_count: 0, file_fingerprint: "e".repeat(64) })];
+  const legacy = computeKpis([...base, ev("pro_interest_tap", a, 1)], t + 20 * 86400e3);
+  assert.equal(legacy.killBar.priceIntents, 0, "a legacy pro tap no longer counts");
+  assert.ok(legacy.killIf.some((k) => k.includes("price_intent")));
+  const k = computeKpis([...base, ev("price_card_view", a, 1), ev("price_card_view", b, 1), ev("price_intent", a, 2), ev("price_dismiss", b, 2)], t + 86400e3);
+  assert.equal(k.killBar.priceIntents, 1);
+  assert.equal(k.priceCardViews, 2);
+  assert.equal(k.priceIntentRate, 0.5);
 });

@@ -146,8 +146,15 @@ export const COPY = {
   ],
   cheatSheet: "%11 whole text · %12 line 1 · %13 line 2 · … · %2 first name · %7 option 1",
 
-  proButton: "I'd pay for unlimited batches",
-  proThanks: "Thanks, noted. No sign-up needed.",
+  /**
+   * "I'd pay" price card (COPY-PRICE-CARD.md FINAL: Brand Creator 8:28, Voice Gate 8:29 AM ET Oct 3). A Phase 1 interest
+   * test: "free for now" sits in the same card as every "$29"; no buy / checkout / pay now / charge words. It replaces the
+   * old "I'd pay for unlimited batches" button and its thanks line.
+   */
+  priceLine: "Engrave Merge is free for now. We're thinking of keeping your first 3 files free, then a one-time $29. Would you pay that?",
+  priceYes: "I'd pay $29",
+  priceNo: "No thanks",
+  priceThanks: "Thanks, that helps. It's still free, so keep using it.",
   sample: "Try it with a sample file",
 } as const;
 

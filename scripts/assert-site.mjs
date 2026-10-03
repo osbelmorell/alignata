@@ -1628,10 +1628,13 @@ test("/privacy (COPY.md §5 v4 FINAL): no art, H1, dek, 'Last updated' + SHIP_DA
     "<h2>Services we use</h2><p>Vercel hosts the site, and Upstash stores our usage log. We don&#x27;t store your IP address. Vercel processes it briefly to serve and protect the site, and keeps its request logs for about an hour. Our fonts are hosted on our own site.</p>",
     "<p>Entries are deleted automatically after about 180 days (about 120 days for Engrave Merge).</p>",
     "<p>Each entry has a random ID. A visitor ID stays in your browser until you clear this site&#x27;s data, and a session ID usually lasts only as long as the tab. Engrave Merge keeps its own random ID in your browser, like the visitor ID.</p>",
+    "<h2>What we count</h2><p>We keep our own small log of how the site is used: which pages you visit, which tool you open and where on the site you tapped it, which articles you read, and which links you tap on the homepage. On Engrave Merge, we also count when the page opens, when you download or print a result, and whether you saw the price question and how you answered it.</p>",
+    "<p>Engrave Merge also keeps a small note on this device: how many files you&#x27;ve dropped into it, which days it showed you the price question, and your answer if you gave one. That way it doesn&#x27;t keep asking.</p><h2>Services we use</h2>",
     "<h2>Changes</h2><p>If we change what we collect, for example when paid plans arrive, we&#x27;ll update this page first and change the date at the top.</p>",
   ]) assert.ok(html.includes(f), `privacy has: ${f.slice(0, 80)}`);
   assert.ok(!/LEGAL ENTITY NAME|Alignata is run by/.test(html), "Questions' entity line is cut (split release)");
   assert.ok(!/deleted when you close the tab|the same way\./.test(html), "old session-ID wording replaced (9:32 AM ET fix)");
+  assert.ok(!html.includes("when you tap &quot;I&#x27;d pay&quot;"), "the old 'I'd pay' sentence is replaced (price card ships)");
   assert.ok(!/Paramount|blog/i.test(html));
 });
 

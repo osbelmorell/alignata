@@ -15,6 +15,24 @@ import {
 import { process as runProcess } from "@/lib/engrave-merge/process";
 import { summaryView } from "@/lib/engrave-merge/summary";
 import { SummaryPanel } from "@/components/engrave-merge/SummaryPanel";
+import { PriceCard, type PriceCardMode } from "@/components/engrave-merge/PriceCard";
+import {
+  type MadeFrom,
+  countMade,
+  doneScrollTop,
+  isDogfoodRun,
+  localArea,
+  localDay,
+  PRICE_KEY,
+  type PriceAnswer,
+  answerBlock,
+  storedAnswer,
+  viewBlock,
+  withPriceLock,
+  scrollSettled,
+  shouldShowCard,
+  tabSession,
+} from "@/lib/engrave-merge/price";
 import { RECIPE_FILE_NAME, buildRecipe, parseRecipe } from "@/lib/engrave-merge/recipe";
 import { fileRef, initInstallId, sendEvent } from "@/lib/engrave-merge/track";
 import {
@@ -52,6 +70,10 @@ interface FileState {
   orderCount: number;
   /** Shown on screen only; never sent anywhere. */
   name: string;
+  /** One per successful load in this page: the price card counts each upload once, when its merge file is made. */
+  uploadId: number;
+  /** "sample" = the bundled sample button (never counted by the price card). */
+  source: "upload" | "sample";
 }
 
 export function EngraveMergeDesk() {
@@ -70,7 +92,13 @@ export function EngraveMergeDesk() {
   const [fontFileName, setFontFileName] = useState<string>("");
   const [recipeMsg, setRecipeMsg] = useState<string>("");
   const [showWhere, setShowWhere] = useState(false);
-  const [proTapped, setProTapped] = useState(false);
+  /** The "I'd pay" price card below the results (lib/engrave-merge/price.ts). */
+  const [priceMode, setPriceMode] = useState<PriceCardMode>(null);
+  const priceViewSent = useRef(false);
+  /** Uploads already counted by the price card in this page (lib/engrave-merge/price.ts countMade). */
+  const priceCounted = useRef<Set<number>>(new Set());
+  const uploadSeq = useRef(0);
+  const primaryRef = useRef<HTMLButtonElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [updated, setUpdated] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -131,7 +159,7 @@ export function EngraveMergeDesk() {
   }, [ok]);
 
   const loadText = useCallback(
-    async (text: string, name: string) => {
+    async (text: string, name: string, source: "upload" | "sample" = "upload") => {
       if (!text.trim()) {
         setFile(null);
         setStatus({ kind: "error", text: COPY.statusEmpty });
@@ -139,7 +167,7 @@ export function EngraveMergeDesk() {
       }
       const res = runProcess(text, { settings, explicit: ALL_KEYS, recipe, glyphCheck: font?.check ?? null });
       if (res.error) {
-        setFile({ text, fingerprint: null, orderCount: 0, name });
+        setFile({ text, fingerprint: null, orderCount: 0, name, uploadId: ++uploadSeq.current, source });
         setStatus({
           kind: "error",
           text: res.soldOrdersFile ? COPY.statusWrongSoldOrders : COPY.statusWrongOther(res.missing),
@@ -147,7 +175,8 @@ export function EngraveMergeDesk() {
         return;
       }
       const fingerprint = await fingerprintOf(res.orderIds);
-      setFile({ text, fingerprint, orderCount: res.stats.order_count, name });
+      // Each successful load is one upload; the price card counts it (once) only when its merge file is made.
+      setFile({ text, fingerprint, orderCount: res.stats.order_count, name, uploadId: ++uploadSeq.current, source });
       setListing("");
       setStatus({ kind: "info", text: COPY.statusReady });
       sendEvent(iidRef.current, "file_processed", {
@@ -180,11 +209,80 @@ export function EngraveMergeDesk() {
       return;
     }
     if (ok.stats.merge_row_count === 0) return; // nothing to make: never a header-only file (button is hidden anyway)
+    const made: MadeFrom | null = file
+      ? { uploadId: file.uploadId, source: file.source, fingerprint: file.fingerprint, orderCount: file.orderCount }
+      : null;
     downloadText(mergeFileName(), mergeCsv(ok));
     sendEvent(iidRef.current, "merge_downloaded", { ...fileProps(), merge_row_count: ok.stats.merge_row_count });
     setStatus({ kind: "info", text: COPY.statusDownloaded(ok.stats.ready_items) });
-    summaryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Done scroll (HANDOFF-PRICE-CARD §1.5): Make merge file's top lands at the sticky "All tools" bar's height + 16px,
+    // so the "Merge file downloaded…" line under it is fully visible (was: the results at 16px, under the bar).
+    const bar = document.querySelector('nav[aria-label="Apps"]')?.getBoundingClientRect().height ?? 0;
+    const primary = primaryRef.current ?? summaryRef.current;
+    if (primary) window.scrollTo({ top: doneScrollTop(primary.getBoundingClientRect().top, window.scrollY, bar), behavior: "smooth" });
+    // Only now, with the file already made and the scroll settled, may the price card show (below the results), so it
+    // never moves Make merge file or the results. Dogfood run: no count, no card, no card event, em_price untouched.
+    void scrollSettled().then(() => {
+      if (!made || isDogfoodRun(iidRef.current, tabSession())) return;
+      const store = localArea();
+      countMade(store, made, iidRef.current, priceCounted.current);
+      const show = shouldShowCard(store, localDay());
+      setPriceMode((m) => {
+        if (m === "card") return m; // an unanswered card already on screen stays as it is (no second view)
+        if (show) priceViewSent.current = false;
+        return show ? "card" : null; // an earlier thanks line goes away on the next file
+      });
+    });
   };
+
+  /** price_card_view: at most once per shown card here, and once per install per local day across tabs (viewBlock). */
+  const sendView = () => viewBlock(localArea(), localDay(), () => sendEvent(iidRef.current, "price_card_view"));
+
+  /** ≥ 50% of the card on screen (or a tap first): the view block, inside the em_price lock (HANDOFF §1.3). */
+  const onPriceSeen = () => {
+    if (priceViewSent.current) return;
+    priceViewSent.current = true;
+    withPriceLock(sendView);
+  };
+
+  /**
+   * Show an answer's state: "pay" → thanks line (focus moves to it); "no" → the card just closes, nothing replaces it,
+   * and focus moves to the count line. Never sends anything.
+   */
+  const showAnswer = (a: PriceAnswer) => {
+    setPriceMode(a === "pay" ? "thanks" : null);
+    if (a === "no") setTimeout(() => summaryRef.current?.querySelector<HTMLElement>("[data-count-line]")?.focus({ preventScroll: true }), 0);
+  };
+
+  /**
+   * A tap: in one locked, synchronous block, the view (a tap before the 50% view still counts as seen, unless today is
+   * already counted), then the answer block: already answered (another tab) → no event, show the stored answer;
+   * otherwise write the answer first, then send price_intent / price_dismiss. Blocked storage: no event, same UI.
+   */
+  const onPriceAnswer = (a: PriceAnswer) => {
+    const needView = !priceViewSent.current;
+    priceViewSent.current = true;
+    withPriceLock(() => {
+      if (needView) sendView();
+      const r = answerBlock(localArea(), a, (x) =>
+        x === "pay" ? sendEvent(iidRef.current, "price_intent") : sendEvent(iidRef.current, "price_dismiss"),
+      );
+      showAnswer(r.show);
+    });
+  };
+
+  // Other tabs (HANDOFF §1.3): when an answer lands in em_price from another tab, an open card here swaps to the thanks
+  // line ("pay") or closes ("no") by itself. Never sends an event (the storage event only fires in OTHER tabs).
+  useEffect(() => {
+    if (priceMode !== "card") return;
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== PRICE_KEY) return;
+      const a = storedAnswer(localArea());
+      if (a) showAnswer(a);
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [priceMode]);
 
   const onProblems = () => {
     if (!ok) return;
@@ -198,16 +296,10 @@ export function EngraveMergeDesk() {
     sendEvent(iidRef.current, "cutsheet_printed", fileProps());
   };
 
-  const onPro = () => {
-    if (proTapped) return;
-    setProTapped(true);
-    sendEvent(iidRef.current, "pro_interest_tap");
-  };
-
   const onSample = async () => {
     try {
       const res = await fetch(SAMPLE_URL);
-      await loadText(await res.text(), SAMPLE_URL.split("/").pop() || "sample.csv");
+      await loadText(await res.text(), SAMPLE_URL.split("/").pop() || "sample.csv", "sample");
     } catch {
       setStatus({ kind: "error", text: COPY.statusUnreadable });
     }
@@ -287,6 +379,7 @@ export function EngraveMergeDesk() {
     setShowWhere(false);
     setUpdated(false);
     setConfirmReset(false);
+    setPriceMode(null);
     setEpoch((n) => n + 1);
     window.scrollTo({ top: 0, behavior: "auto" });
     fileInput.current?.focus({ preventScroll: true });
@@ -510,7 +603,7 @@ export function EngraveMergeDesk() {
 
       {/* Nothing to make (0 merge rows): no Make merge file. */}
       {!nothingToMake && (
-        <button type="button" data-primary className={`mt-4 ${primaryBtn}`} onClick={onPrimary}>
+        <button type="button" data-primary ref={primaryRef} className={`mt-4 ${primaryBtn}`} onClick={onPrimary}>
           {COPY.primary}
         </button>
       )}
@@ -537,6 +630,7 @@ export function EngraveMergeDesk() {
           onIncludeShipped={onIncludeShipped}
         />
       )}
+      <PriceCard mode={priceMode} onSeen={onPriceSeen} onAnswer={onPriceAnswer} />
 
 
       <details className="mt-3 rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[var(--cb-surface)] px-4">
@@ -576,13 +670,6 @@ export function EngraveMergeDesk() {
       </div>
 
       <div className="mt-6 flex flex-col items-start gap-1">
-        {proTapped ? (
-          <p className="min-h-[44px] py-2.5 text-base">{COPY.proThanks}</p>
-        ) : (
-          <button type="button" className={textBtn} onClick={onPro}>
-            {COPY.proButton}
-          </button>
-        )}
         <button type="button" className={textBtn} onClick={() => void onSample()}>
           {COPY.sample}
         </button>

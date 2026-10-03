@@ -8,8 +8,11 @@ export const EVENT_PROPS = {
   merge_downloaded: ["file_fingerprint", "small_file", "merge_row_count"],
   exceptions_downloaded: ["file_fingerprint", "small_file", "exception_count"],
   cutsheet_printed: ["file_fingerprint", "small_file"],
-  pro_interest_tap: [],
   page_open: [],
+  /** "I'd pay" price card (lib/engrave-merge/price.ts): seen (≥ 50% on screen), "I'd pay $29", "No thanks". No props. */
+  price_card_view: [],
+  price_intent: [],
+  price_dismiss: [],
 } as const;
 
 export type EventName = keyof typeof EVENT_PROPS;

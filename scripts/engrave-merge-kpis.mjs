@@ -26,7 +26,9 @@ import { EVENT_KEY_MATCH } from "../lib/engrave-merge/store.ts";
 export const PROD_HOST = "alignata.com";
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const WINDOW_DAYS = 14;
-export const BAR = { distinctRealFiles: 15, returningInstalls: 3, proInterestTaps: 1 };
+// Kill bar item 3 (SPEC §8.6): "I'd pay $29" taps on the price card (price_intent). Moved from pro_interest_tap on
+// Oct 3 2026, when the card replaced the old "I'd pay for unlimited batches" button.
+export const BAR = { distinctRealFiles: 15, returningInstalls: 3, priceIntents: 1 };
 
 export function parseLog(text) {
   return text
@@ -86,9 +88,14 @@ export function computeKpis(events, now = Date.now(), excludedIids = EXCLUDED_II
   }
   const installsBackOnAnotherDay = [...anyDays.values()].filter((s) => s.size >= 2).length;
 
-  const taps = inWin.filter((e) => e.event === "pro_interest_tap");
-  const proInterestTaps = taps.length;
-  const proInterestInstalls = new Set(taps.map((e) => e.iid)).size;
+  const taps = inWin.filter((e) => e.event === "price_intent");
+  const priceIntents = taps.length;
+  const priceIntentInstalls = new Set(taps.map((e) => e.iid)).size;
+  const views = inWin.filter((e) => e.event === "price_card_view");
+  const priceCardViews = views.length;
+  const priceCardViewInstalls = new Set(views.map((e) => e.iid)).size;
+  // The card's rate: distinct installs that tapped "I'd pay" / distinct installs that saw the card.
+  const priceIntentRate = priceCardViewInstalls ? priceIntentInstalls / priceCardViewInstalls : null;
 
   // Weekly engaged sellers (all real events, not only the kill-bar window)
   const wk = new Map();
@@ -109,7 +116,7 @@ export function computeKpis(events, now = Date.now(), excludedIids = EXCLUDED_II
   if (t0 !== null) {
     if (fps.size < BAR.distinctRealFiles) kill.push(`distinct real files ${fps.size} < ${BAR.distinctRealFiles}`);
     if (returningInstalls < BAR.returningInstalls) kill.push(`returning installs ${returningInstalls} < ${BAR.returningInstalls}`);
-    if (proInterestTaps < BAR.proInterestTaps) kill.push(`pro-interest taps ${proInterestTaps} = 0`);
+    if (priceIntents < BAR.priceIntents) kill.push(`"I'd pay" taps (price_intent) ${priceIntents} = 0`);
   }
   const status = t0 === null ? "NOT_STARTED" : now < end ? "IN_WINDOW" : kill.length ? "KILL" : "PASS";
 
@@ -117,9 +124,12 @@ export function computeKpis(events, now = Date.now(), excludedIids = EXCLUDED_II
     t0: t0 === null ? null : new Date(t0).toISOString(),
     windowEnd: end === null ? null : new Date(end).toISOString(),
     status,
-    killBar: { distinctRealFiles: fps.size, returningInstalls, proInterestTaps },
+    killBar: { distinctRealFiles: fps.size, returningInstalls, priceIntents },
     killIf: kill,
-    proInterestInstalls,
+    priceIntentInstalls,
+    priceCardViews,
+    priceCardViewInstalls,
+    priceIntentRate,
     smallFiles,
     installsBackOnAnotherDay,
     weeklyEngaged,
@@ -180,7 +190,11 @@ function print(k) {
   console.log(`  Status:                        ${k.status}`);
   console.log(`  1. Distinct real files:        ${k.killBar.distinctRealFiles}  (kill if < ${BAR.distinctRealFiles})`);
   console.log(`  2. Returning installs:         ${k.killBar.returningInstalls}  (≥2 days AND ≥2 files; kill if < ${BAR.returningInstalls})`);
-  console.log(`  3. "I'd pay" taps:             ${k.killBar.proInterestTaps}  from ${k.proInterestInstalls} installs (kill if 0)`);
+  console.log(`  3. "I'd pay $29" taps:         ${k.killBar.priceIntents}  from ${k.priceIntentInstalls} installs (price_intent; kill if 0)`);
+  console.log(
+    `  Price card seen:               ${k.priceCardViews}  by ${k.priceCardViewInstalls} installs; rate ` +
+      (k.priceIntentRate === null ? "n/a" : `${Math.round(k.priceIntentRate * 100)}%`) + " (price_intent / price_card_view, distinct installs)",
+  );
   console.log(`  Installs back on another day:  ${k.installsBackOnAnotherDay}`);
   console.log(`  Small files (<3 orders, no fingerprint): ${k.smallFiles}`);
   console.log("  Weekly engaged sellers (merge downloads on ≥2 days in a Mon–Sun week):");

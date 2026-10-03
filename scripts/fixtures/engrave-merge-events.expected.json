@@ -2,7 +2,9 @@
   "t0": "2026-10-05T14:00:00.000Z",
   "distinctRealFiles": 5,
   "returningInstalls": 2,
-  "proInterestTaps": 1,
+  "priceIntents": 1,
+  "priceCardViews": 1,
+  "priceIntentRate": 1,
   "installsBackOnAnotherDay": 3,
   "weeklyEngaged": {
     "2026-10-05": 2,
