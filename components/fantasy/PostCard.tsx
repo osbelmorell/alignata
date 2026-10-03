@@ -26,11 +26,10 @@ export function PostCard({
   const art = cardImage(post);
   return (
     <article className={`fx-post fx-card${feature ? " fx-feature" : ""}`} data-post-card={post.slug}>
-      <figure className="fx-art fx-reveal">
+      <figure className="fx-art fx-reveal" style={{ background: art.pad }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={art.src}
-          {...(art.srcSet ? { srcSet: art.srcSet } : {})}
           sizes={feature ? "(min-width: 900px) 690px, calc(100vw - 40px)" : "(min-width: 900px) 380px, calc(100vw - 40px)"}
           alt=""
           width={art.width}

@@ -18,20 +18,18 @@ export function ToolCard({ app, pos, homeTarget = false }: { app: HubApp; pos: n
     ...(homeTarget ? { "data-home-target": `tool:${app.id}` } : {}),
   };
   return (
-    <article data-tool-card className={`fx-tool fx-card${art.featured ? " fx-lg" : ""}`}>
+    <article data-tool-card className={`fx-tool fx-card${pos <= 2 ? " fx-lg" : ""}`}>
       <p className="fx-meta">
         {pos === 1 ? <span className="fx-dot" aria-hidden="true" /> : null}
         {two(pos)} /
       </p>
-      <figure className="fx-art fx-reveal">
+      <figure className="fx-art fx-reveal" style={{ background: art.pad }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={`/art/${art.file}-1280.webp`}
-          srcSet={`/art/${art.file}-640.webp 640w, /art/${art.file}-1280.webp 1280w`}
-          sizes={art.featured ? "(min-width: 1024px) 680px, (min-width: 900px) 570px, calc(100vw - 72px)" : "(min-width: 900px) 380px, calc(100vw - 72px)"}
-          alt={art.alt}
-          width={1280}
-          height={720}
+          src={art.art ?? art.icon}
+          alt={art.art ? art.alt : art.iconAlt}
+          width={art.art ? 1920 : 256}
+          height={art.art ? 1080 : 256}
           {...(pos <= 2 ? { fetchPriority: pos === 1 ? ("high" as const) : ("auto" as const) } : { loading: "lazy" as const })}
           decoding="async"
         />

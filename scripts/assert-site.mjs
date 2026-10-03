@@ -270,7 +270,7 @@ test("/apps (v1.4): 11 tools, Cleaver 01 and License Gate 02 with custom art, th
     "Enterprise Scorecard", "Env Diff Snapshot", "Hobby Deploy Burn Digest", "LLM Feature-Cost Tag", "What-Changed Card",
   ]);
   assert.equal(order.find((a) => a.id === "stripe-cleaver").blurb, "Turn a Stripe payout file into a QuickBooks or Xero import.", "locked Cleaver line");
-  assert.deepEqual(order.map((a) => toolArt(a.id).file), ["stripe-cleaver", "license-gate", ...Array(9).fill("fallback-tile")]);
+  for (const a of order) assert.ok(toolArt(a.id).icon, `${a.id} has an icon`);
   const html = renderToStaticMarkup(createElement(ToolsPage, { apps: order }));
   const attrs = [...html.matchAll(/<a class="(fx-stretch|fx-pill)" href="([^"]+)" data-tool-slug="([^"]+)" data-tool-pos="(\d+)"/g)].map((m) => [m[1], m[3], +m[4]]);
   assert.equal(attrs.length, 22, "card link + Open on every card");
@@ -285,7 +285,67 @@ test("/apps (v1.4): 11 tools, Cleaver 01 and License Gate 02 with custom art, th
 });
 const SLUG_RE_OK = (s) => validateSiteEvent({ v: 1, event: "tool_open", sid: SID, vid: VID, dogfood: false, props: { slug: s, position: 1 } }).ok;
 
-test("Daily Digest (v1.4): tags, real read time, hero art + alt, verbatim pull quotes, Next article chain", async () => {
+/* ---------- Art (SPEC v2 sticker batch v3.1): final alt text, copied verbatim from ART-ALT-DRAFT.md ---------- */
+/** "Digest: FINAL alt text" (Product Copy, Oct 2 11:15 PM ET), all 24 lines. */
+const DIGEST_FINAL_ALT = new Map([
+  ["break-loops-when-progress-stalls", "A looped toy train track with a switch lever that sends the train off onto a straight exit."],
+  ["dont-follow-orders-in-tool-text", "A fishing hook on a line from a yellow float, caught on a paper slip."],
+  ["the-ai-safety-paradox", "A red firework rocket with a fire extinguisher strapped to its side."],
+  ["ask-before-doing-what-wasnt-asked", "A brass desk bell on a small steel block."],
+  ["test-search-before-saying-none", "A flashlight shining a yellow beam into an open cardboard box."],
+  ["make-routers-pick-from-a-fixed-list", "A mail sorter with a grid of pigeonholes and one pink envelope sliding into a slot."],
+  ["keep-hard-rules-sticky", "A yellow sticky note pinned flat with a pushpin."],
+  ["refuse-answers-sources-do-not-support", "A stool with a red seat and one leg snapped off, tipping over."],
+  ["do-not-swap-tools-on-a-hunch", "A gold coin flipping in the air above a closed toolbox."],
+  ["check-each-tool-step-before-next", "A level with a green bubble, resting on a single step."],
+  ["prove-it-before-irreversible-actions", "A wax seal stamp pressing into red wax on an envelope."],
+  ["tell-failed-tools-what-to-try-next", "A folded paper map with a red dotted route across it."],
+  ["dont-blind-retry-sends-or-charges", "A paper airplane held by its tail in a pink clothespin."],
+  ["laya-ai-deep-dive", "An old brass and steel diving helmet with an air hose trailing behind it."],
+  ["system-one-and-jev-deep-dive", "An open pocket compass with a green face and a chain."],
+  ["paperclip-deep-dive", "A giant paperclip holding a small stack of cards, the top one yellow."],
+  ["block-done-if-code-changed-after-tests", "A test tube of green liquid in a clamp stand, with a drop falling in."],
+  ["trim-long-logs-from-both-ends", "The two end pieces of a log, with the middle sawn out."],
+  ["refuse-answers-that-dont-match-tool-results", "Two jigsaw pieces, one white and one yellow, that don't fit together."],
+  ["bind-every-claim-to-a-real-citation", "An open book with a red binder clip holding a note to its page."],
+  ["compare-models-only-under-a-locked-setup", "Two identical stopwatches side by side on a steel tray, their hands at the same spot."],
+  ["reuse-the-same-key-when-a-tool-retries", "A brass key on a ring, with a white outline of the same key behind it."],
+  ["require-held-out-lift-before-shipping-harness-edits", "A striped hot-air balloon tugging upward, tied down to a sandbag."],
+  ["load-only-the-tools-this-turn-needs", "A tool belt with empty pockets and a single wrench."],
+]);
+/** "Tools: FINAL alt text" (Brand Creator, Oct 2 10:47 PM ET): [slug, hero alt (null = icon only), icon alt]. */
+const TOOL_FINAL_ALT = [
+  ["stripe-cleaver", "A big cleaver slices a paper receipt into torn strips, with the fee strip in yellow.", "A cartoon cleaver with a steel blade and a black handle."],
+  ["license-gate", "A padlock with a brass shackle clamped shut on a rolled paper scroll.", "A padlock with a brass shackle."],
+  ["agent-bundle-tag", "A pink luggage tag tied with string to a wrapped paper parcel.", "A pink luggage tag."],
+  ["agent-eval-go-no-go", "A black and white checkered flag waving on a pole.", "A checkered flag."],
+  ["deploy-decision-card", null, "A balance scale with two brass pans."],
+  ["engrave-merge", "A laser engraver on a rail burning a line onto a paper tag.", "A laser engraver burning a line onto a tag."],
+  ["enterprise-scorecard", "A round pressure gauge with green, yellow and red bands and one needle.", "A pressure gauge."],
+  ["env-diff-snapshot", "A magnifying glass over two paper sheets whose lines don't match up.", "A magnifying glass."],
+  ["hobby-deploy-burn-digest", "A lit match, half burnt down, with a yellow flame.", "A lit match."],
+  ["llm-feature-cost-tag", "A pink price tag hanging from a steel cog.", "A steel cog with a pink price tag."],
+  ["what-changed-card", "A rubber stamp lifting off a paper sheet, leaving a round mark.", "A rubber stamp."],
+];
+/** Clay files replaced by the sticker batch (alignata-art/clay-replacement-list.md): none may come back. */
+const CLAY_FILES = [
+  ...[...DIGEST_FINAL_ALT.keys()].filter((s) => s !== "the-ai-safety-paradox").flatMap((s) => [`public/art/digest/${s}.webp`, `public/art/digest/${s}-card.webp`]),
+  ...["fallback-tile", "license-gate", "stripe-cleaver", "the-ai-safety-paradox"].flatMap((b) => [`public/art/${b}-640.webp`, `public/art/${b}-1280.webp`]),
+];
+/** Width × height of a WebP file (VP8, VP8L or VP8X), read from its header. */
+async function webpSize(path) {
+  const { readFileSync } = await import("node:fs");
+  const b = readFileSync(path);
+  assert.equal(b.toString("ascii", 0, 4), "RIFF", `${path} is RIFF`);
+  assert.equal(b.toString("ascii", 8, 12), "WEBP", `${path} is WebP`);
+  const kind = b.toString("ascii", 12, 16);
+  if (kind === "VP8X") return [1 + b.readUIntLE(24, 3), 1 + b.readUIntLE(27, 3)];
+  if (kind === "VP8L") { const v = b.readUInt32LE(21); return [1 + (v & 0x3fff), 1 + ((v >> 14) & 0x3fff)]; }
+  if (kind === "VP8 ") return [b.readUInt16LE(26) & 0x3fff, b.readUInt16LE(28) & 0x3fff];
+  throw new Error(`${path}: unknown WebP chunk ${kind}`);
+}
+
+test("Daily Digest: tags, real read time, sticker hero art + FINAL alt, verbatim pull quotes, Next article chain", async () => {
   const { existsSync } = await import("node:fs");
   const { posts, getPostsNewestFirst } = await import("../content/posts.ts");
   const meta = await import("../lib/daily-digest/meta.ts");
@@ -303,14 +363,13 @@ test("Daily Digest (v1.4): tags, real read time, hero art + alt, verbatim pull q
     assert.match(meta.postMeta(p), /^(Technique|Deep dive|Essay) · [A-Z][a-z]{2} \d{1,2} · \d+ min read$/);
     assert.ok(p.hero, `${p.slug}: has its own art (no fallback)`);
     const hero = meta.postHero(p);
-    if ("src" in hero) {
-      for (const f of [hero.src, hero.cardSrc]) assert.ok(existsSync(`public${f}`), `${p.slug}: ${f}`);
-      assert.equal(hero.src, `/art/digest/${p.slug}.webp`);
-      assert.equal(hero.cardSrc, `/art/digest/${p.slug}-card.webp`);
-      assert.deepEqual([meta.heroImage(p).width, meta.heroImage(p).height, meta.cardImage(p).width, meta.cardImage(p).height], [1600, 900, 1600, 900]);
-    } else {
-      for (const size of [640, 1280]) assert.ok(existsSync(`public/art/${hero.image}-${size}.webp`), `${p.slug}: ${hero.image}-${size}.webp`);
-    }
+    assert.equal(hero.src, `/art/digest/${p.slug}-sticker.webp`, `${p.slug}: sticker art`);
+    assert.ok(existsSync(`public${hero.src}`), `${p.slug}: ${hero.src} exists`);
+    assert.deepEqual(await webpSize(`public${hero.src}`), [1920, 1080], `${p.slug}: one 16:9 file`);
+    assert.equal(hero.alt, DIGEST_FINAL_ALT.get(p.slug), `${p.slug}: FINAL alt, verbatim`);
+    assert.match(hero.pad, /^#[0-9A-F]{6}$/, `${p.slug}: pad colour`);
+    assert.deepEqual(meta.cardImage(p), meta.heroImage(p), `${p.slug}: card and hero use the same file, size and alt`);
+    assert.deepEqual([meta.heroImage(p).width, meta.heroImage(p).height], [1920, 1080]);
     assert.match(hero.alt, /^[A-Z].{10,200}\.$/, `${p.slug}: alt is one plain sentence`);
     if (p.pullQuote) {
       const paras = meta.bodyBlocks(p).filter((b) => b.kind === "paragraph").map((b) => toPlainText(b.text));
@@ -318,8 +377,8 @@ test("Daily Digest (v1.4): tags, real read time, hero art + alt, verbatim pull q
       if (p.pullQuote.cite) assert.ok(paras.includes(p.pullQuote.cite), `${p.slug}: cite is the article's own byline`);
     }
   }
-  assert.equal(meta.postHero(posts.find((p) => p.slug === "the-ai-safety-paradox")).image, "the-ai-safety-paradox");
-  assert.equal(posts.filter((p) => p.hero && "src" in p.hero).length, 23, "Brand Creator art for the 23 other articles (Oct 2)");
+  assert.equal(meta.postHero(posts.find((p) => p.slug === "the-ai-safety-paradox")).src, "/art/digest/the-ai-safety-paradox-sticker.webp", "the essay gets its new sticker");
+  assert.deepEqual(posts.map((p) => p.slug).sort(), [...DIGEST_FINAL_ALT.keys()].sort(), "a FINAL alt line for every article, and no extra");
   assert.equal(meta.shortDate("2026-10-02"), "Oct 2");
   assert.equal(meta.shortDate("2026-09-16"), "Sep 16");
   // Next article: the next older one, oldest wraps to newest; following it visits every article once.
@@ -400,4 +459,33 @@ test("baseline summary: home_click per target, sessions, visitors and / tap rate
   assert.equal(s.homeClickRate, 0.5);
   assert.deepEqual(s.homeClickByTarget, { "tools-pill": 2, "nav:daily-digest": 1 });
   assert.equal(summarize([]).window.homeClickRate, null);
+});
+
+test("art: tool stickers + icons with FINAL alt, every file a real WebP of the right shape, and no clay left", async () => {
+  const { existsSync, readdirSync } = await import("node:fs");
+  const { getApps, toolArt } = await import("../lib/apps.ts");
+  const apps = getApps();
+  assert.deepEqual(apps.map((a) => a.id).sort(), TOOL_FINAL_ALT.map(([s]) => s).sort(), "a FINAL alt row for every listed tool");
+  for (const [slug, heroAlt, iconAlt] of TOOL_FINAL_ALT) {
+    const t = toolArt(slug);
+    assert.equal(t.icon, `/art/${slug}-sticker-icon.webp`, `${slug} icon path`);
+    assert.ok(existsSync(`public${t.icon}`), `${slug} icon exists`);
+    const [iw, ih] = await webpSize(`public${t.icon}`);
+    assert.ok(iw === ih && iw >= 168, `${slug} icon is square and at least 3x of 56px (${iw}x${ih})`);
+    assert.equal(t.iconAlt, iconAlt, `${slug} icon alt, verbatim`);
+    assert.match(t.pad, /^#[0-9A-F]{6}$/);
+    if (heroAlt === null) {
+      assert.equal(t.art, null, `${slug} is icon-only (no story page)`);
+      continue;
+    }
+    assert.equal(t.art, `/art/${slug}-sticker.webp`, `${slug} hero path`);
+    assert.ok(existsSync(`public${t.art}`), `${slug} hero exists`);
+    assert.deepEqual(await webpSize(`public${t.art}`), [1920, 1080], `${slug}: one 16:9 file`);
+    assert.equal(t.alt, heroAlt, `${slug} hero alt, verbatim`);
+  }
+  const files = readdirSync("public/art", { recursive: true }).map(String).filter((f) => /\.[a-z]+$/.test(f));
+  for (const f of files) assert.match(f, /^(digest\/)?[a-z0-9-]+-sticker(-icon)?\.webp$/, `public/art/${f} is sticker art (no clay, no fallback tile)`);
+  assert.equal(files.length, 24 + 10 + 11, "24 Digest heroes + 10 tool heroes + 11 icons");
+  for (const f of CLAY_FILES) assert.ok(!existsSync(f), `${f} is gone`);
+  assert.equal(CLAY_FILES.length, 54);
 });

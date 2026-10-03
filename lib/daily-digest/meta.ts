@@ -2,12 +2,6 @@ import type { Post, PostHero, PostTag } from "@/content/posts";
 import { getPostsNewestFirst } from "@/content/posts";
 import { parseArticle, parseSections, toPlainText, type ArticleBlock } from "@/lib/daily-digest/blocks";
 
-/** Shared fallback art for articles without their own hero (SPEC §11). Alt is one plain sentence. */
-export const FALLBACK_HERO: PostHero = {
-  image: "fallback-tile",
-  alt: "Three stacked rounded blocks in cream, grey and black, with a small lime-green ball on top.",
-};
-
 export const READ_WPM = 230;
 
 export function postTag(post: Post): PostTag {
@@ -15,22 +9,25 @@ export function postTag(post: Post): PostTag {
 }
 
 export function postHero(post: Post): PostHero {
-  return post.hero ?? FALLBACK_HERO;
+  return post.hero;
 }
 
-/** One <img> worth of attributes. */
-export type ArtImage = { src: string; srcSet?: string; width: number; height: number; alt: string };
+/** One <img> worth of attributes, plus the pad colour the slot is filled with (art is never cropped). */
+export type ArtImage = { src: string; width: number; height: number; alt: string; pad: string };
 
-/** Article hero, 16:9: the 1600×900 file, or the legacy 640/1280 pair. */
+/** Sticker art is 1920×1080 (16:9). */
+export const ART_W = 1920;
+export const ART_H = 1080;
+
+/** Story hero: the article's one sticker file. */
 export function heroImage(post: Post): ArtImage {
   const h = postHero(post);
-  if ("src" in h) return { src: h.src, width: 1600, height: 900, alt: h.alt };
-  return { src: `/art/${h.image}-1280.webp`, srcSet: `/art/${h.image}-640.webp 640w, /art/${h.image}-1280.webp 1280w`, width: 1280, height: 720, alt: h.alt };
+  return { src: h.src, width: ART_W, height: ART_H, alt: h.alt, pad: h.pad };
 }
 
-/** Card art, shown 16:9 (SPEC §7, CEO call Oct 2): the 1600×900 hero, or the legacy 16:9 pair. The 4:3 cardSrc crops stay on disk, unused. */
+/** Card art: the exact same file, size and alt as the hero (SPEC v2 §3: same image, so the morph pairs). */
 export function cardImage(post: Post): ArtImage {
-  return { ...heroImage(post) };
+  return heroImage(post);
 }
 
 export function postCardDek(post: Post): string {

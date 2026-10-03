@@ -68,11 +68,10 @@ export default async function DailyDigestPostPage({
             <h1>{post.title}</h1>
             <p className="fx-intro">{toPlainText(post.dek)}</p>
           </div>
-          <figure className="fx-hero fx-art fx-reveal">
+          <figure className="fx-hero fx-art fx-reveal" style={{ background: hero.pad }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={hero.src}
-              {...(hero.srcSet ? { srcSet: hero.srcSet } : {})}
               sizes="(min-width: 1280px) 1184px, calc(100vw - 40px)"
               alt={hero.alt}
               width={hero.width}

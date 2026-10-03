@@ -35,7 +35,7 @@
 
 /* Art */
 .fx-art { border-radius: var(--r-art); overflow: hidden; background: #E9E3D9; }
-.fx-art img { width: 100%; height: 100%; object-fit: cover; }
+.fx-art img { width: 100%; height: 100%; object-fit: contain; } /* sticker art is padded, never cropped */
 
 /* Primary pill: label colour set explicitly, never inherited */
 a.fx-pill, a.fx-pill:visited, a.fx-pill:hover { display: inline-flex; align-items: center; justify-content: center; min-height: 48px;

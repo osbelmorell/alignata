@@ -12,15 +12,13 @@
 export type PostTag = "Technique" | "Deep dive" | "Essay";
 
 /**
- * Hero art (SPEC §11). `alt` is required: one plain sentence describing the picture (final copy, used exactly).
- * Two shapes:
- * - `{ src, cardSrc, alt }`: Brand Creator files under public/art/digest/: `src` is the 1600×900 (16:9) article hero,
- *   `cardSrc` the 1200×900 (4:3) centre-safe crop used by index / Next article / homepage cards.
- * - `{ image, alt }` (legacy): a base name under public/art/ with `<image>-1280.webp` + `<image>-640.webp` (16:9);
- *   cards crop it to 4:3 with object-fit.
- * Leave `hero` out and the article uses the shared fallback tile (lib/daily-digest/meta.ts → FALLBACK_HERO).
+ * Hero art (SPEC v2 §3/§4, sticker batch v3.1, Oct 2 2026). One 16:9 file (1920×1080) under public/art/digest/,
+ * `<slug>-sticker.webp`, used for the card AND the story hero (same URL, so the card→story morph pairs and the hero
+ * is already cached). It is never cropped: slots show it with object-fit: contain on `pad`, the art's own background
+ * colour (Digest 5-colour cycle, art-src/palette.json). `alt` is final copy (ART-ALT-DRAFT.md, "Digest: FINAL alt text"),
+ * one plain sentence, used exactly.
  */
-export type PostHero = { image: string; alt: string } | { src: string; cardSrc: string; alt: string };
+export type PostHero = { src: string; alt: string; pad: string };
 
 /**
  * Pull quote (SPEC §8, v1.2): `text` must be a verbatim line from this article's body (the test suite checks it).
@@ -35,8 +33,8 @@ export type Post = {
   date: string;
   /** Index + article meta tag. Omitted = "Technique". */
   tag?: PostTag;
-  /** Per-article art (hero + card crop + alt). Omitted = fallback tile. */
-  hero?: PostHero;
+  /** Per-article sticker art (card + story hero + alt + pad). Required: there is no fallback art. */
+  hero: PostHero;
   /** Optional shorter one-line dek for index / Next article cards. Omitted = `dek`. */
   cardDek?: string;
   pullQuote?: PostPullQuote;
@@ -52,9 +50,9 @@ export const posts: Post[] = [
     dek: "Prevents double-charges on payment or deploy retries.",
     cardDek: "Reuse one request ID on retries so payments and deploys don't run twice.",
     hero: {
-      src: "/art/digest/reuse-the-same-key-when-a-tool-retries.webp",
-      cardSrc: "/art/digest/reuse-the-same-key-when-a-tool-retries-card.webp",
-      alt: "A stone bottle sealed with a lime-green cork, and a second black cork of the same shape lying beside it with nowhere to go.",
+      src: "/art/digest/reuse-the-same-key-when-a-tool-retries-sticker.webp",
+      alt: "A brass key on a ring, with a white outline of the same key behind it.",
+      pad: "#C5C6FB",
     },
     date: "2026-09-16",
     paragraphs: [
@@ -70,9 +68,9 @@ export const posts: Post[] = [
     dek: "Stops train-only tweaks that fail on new cases.",
     cardDek: "Only ship a setup tweak if it also helps on cases it wasn't tuned on.",
     hero: {
-      src: "/art/digest/require-held-out-lift-before-shipping-harness-edits.webp",
-      cardSrc: "/art/digest/require-held-out-lift-before-shipping-harness-edits-card.webp",
-      alt: "Two stone water tanks, one calm and one choppy, with a small black sailboat and lime-green sail in the choppy one.",
+      src: "/art/digest/require-held-out-lift-before-shipping-harness-edits-sticker.webp",
+      alt: "A striped hot-air balloon tugging upward, tied down to a sandbag.",
+      pad: "#F0CD5F",
     },
     date: "2026-09-16",
     paragraphs: [
@@ -88,9 +86,9 @@ export const posts: Post[] = [
     dek: "Cuts prompt size without losing the needed tool.",
     cardDek: "Give the agent only the tools this turn needs, so prompts stay small.",
     hero: {
-      src: "/art/digest/load-only-the-tools-this-turn-needs.webp",
-      cardSrc: "/art/digest/load-only-the-tools-this-turn-needs-card.webp",
-      alt: "A large closed stone toolbox beside a small open tray that holds a single lime-green screwdriver.",
+      src: "/art/digest/load-only-the-tools-this-turn-needs-sticker.webp",
+      alt: "A tool belt with empty pockets and a single wrench.",
+      pad: "#EE83C3",
     },
     date: "2026-09-16",
     paragraphs: [
@@ -106,9 +104,9 @@ export const posts: Post[] = [
     dek: "Stops invented “CI green” or fake search hits from shipping as done.",
     cardDek: "Catch answers that claim results the tools never returned.",
     hero: {
-      src: "/art/digest/refuse-answers-that-dont-match-tool-results.webp",
-      cardSrc: "/art/digest/refuse-answers-that-dont-match-tool-results-card.webp",
-      alt: "A black star-shaped cookie cutter beside a round stone cookie that doesn't match it, with one lime-green sprinkle on top.",
+      src: "/art/digest/refuse-answers-that-dont-match-tool-results-sticker.webp",
+      alt: "Two jigsaw pieces, one white and one yellow, that don't fit together.",
+      pad: "#EE83C3",
     },
     date: "2026-09-23",
     paragraphs: [
@@ -124,9 +122,9 @@ export const posts: Post[] = [
     dek: "Blocks unsupported or mis-cited final answers.",
     cardDek: "Tie every claim to a real source, or leave it out.",
     hero: {
-      src: "/art/digest/bind-every-claim-to-a-real-citation.webp",
-      cardSrc: "/art/digest/bind-every-claim-to-a-real-citation-card.webp",
-      alt: "Three stone balloons, each tied by a black string to its own small weight, with one weight in lime-green.",
+      src: "/art/digest/bind-every-claim-to-a-real-citation-sticker.webp",
+      alt: "An open book with a red binder clip holding a note to its page.",
+      pad: "#EFC3BB",
     },
     date: "2026-09-23",
     paragraphs: [
@@ -142,9 +140,9 @@ export const posts: Post[] = [
     dek: "Stops harness help from looking like model skill.",
     cardDek: "Test every model on the same setup, so the score reflects the model.",
     hero: {
-      src: "/art/digest/compare-models-only-under-a-locked-setup.webp",
-      cardSrc: "/art/digest/compare-models-only-under-a-locked-setup-card.webp",
-      alt: "Three different toy race cars on identical stone ramps, with one lime-green ribbon stretched across all three.",
+      src: "/art/digest/compare-models-only-under-a-locked-setup-sticker.webp",
+      alt: "Two identical stopwatches side by side on a steel tray, their hands at the same spot.",
+      pad: "#96E4B7",
     },
     date: "2026-09-23",
     paragraphs: [
@@ -160,9 +158,9 @@ export const posts: Post[] = [
     dek: "Stops untested edits from being reported as finished.",
     cardDek: "Don't call it done if code changed after the last test run.",
     hero: {
-      src: "/art/digest/block-done-if-code-changed-after-tests.webp",
-      cardSrc: "/art/digest/block-done-if-code-changed-after-tests-card.webp",
-      alt: "A stone jar with its lid lifted, and a lime-green seal strip broken and hanging loose from the rim.",
+      src: "/art/digest/block-done-if-code-changed-after-tests-sticker.webp",
+      alt: "A test tube of green liquid in a clamp stand, with a drop falling in.",
+      pad: "#C5C6FB",
     },
     date: "2026-09-24",
     paragraphs: [
@@ -178,9 +176,9 @@ export const posts: Post[] = [
     dek: "Keeps the error codes the model needs when logs get cut.",
     cardDek: "Cut long logs from both ends so the error lines survive.",
     hero: {
-      src: "/art/digest/trim-long-logs-from-both-ends.webp",
-      cardSrc: "/art/digest/trim-long-logs-from-both-ends-card.webp",
-      alt: "Two lengths of black beads with the middle cut away, four grey beads set aside, and one lime-green bead between them.",
+      src: "/art/digest/trim-long-logs-from-both-ends-sticker.webp",
+      alt: "The two end pieces of a log, with the middle sawn out.",
+      pad: "#F0CD5F",
     },
     date: "2026-09-24",
     paragraphs: [
@@ -196,9 +194,9 @@ export const posts: Post[] = [
     dek: "Blocks send, delete, and force-push without fresh proof.",
     cardDek: "Get fresh proof before a send, delete, or overwrite you can't undo.",
     hero: {
-      src: "/art/digest/prove-it-before-irreversible-actions.webp",
-      cardSrc: "/art/digest/prove-it-before-irreversible-actions-card.webp",
-      alt: "A black push button under a frosted hinged safety cover, held shut by a small lime-green latch.",
+      src: "/art/digest/prove-it-before-irreversible-actions-sticker.webp",
+      alt: "A wax seal stamp pressing into red wax on an envelope.",
+      pad: "#96E4B7",
     },
     date: "2026-09-25",
     paragraphs: [
@@ -214,9 +212,9 @@ export const posts: Post[] = [
     dek: "Turns vague errors into a short list of safe fixes.",
     cardDek: "Turn vague errors into a short list of safe next steps.",
     hero: {
-      src: "/art/digest/tell-failed-tools-what-to-try-next.webp",
-      cardSrc: "/art/digest/tell-failed-tools-what-to-try-next-card.webp",
-      alt: "A stone board with one empty jigsaw slot, a rejected black piece beside it, and three spare pieces, one lime-green.",
+      src: "/art/digest/tell-failed-tools-what-to-try-next-sticker.webp",
+      alt: "A folded paper map with a red dotted route across it.",
+      pad: "#C5C6FB",
     },
     date: "2026-09-25",
     paragraphs: [
@@ -232,9 +230,9 @@ export const posts: Post[] = [
     dek: "Stops duplicate emails and double charges after timeouts.",
     cardDek: "Check before retrying so a timeout doesn't send or charge twice.",
     hero: {
-      src: "/art/digest/dont-blind-retry-sends-or-charges.webp",
-      cardSrc: "/art/digest/dont-blind-retry-sends-or-charges-card.webp",
-      alt: "A stone mailbox on a short black post with its door shut and a small lime-green flag raised on its side.",
+      src: "/art/digest/dont-blind-retry-sends-or-charges-sticker.webp",
+      alt: "A paper airplane held by its tail in a pink clothespin.",
+      pad: "#F0CD5F",
     },
     date: "2026-09-25",
     paragraphs: [
@@ -250,9 +248,9 @@ export const posts: Post[] = [
     dek: "Full board brief: Laya is ConvAI’s open System-1 decision model (not the community mirror). How to run it, when it fits. Cross-links Jev.",
     cardDek: "What Laya is, how to run it, and when it beats a chat model.",
     hero: {
-      src: "/art/digest/laya-ai-deep-dive.webp",
-      cardSrc: "/art/digest/laya-ai-deep-dive-card.webp",
-      alt: "A clear marble run that splits into three chutes ending in cups, with one lime-green marble rolling down.",
+      src: "/art/digest/laya-ai-deep-dive-sticker.webp",
+      alt: "An old brass and steel diving helmet with an air hose trailing behind it.",
+      pad: "#EE83C3",
     },
     date: "2026-09-25",
     tag: "Deep dive",
@@ -332,9 +330,9 @@ export const posts: Post[] = [
     dek: "Full board brief on TypeSafe’s System One category and Jev (Almeida): how the API works, when it beats LLMs, vs open Laya.",
     cardDek: "How TypeSafe's hosted decision model works and when it beats a chat model.",
     hero: {
-      src: "/art/digest/system-one-and-jev-deep-dive.webp",
-      cardSrc: "/art/digest/system-one-and-jev-deep-dive-card.webp",
-      alt: "A flat black block with a round opening on top and three small trays, one holding a lime-green disc.",
+      src: "/art/digest/system-one-and-jev-deep-dive-sticker.webp",
+      alt: "An open pocket compass with a green face and a chain.",
+      pad: "#EFC3BB",
     },
     date: "2026-09-25",
     tag: "Deep dive",
@@ -413,9 +411,9 @@ export const posts: Post[] = [
     dek: "Full board brief on Paperclip (from NetworkChuck’s Sep 24 video): org-layer for AI agent teams, install path, risks (skills/CVEs/budgets), vs OpenClaw.",
     cardDek: "A tool for running teams of AI agents, with setup, risks, and how it compares.",
     hero: {
-      src: "/art/digest/paperclip-deep-dive.webp",
-      cardSrc: "/art/digest/paperclip-deep-dive-card.webp",
-      alt: "A tabletop mobile of black branching arms holding stone teardrops, with one lime-green teardrop near the top.",
+      src: "/art/digest/paperclip-deep-dive-sticker.webp",
+      alt: "A giant paperclip holding a small stack of cards, the top one yellow.",
+      pad: "#96E4B7",
     },
     date: "2026-09-25",
     tag: "Deep dive",
@@ -527,9 +525,9 @@ export const posts: Post[] = [
     dek: "Soft reminders fade in long chats. Re-inject the non-negotiables every turn.",
     cardDek: "Repeat the must-follow rules every turn so long chats don't forget them.",
     hero: {
-      src: "/art/digest/keep-hard-rules-sticky.webp",
-      cardSrc: "/art/digest/keep-hard-rules-sticky-card.webp",
-      alt: "A clear frosted cylinder filled with pebbles and grey sand, with a small lime-green float resting on top.",
+      src: "/art/digest/keep-hard-rules-sticky-sticker.webp",
+      alt: "A yellow sticky note pinned flat with a pushpin.",
+      pad: "#C5C6FB",
     },
     date: "2026-09-28",
     sourceNote: "based on hub digest 2026-09-24 technique test",
@@ -549,9 +547,9 @@ export const posts: Post[] = [
     dek: "Stops shipping answers that look cited but are not backed.",
     cardDek: "Don't ship an answer unless its sources actually back it.",
     hero: {
-      src: "/art/digest/refuse-answers-sources-do-not-support.webp",
-      cardSrc: "/art/digest/refuse-answers-sources-do-not-support-card.webp",
-      alt: "A pale stone slab on black legs, with one shorter black post beside it that doesn't reach the slab, topped by a lime-green cap.",
+      src: "/art/digest/refuse-answers-sources-do-not-support-sticker.webp",
+      alt: "A stool with a red seat and one leg snapped off, tipping over.",
+      pad: "#F0CD5F",
     },
     date: "2026-09-28",
     paragraphs: [
@@ -567,9 +565,9 @@ export const posts: Post[] = [
     dek: "Blocks risky mid-flight tool swaps without proof.",
     cardDek: "Don't let an agent switch tools mid-task without proof it needs to.",
     hero: {
-      src: "/art/digest/do-not-swap-tools-on-a-hunch.webp",
-      cardSrc: "/art/digest/do-not-swap-tools-on-a-hunch-card.webp",
-      alt: "A stone balance scale weighing two nearly identical black wrenches, with a small lime-green pointer on top.",
+      src: "/art/digest/do-not-swap-tools-on-a-hunch-sticker.webp",
+      alt: "A gold coin flipping in the air above a closed toolbox.",
+      pad: "#EE83C3",
     },
     date: "2026-09-28",
     paragraphs: [
@@ -585,9 +583,9 @@ export const posts: Post[] = [
     dek: "Stops bad tool steps from cascading into the rest of the run.",
     cardDek: "Check each step's result so one bad step doesn't spoil the run.",
     hero: {
-      src: "/art/digest/check-each-tool-step-before-next.webp",
-      cardSrc: "/art/digest/check-each-tool-step-before-next-card.webp",
-      alt: "A row of stone dominoes with the first few fallen, stopped by a small lime-green peg before the rest can tip.",
+      src: "/art/digest/check-each-tool-step-before-next-sticker.webp",
+      alt: "A level with a green bubble, resting on a single step.",
+      pad: "#EFC3BB",
     },
     date: "2026-09-28",
     paragraphs: [
@@ -603,9 +601,9 @@ export const posts: Post[] = [
     dek: "Stops agents from doing helpful extras nobody asked for.",
     cardDek: "Make agents ask before adding extras you didn't request.",
     hero: {
-      src: "/art/digest/ask-before-doing-what-wasnt-asked.webp",
-      cardSrc: "/art/digest/ask-before-doing-what-wasnt-asked-card.webp",
-      alt: "A walled stone yard with stacked black blocks inside, a closed gate with a small lime-green bell, and a toy wheelbarrow outside.",
+      src: "/art/digest/ask-before-doing-what-wasnt-asked-sticker.webp",
+      alt: "A brass desk bell on a small steel block.",
+      pad: "#EE83C3",
     },
     date: "2026-09-29",
     paragraphs: [
@@ -628,9 +626,9 @@ export const posts: Post[] = [
     dek: "A broken search tool can return the same clean empty list as a real \"nothing found.\" One lookup you know should hit tells them apart.",
     cardDek: "Run one search you know should hit before you trust an empty result.",
     hero: {
-      src: "/art/digest/test-search-before-saying-none.webp",
-      cardSrc: "/art/digest/test-search-before-saying-none-card.webp",
-      alt: "An empty black mine cart on a short rail, with a small lime-green canary perched on its rim.",
+      src: "/art/digest/test-search-before-saying-none-sticker.webp",
+      alt: "A flashlight shining a yellow beam into an open cardboard box.",
+      pad: "#EFC3BB",
     },
     date: "2026-09-29",
     paragraphs: [
@@ -661,9 +659,9 @@ export const posts: Post[] = [
     dek: "Stops chatty router replies from sending tickets to the wrong queue.",
     cardDek: "Give the sorting step a fixed list so tickets land in the right queue.",
     hero: {
-      src: "/art/digest/make-routers-pick-from-a-fixed-list.webp",
-      cardSrc: "/art/digest/make-routers-pick-from-a-fixed-list-card.webp",
-      alt: "A stone shape-sorter box with four holes, black blocks beside it, and a lime-green cube dropping into the square hole.",
+      src: "/art/digest/make-routers-pick-from-a-fixed-list-sticker.webp",
+      alt: "A mail sorter with a grid of pigeonholes and one pink envelope sliding into a slot.",
+      pad: "#96E4B7",
     },
     date: "2026-09-29",
     paragraphs: [
@@ -686,9 +684,9 @@ export const posts: Post[] = [
     dek: "Tool replies are data, not instructions. Check them for commands before the agent plans its next step.",
     cardDek: "Treat tool replies as data, so hidden commands can't steer your agent.",
     hero: {
-      src: "/art/digest/dont-follow-orders-in-tool-text.webp",
-      cardSrc: "/art/digest/dont-follow-orders-in-tool-text-card.webp",
-      alt: "A stone sieve holds back sharp black shards while pale pebbles fall into the bowl below, with a lime-green clip on its rim.",
+      src: "/art/digest/dont-follow-orders-in-tool-text-sticker.webp",
+      alt: "A fishing hook on a line from a yellow float, caught on a paper slip.",
+      pad: "#C5C6FB",
     },
     date: "2026-10-01",
     paragraphs: [
@@ -719,8 +717,9 @@ export const posts: Post[] = [
     date: "2026-10-01",
     tag: "Essay",
     hero: {
-      image: "the-ai-safety-paradox",
-      alt: "A frosted safe with its door open, a dark egg-shaped object inside and a key hanging on its side.",
+      src: "/art/digest/the-ai-safety-paradox-sticker.webp",
+      alt: "A red firework rocket with a fire extinguisher strapped to its side.",
+      pad: "#F0CD5F",
     },
     pullQuote: { text: "It's like asking the inmates to design the locks.", cite: "— Osbel Morell" },
     paragraphs: [
@@ -746,9 +745,9 @@ export const posts: Post[] = [
     dek: "A busy agent isn't always a working one. Check progress every few steps, and force a change of course when it stalls.",
     cardDek: "Check progress every few steps, and change course when an agent stalls.",
     hero: {
-      src: "/art/digest/break-loops-when-progress-stalls.webp",
-      cardSrc: "/art/digest/break-loops-when-progress-stalls-card.webp",
-      alt: "A small black toy train on a looped stone track, with a lime-green switch lever set to send it onto a straight exit track.",
+      src: "/art/digest/break-loops-when-progress-stalls-sticker.webp",
+      alt: "A looped toy train track with a switch lever that sends the train off onto a straight exit.",
+      pad: "#96E4B7",
     },
     date: "2026-10-02",
     paragraphs: [
