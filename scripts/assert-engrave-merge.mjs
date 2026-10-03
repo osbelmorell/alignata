@@ -889,7 +889,11 @@ test("Re-list: Engrave Merge card has the About fields; robots + sitemap list on
   const { guideSitemapEntries } = await import("../lib/guides/guides.ts");
   const guides = urls.filter((u) => u.startsWith("https://alignata.com/guides/"));
   assert.deepEqual(guides, guideSitemapEntries().map((e) => e.url));
-  assert.equal(urls.length, 2 + apps.length + stories.length + 1 + posts.length + guides.length);
+  // Company pages (Oct 3): the shipped ones only (content/company.ts COMPANY_PATHS; /terms is held).
+  const { COMPANY_PATHS } = await import("../content/company.ts");
+  const company = urls.filter((u) => COMPANY_PATHS.some((p) => u === `https://alignata.com${p}`));
+  assert.deepEqual(company, COMPANY_PATHS.map((p) => `https://alignata.com${p}`));
+  assert.equal(urls.length, 2 + apps.length + stories.length + 1 + posts.length + company.length + guides.length);
   assert.equal(new Set(urls).size, urls.length, "no duplicates");
   for (const u of ["https://alignata.com", "https://alignata.com/apps", "https://alignata.com/engrave-merge", "https://alignata.com/daily-digest"]) assert.ok(urls.includes(u), u);
   for (const p of posts) assert.ok(urls.includes(`https://alignata.com/daily-digest/${p.slug}`));

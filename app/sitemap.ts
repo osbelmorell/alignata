@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { getApps, storyHref, toolsOrder } from "@/lib/apps";
 import { posts } from "@/content/posts";
 import { guideSitemapEntries } from "@/lib/guides/guides";
+import { COMPANY_PATHS } from "@/content/company";
 
 export const dynamic = "force-static";
 
@@ -20,6 +21,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const stories = toolsOrder(getApps())
     .map((a) => storyHref(a.id))
     .filter((h): h is string => !!h);
-  const paths = ["/", "/apps", ...tools, ...stories, "/daily-digest", ...posts.map((p) => `/daily-digest/${p.slug}`)];
+  const paths = ["/", "/apps", ...tools, ...stories, "/daily-digest", ...posts.map((p) => `/daily-digest/${p.slug}`), ...COMPANY_PATHS];
   return [...[...new Set(paths)].map((p) => ({ url: p === "/" ? SITE : `${SITE}${p}` })), ...guideSitemapEntries()];
 }

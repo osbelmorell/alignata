@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CostDesk } from "@/components/feature-cost/CostDesk";
+import { SiteFooter } from "@/components/fantasy/SiteFooter";
 
 export const metadata: Metadata = {
   title: "Feature-Cost Tag",
@@ -9,8 +10,11 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <main className="fx-toolroute flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-[var(--cb-bg)] font-sans text-[var(--cb-ink)]">
-      <CostDesk />
-    </main>
+    <>
+      <main className="fx-toolroute flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-[var(--cb-bg)] font-sans text-[var(--cb-ink)]">
+        <CostDesk />
+      </main>
+      <SiteFooter />
+    </>
   );
 }

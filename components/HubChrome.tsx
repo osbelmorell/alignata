@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { COMPANY_PATHS } from "@/content/company";
 
 /**
  * Persistent tool chrome: on tool routes, always offer a path back to `/apps`
  * (All apps). Hidden on brand home, /apps, the /apps/<slug> stories, /daily-digest and /guides/<slug> so Alignata nav
- * leads, and on retired tool routes (/env-diff), whose page already has its one link back to the tools.
+ * leads, on the company pages (/about, /privacy), and on retired tool routes (/env-diff), whose page already has its one link back to the tools.
  * Light nav — paper bg, ink link — on the one site container (.fx-wrap), so its left edge matches the header on every route.
  */
 export function HubChrome() {
@@ -18,7 +19,8 @@ export function HubChrome() {
     pathname.startsWith("/apps/") ||
     pathname.startsWith("/daily-digest") ||
     pathname.startsWith("/guides/") ||
-    pathname === "/env-diff";
+    pathname === "/env-diff" ||
+    COMPANY_PATHS.includes(pathname);
 
   if (hide) {
     return null;

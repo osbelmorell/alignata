@@ -573,7 +573,9 @@ test("art: tool stickers + icons with FINAL alt, every file a real WebP of the r
   }
   const files = readdirSync("public/art", { recursive: true }).map(String).filter((f) => /\.[a-z]+$/.test(f));
   for (const f of files) assert.match(f, /^(digest\/)?[a-z0-9-]+-sticker(-icon)?\.webp$/, `public/art/${f} is sticker art (no clay, no fallback tile)`);
-  assert.equal(files.length, 24 + 9 + 10, "24 Digest heroes + 9 tool heroes + 10 icons");
+  assert.equal(files.length, 24 + 9 + 10 + 1, "24 Digest heroes + 9 tool heroes + 10 icons + the About hero");
+  assert.ok(files.includes("about-sticker.webp"), "About hero (company pages, Oct 3)");
+  assert.deepEqual(await webpSize("public/art/about-sticker.webp"), [1920, 1080], "About hero: one 16:9 file");
   for (const f of CLAY_FILES) assert.ok(!existsSync(f), `${f} is gone`);
   assert.equal(CLAY_FILES.length, 54);
 });
@@ -782,9 +784,12 @@ test("sitemap: adds exactly the tool stories (no Deploy Decision story); everyth
   assert.deepEqual(stories.sort(), storySlugs.map((s) => `${S}/apps/${s}`).sort(), "story URLs = the static story pages");
   assert.equal(stories.length, 9);
   assert.ok(!stories.includes(`${S}/apps/deploy-decision-card`), "Deploy Decision has no story");
+  const company = [`${S}/about`, `${S}/privacy`];
   const before = [S, `${S}/apps`, ...getApps().map((a) => `${S}${a.url}`), `${S}/daily-digest`, ...posts.map((p) => `${S}/daily-digest/${p.slug}`)];
-  assert.deepEqual(urls.filter((u) => !stories.includes(u) && !guides.includes(u)), before, "the 37 existing URLs, same order");
-  assert.equal(urls.length, 48);
+  assert.deepEqual(urls.filter((u) => !stories.includes(u) && !guides.includes(u) && !company.includes(u)), before, "the 37 existing URLs, same order");
+  assert.deepEqual(urls.filter((u) => company.includes(u)), company, "company pages (About, Privacy) after the Digest, before the guides");
+  assert.ok(!urls.includes(`${S}/terms`), "Terms is held: not in the sitemap");
+  assert.equal(urls.length, 50);
   assert.equal(new Set(urls).size, urls.length);
   const robots = (await import("../app/robots.ts")).default();
   assert.deepEqual(robots, { rules: { userAgent: "*", allow: "/" }, sitemap: "https://alignata.com/sitemap.xml" }, "robots unchanged");
@@ -1512,4 +1517,162 @@ test("Google Search Console: root layout metadata carries the exact verification
     assert.equal(head.split(TAG).length - 1, 1, `exactly one ${TAG} in <head>`);
     assert.equal((html.match(/<meta name="google-site-verification"/g) || []).length, 1, "no second verification meta tag anywhere");
   }
+});
+
+/* ---------- Company pages (SPEC v1 + COPY.md v4 FINAL + Split release notes, Oct 3 2026) ---------- */
+
+const MISSION_TXT = "Alignata builds small, sharp tools that take busy work off people&#x27;s plates, so they get their time back.";
+const companyHtml = async (route) => {
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { createElement } = await import("react");
+  const m = await import(`../app${route === "/" ? "" : route}/page.tsx`);
+  return renderToStaticMarkup(createElement(m.default));
+};
+const footerOf = (html) => html.slice(html.indexOf('<footer class="fx-footer">'), html.indexOf("</footer>") + 9);
+
+test("homepage mission: the dek sits directly under the locked display line and above the two pills; nothing else added", async () => {
+  const html = await companyHtml("/");
+  const head = html.slice(html.indexOf('<section class="fx-home-head"'), html.indexOf('<section class="fx-feed"'));
+  assert.equal(
+    head,
+    '<section class="fx-home-head" aria-label="Start"><h1 class="fx-display">Small tools for busy people, and AI techniques in plain English.</h1>' +
+      `<p class="fx-story-dek fx-home-dek">${MISSION_TXT}</p>` +
+      '<div class="fx-home-cta"><a class="fx-pill" data-home-target="tools-pill" href="/apps">Tools</a><a class="fx-pill fx-pill-outline" data-home-target="digest-pill" href="/daily-digest">Daily Digest</a></div></section>',
+  );
+});
+
+test("footer: '© 2026 Alignata', links Tools · Daily Digest · About · Privacy, identical on every page that has it; home_click targets validate", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { createElement } = await import("react");
+  const { SiteFooter } = await import("../components/fantasy/SiteFooter.tsx");
+  const { FOOTER_LINKS } = await import("../content/company.ts");
+  const f = renderToStaticMarkup(createElement(SiteFooter));
+  assert.equal(
+    f,
+    '<footer class="fx-footer"><div class="fx-wrap"><p class="fx-footer-co">© 2026 Alignata</p><nav aria-label="Footer" class="fx-footer-nav">' +
+      '<a data-home-target="nav:footer-tools" href="/apps">Tools</a><a data-home-target="nav:footer-daily-digest" href="/daily-digest">Daily Digest</a>' +
+      '<a data-home-target="nav:footer-about" href="/about">About</a><a data-home-target="nav:footer-privacy" href="/privacy">Privacy</a></nav></div></footer>',
+  );
+  assert.ok(!/Build tools for busy humans|\[LEGAL ENTITY NAME\]|Terms|\/terms/.test(f), "old line gone; no entity placeholder; Terms held");
+  for (const l of FOOTER_LINKS) {
+    assert.ok(validateSiteEvent(env("home_click", { target: l.target })).ok, `${l.target} is a valid home_click target`);
+    assert.equal(homeClickTarget(l.target, l.href), l.target, "explicit target wins (never derived as tool:about)");
+  }
+  for (const route of ["/", "/about", "/privacy", "/env-diff"]) assert.equal(footerOf(await companyHtml(route)), f, `${route}: the same footer`);
+});
+
+test("footer on every page: tool routes and the 404 end with the same SiteFooter, after </main> (HANDOFF-PRICE-CARD §1.8)", async () => {
+  const { readFileSync, readdirSync, existsSync } = await import("node:fs");
+  const tools = readdirSync("app", { withFileTypes: true })
+    .filter((d) => d.isDirectory() && existsSync(`app/${d.name}/page.tsx`) && readFileSync(`app/${d.name}/page.tsx`, "utf8").includes('className="fx-toolroute'))
+    .map((d) => d.name)
+    .sort();
+  assert.deepEqual(tools, ["agent-bundle", "agent-eval", "deploy-decision", "engrave-merge", "feature-cost", "hobby-burn", "license-gate", "scorecard", "stripe-cleaver", "what-changed"]);
+  for (const t of tools) {
+    const src = readFileSync(`app/${t}/page.tsx`, "utf8");
+    assert.match(src, /<\/main>\n\s+<SiteFooter \/>\n\s+<\/>/, `/${t}: SiteFooter right after </main>`);
+    assert.equal((src.match(/<SiteFooter \/>/g) || []).length, 1, `/${t}: one footer`);
+  }
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { createElement } = await import("react");
+  const { SiteFooter } = await import("../components/fantasy/SiteFooter.tsx");
+  const nf = renderToStaticMarkup(createElement((await import("../app/not-found.tsx")).default));
+  assert.ok(nf.endsWith(renderToStaticMarkup(createElement(SiteFooter))), "404: the same footer, last");
+  assert.ok(nf.includes("This page could not be found."));
+});
+
+test("/about (COPY.md §3): story template, one sticker hero with alt, H1, mission dek, body verbatim, Built by, ONE black pill → /apps", async () => {
+  const { existsSync, readFileSync } = await import("node:fs");
+  const html = await companyHtml("/about");
+  const mod = await import("../app/about/page.tsx");
+  assert.equal(mod.metadata.title, "About");
+  assert.equal(mod.metadata.alternates.canonical, "/about");
+  assert.ok(html.includes('<main class="fx-story fx-company" data-page="about"><article><figure class="fx-story-hero" style="--art-pad:#C5C6FB" data-art="about"><img src="/art/about-sticker.webp" alt="A handsaw with a red handle resting on a pale wooden plank." width="1920" height="1080"'));
+  const order = [
+    '<h1 class="fx-story-title">About Alignata</h1>',
+    `<p class="fx-story-dek">${MISSION_TXT}</p>`,
+    "<h2>What we make</h2>",
+    "<p>Each tool does one job. One turns a Stripe payout file into an import for your books. Another turns Etsy orders into a LightBurn file.</p>",
+    "<p>The tools run in your browser. There&#x27;s no account to make.</p>",
+    "<p>The Daily Digest explains one AI technique at a time, in plain English.</p>",
+    "<h2>Your files</h2>",
+    "<p>When you drop a file into a tool, your browser does the work. The file isn&#x27;t uploaded to us.</p>",
+    '<p>The site counts visits and taps without knowing who you are, and some tools send us counts like how many rows a file had. The <a href="/privacy">Privacy page</a> lists exactly what.</p>',
+    '<p class="fx-built-by">Built by Osbel Morell.</p>',
+    '<div class="fx-company-end"><a class="fx-pill" href="/apps">See the tools</a></div>',
+  ];
+  let at = -1;
+  for (const f of order) { const i = html.indexOf(f); assert.ok(i > at, `about order: ${f}`); at = i; }
+  assert.equal((html.match(/class="fx-pill"/g) || []).length, 1, "one black pill");
+  assert.ok(!/Paramount|blog|team|values|\/terms|\/contact/i.test(html.replace(footerOf(html), "")), "no employer, no 'blog', no team or values; no Terms or Contact link in the body");
+  assert.ok(existsSync("public/art/about-sticker.webp"));
+  const b = readFileSync("public/art/about-sticker.webp");
+  assert.equal(b.subarray(0, 4).toString(), "RIFF");
+  assert.equal(b.subarray(8, 12).toString(), "WEBP");
+  assert.deepEqual(imgsWithoutAlt(html), []);
+});
+
+test("/privacy (COPY.md §5 v4 FINAL): no art, H1, dek, 'Last updated' + SHIP_DATE, short version, H2 sections verbatim, no pill", async () => {
+  const html = await companyHtml("/privacy");
+  const mod = await import("../app/privacy/page.tsx");
+  assert.equal(mod.metadata.title, "Privacy");
+  assert.equal(mod.metadata.alternates.canonical, "/privacy");
+  assert.ok(!html.includes("<img") && !html.includes("fx-story-hero"), "no art");
+  assert.ok(!html.includes('class="fx-pill'), "no pill");
+  const h2s = [...html.matchAll(/<h2>([^<]+)<\/h2>/g)].map((m) => m[1]);
+  assert.deepEqual(h2s, ["The short version", "Your files", "What we count", "Vercel Web Analytics", "What&#x27;s saved in your browser", "Services we use", "What we don&#x27;t do", "Changes"]);
+  for (const f of [
+    '<h1 class="fx-story-title">Privacy</h1><p class="fx-story-dek">What Alignata collects, and what it doesn&#x27;t.</p><p class="fx-meta fx-story-meta">Last updated <time dateTime="2026-10-03">October 3, 2026</time></p>',
+    "<li>Files you drop into a tool stay in your browser. We don&#x27;t upload them.</li><li>We count visits and taps without your name, email or IP address.</li><li>We don&#x27;t set cookies, show ads, or sell data.</li>",
+    "For a file with 3 or more orders, it also sends a scrambled code made from the order numbers. We use it only to tell different files apart.</p>",
+    "<h2>Services we use</h2><p>Vercel hosts the site, and Upstash stores our usage log. We don&#x27;t store your IP address. Vercel processes it briefly to serve and protect the site, and keeps its request logs for about an hour. Our fonts are hosted on our own site.</p>",
+    "<p>Entries are deleted automatically after about 180 days (about 120 days for Engrave Merge).</p>",
+    "<p>Each entry has a random ID. A visitor ID stays in your browser until you clear this site&#x27;s data, and a session ID usually lasts only as long as the tab. Engrave Merge keeps its own random ID in your browser, like the visitor ID.</p>",
+    "<h2>Changes</h2><p>If we change what we collect, for example when paid plans arrive, we&#x27;ll update this page first and change the date at the top.</p>",
+  ]) assert.ok(html.includes(f), `privacy has: ${f.slice(0, 80)}`);
+  assert.ok(!/LEGAL ENTITY NAME|Alignata is run by/.test(html), "Questions' entity line is cut (split release)");
+  assert.ok(!/deleted when you close the tab|the same way\./.test(html), "old session-ID wording replaced (9:32 AM ET fix)");
+  assert.ok(!/Paramount|blog/i.test(html));
+});
+
+test("company pages: only page_view (no new events or data attributes for tracking); tool bar hidden; Terms route not shipped", async () => {
+  const { existsSync, readFileSync } = await import("node:fs");
+  for (const r of ["about", "privacy"]) {
+    const src = readFileSync(`app/${r}/page.tsx`, "utf8");
+    assert.ok(!/sendSiteEvent|sendEvent|data-tool-slug|data-home-target/.test(src), `${r}: no new events`);
+    assert.deepEqual(routeEvents(`/${r}`, mem()), [{ event: "page_view", props: { path: `/${r}` } }], `${r}: page_view only`);
+  }
+  const hub = readFileSync("components/HubChrome.tsx", "utf8");
+  assert.ok(hub.includes("COMPANY_PATHS.includes(pathname)"), "the ← All tools bar is hidden on company pages");
+  assert.equal(existsSync("app/terms"), false, "Terms is held: no /terms route in this release");
+});
+
+test("4-link release (CEO 9:43 AM ET): no /contact or /terms route, no link to either, no Privacy 'Questions', no mailto, sitemap = about + privacy", async () => {
+  const { existsSync } = await import("node:fs");
+  assert.equal(existsSync("app/contact"), false, "no /contact route");
+  assert.equal(existsSync("app/terms"), false, "no /terms route");
+  const { COMPANY_PATHS, FOOTER_LINKS } = await import("../content/company.ts");
+  assert.deepEqual([...COMPANY_PATHS], ["/about", "/privacy"]);
+  assert.deepEqual(FOOTER_LINKS.map((l) => l.label), ["Tools", "Daily Digest", "About", "Privacy"]);
+  for (const route of ["/", "/about", "/privacy"]) {
+    const html = await companyHtml(route);
+    assert.ok(!/href="\/(contact|terms)/.test(html), `${route}: no link to /contact or /terms`);
+    assert.ok(!/mailto:|\[CONTACT EMAIL\]|\bContact\b|\bTerms\b/.test(html), `${route}: no Contact/Terms/mailto`);
+  }
+  const privacy = await companyHtml("/privacy");
+  assert.ok(!/Questions|Email \[/.test(privacy), "the whole Questions section is gone, heading included");
+  const sitemap = (await import("../app/sitemap.ts")).default().map((e) => new URL(e.url).pathname);
+  for (const p of ["/contact", "/terms"]) assert.ok(!sitemap.includes(p), `${p} not in the sitemap`);
+  for (const p of ["/about", "/privacy"]) assert.ok(sitemap.includes(p), `${p} in the sitemap`);
+});
+
+test("[DATE] = SHIP_DATE: one constant in content/company.ts, rendered as the real date", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { SHIP_DATE, shipDateLabel } = await import("../content/company.ts");
+  assert.equal(SHIP_DATE, "2026-10-03");
+  assert.equal(shipDateLabel(), "October 3, 2026");
+  assert.equal(shipDateLabel("2026-11-09"), "November 9, 2026", "change SHIP_DATE and the page follows");
+  for (const bad of ["Oct 3", "2026-13-01", "2026-10-00", ""]) assert.throws(() => shipDateLabel(bad), /YYYY-MM-DD/, bad);
+  assert.equal((readFileSync("content/company.ts", "utf8").match(/SHIP_DATE = "/g) || []).length, 1, "defined once");
+  assert.ok((await companyHtml("/privacy")).includes("Last updated <time dateTime=\"2026-10-03\">October 3, 2026</time>"));
 });

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { WhatChangedDesk } from "@/components/what-changed/WhatChangedDesk";
+import { SiteFooter } from "@/components/fantasy/SiteFooter";
 
 export const metadata: Metadata = {
   title: "What-Changed Card",
@@ -9,8 +10,11 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <main className="fx-toolroute flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-[var(--cb-bg)] font-sans text-[var(--cb-ink)]">
-      <WhatChangedDesk />
-    </main>
+    <>
+      <main className="fx-toolroute flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-[var(--cb-bg)] font-sans text-[var(--cb-ink)]">
+        <WhatChangedDesk />
+      </main>
+      <SiteFooter />
+    </>
   );
 }

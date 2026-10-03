@@ -95,6 +95,13 @@ a.fx-pill.fx-pill-outline, a.fx-pill.fx-pill-outline:visited, a.fx-pill.fx-pill-
 .fx-footer nav { display: flex; gap: 20px; }
 .fx-footer nav a { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; min-width: 44px; font-size: 16px; text-decoration: none; color: var(--ink); }
 .fx-footer nav a:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
+/* Company pages SPEC §6 (Oct 3): phone = company line on top, links in a 2-column grid (rows of two, filled in order);
+   desktop = line left, links in one row on the right. Links stay ≥ 44 wide and 48 tall; no sideways scroll at 360. */
+@media (max-width: 899.98px) {
+  .fx-footer .fx-wrap { flex-direction: column; align-items: stretch; gap: 8px; }
+  .fx-footer nav.fx-footer-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+  .fx-footer nav.fx-footer-nav a { justify-content: flex-start; }
+}
 
 /* Reduced motion (unchanged from v1.5): no CSS transitions or animations anywhere, tool routes included. */
 @media (prefers-reduced-motion: reduce) {

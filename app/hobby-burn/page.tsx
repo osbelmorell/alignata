@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { BurnDigestDesk } from "@/components/hobby-burn/BurnDigestDesk";
+import { SiteFooter } from "@/components/fantasy/SiteFooter";
 
 export const metadata: Metadata = {
   title: "Hobby Deploy Burn Digest",
@@ -9,8 +10,11 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <main className="fx-toolroute flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-[var(--cb-bg)] font-sans text-[var(--cb-ink)]">
-      <BurnDigestDesk />
-    </main>
+    <>
+      <main className="fx-toolroute flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-[var(--cb-bg)] font-sans text-[var(--cb-ink)]">
+        <BurnDigestDesk />
+      </main>
+      <SiteFooter />
+    </>
   );
 }

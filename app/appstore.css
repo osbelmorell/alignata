@@ -160,3 +160,18 @@ a.fx-text-link:focus-visible { outline: 3px solid var(--ink); outline-offset: 2p
 .fx-guides { margin-top: var(--section); max-width: 680px; padding-top: 32px; border-top: 1px solid var(--line); }
 .fx-guides > h2 { font-family: var(--display); font-weight: 600; font-size: 26px; line-height: 1.2; }
 .fx-guides ul { margin-top: 12px; list-style: none; padding: 0; display: grid; gap: 12px; }
+
+/* Company pages (SPEC v1, Oct 3 2026): /about and /privacy use the article-story template (680 column). No eyebrow, so
+   the H1 starts at the story-head top. Body links are underlined text (.fx-prose a); at most one black pill per page. */
+.fx-company .fx-story-head .fx-story-title { margin-top: 0; }
+.fx-company .fx-story-col .fx-prose { margin-top: 48px; }
+.fx-company .fx-prose .fx-built-by { margin-top: 32px; font-weight: 600; }
+.fx-company-end { margin-top: 40px; max-width: 680px; }
+.fx-company-end a.fx-pill { width: auto; min-width: 120px; padding: 0 28px; }
+@media (min-width: 900px) {
+  .fx-company .fx-story-col .fx-prose { margin-top: 56px; }
+  .fx-company .fx-prose .fx-built-by { margin-top: 40px; }
+  .fx-company-end { margin-top: 48px; }
+}
+/* Homepage mission dek (SPEC §1): directly under the locked display line, above the two pills, story-dek type step. */
+.fx-home-head .fx-home-dek { max-width: 680px; }
