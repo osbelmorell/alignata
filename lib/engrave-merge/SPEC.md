@@ -353,7 +353,7 @@ Envelope: `{ v: 1, event, iid, dogfood: boolean, props }`. The server adds `ts` 
 4. Osbel and Eng Ops dogfood **only** with `?dogfood=1`.
 
 ### 8.4 Where events go (Eng Ops chooses; record the choice in the PR)
-- **Fact:** Vercel Web Analytics custom events (`track()`) are **Pro/Enterprise only**, with **2 properties per event on Pro** (8 with Web Analytics Plus). The hub runs on **Hobby** (existing tools say "Hobby"). Hobby runtime logs are kept for **1 hour** (Pro 1 day). So "log to Vercel logs" **alone cannot** support a 14-day kill bar on Hobby.
+- **Fact:** Vercel Web Analytics custom events (`track()`) are **Pro/Enterprise only**, with **2 properties per event on Pro** (8 with Web Analytics Plus). The osbelmorell team is on **Pro** (Vercel agent, confirmed in the dashboard Oct 3 2026 8:25 AM ET), so runtime logs are kept for **1 day** (Hobby would be 1 hour). So "log to Vercel logs" **alone cannot** support a 14-day kill bar on Hobby.
 - **Option A (recommended):** route handler `app/api/engrave-merge/e/route.ts` validates the event, then appends one JSON line to a **free KV**: Upstash Redis via the Vercel Marketplace, `RPUSH em:ev:<day>`, TTL 120 days. **Chosen** (store `upstash-kv-crimson-flower`, env `KV_REST_API_URL` +
   `KV_REST_API_TOKEN`; the KPI script prefers `KV_REST_API_READ_ONLY_TOKEN`).
   - Every 204 from the event endpoints carries `x-em-store: stored | skipped-config | skipped-filter | error` (body empty)
