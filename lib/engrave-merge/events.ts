@@ -5,17 +5,25 @@
  */
 export const EVENT_PROPS = {
   file_processed: ["row_count", "item_count", "exception_count", "file_fingerprint", "small_file"],
-  merge_downloaded: ["file_fingerprint", "small_file", "merge_row_count"],
+  /** ref (optional on this + the 3 card events): the guide that sent this tab (lib/engrave-merge/ref.ts). */
+  merge_downloaded: ["file_fingerprint", "small_file", "merge_row_count", "ref"],
   exceptions_downloaded: ["file_fingerprint", "small_file", "exception_count"],
   cutsheet_printed: ["file_fingerprint", "small_file"],
   page_open: [],
-  /** "I'd pay" price card (lib/engrave-merge/price.ts): seen (≥ 50% on screen), "I'd pay $29", "No thanks". No props. */
-  price_card_view: [],
-  price_intent: [],
-  price_dismiss: [],
+  /** "I'd pay" price card (lib/engrave-merge/price.ts): seen (≥ 50% on screen), "I'd pay $29", "No thanks". Only `ref`. */
+  price_card_view: ["ref"],
+  price_intent: ["ref"],
+  price_dismiss: ["ref"],
 } as const;
 
 export type EventName = keyof typeof EVENT_PROPS;
+/**
+ * Allowed values of the optional `ref` prop (= lib/engrave-merge/ref.ts GUIDE_REFS; no "other"). Only merge_downloaded
+ * and the 3 price card events carry it; anything else → bad_ref, and every other event rejects `ref`.
+ */
+export const REF_VALUES = ["guide-lightburn", "guide-etsy-export"] as const;
+/** Events that may carry `ref` (exactly those whose EVENT_PROPS list it). */
+export const carriesRef = (event: EventName): boolean => (EVENT_PROPS[event] as readonly string[]).includes("ref");
 export const FILE_EVENTS: EventName[] = ["file_processed", "merge_downloaded", "exceptions_downloaded", "cutsheet_printed"];
 const COUNT_KEYS = new Set(["row_count", "item_count", "exception_count", "merge_row_count"]);
 const ENVELOPE_KEYS = new Set(["v", "event", "iid", "dogfood", "props"]);
@@ -64,6 +72,8 @@ export function validateEvent(raw: unknown): Validated {
       if (typeof v !== "string" || !FINGERPRINT_RE.test(v)) return { ok: false, reason: "bad_fingerprint" };
     } else if (k === "small_file") {
       if (v !== true) return { ok: false, reason: "bad_small_file" };
+    } else if (k === "ref") {
+      if (typeof v !== "string" || !(REF_VALUES as readonly string[]).includes(v)) return { ok: false, reason: "bad_ref" };
     }
     out[k] = v as number | string | boolean;
   }

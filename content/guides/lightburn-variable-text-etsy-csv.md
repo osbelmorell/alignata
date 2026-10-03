@@ -4,6 +4,7 @@ dek: "Engrave every buyer's name from one file, instead of typing each order int
 datePublished: 2026-10-03
 draft: false
 tool: engrave-merge
+ref: guide-lightburn
 ---
 
 LightBurn can already read a CSV file and swap each row's text into your design. It calls this Variable Text, and it's built in (see [LightBurn's Variable Text guide](https://docs.lightburnsoftware.com/latest/Reference/VariableText/)). The catch is Etsy's order file. It isn't laid out the way LightBurn needs, so this guide covers both halves: getting the right file out of Etsy, and pointing LightBurn at it.

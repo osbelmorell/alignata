@@ -322,6 +322,7 @@ How multi-line quoted cells render (we avoid them), and whether a BOM would leak
 - Send with `navigator.sendBeacon('/api/engrave-merge/e', blob)` (same-origin, fire-and-forget). Failures are silent and never block the tool.
 - localStorage holds exactly **two** keys: `em_iid` = `crypto.randomUUID()`, created on first visit, and `em_price` (Oct 3 2026, the price card, §8.7): `{"v":1,"files":0-4,"fps":[≤3 × 16 hex, only until files reaches 4],"seenDays":[≤3 device-local days],"answer":null|"pay"|"no"}`. `em_price` is never sent. The tool READS sessionStorage `site_dogfood` (written by the site for a `?dogfood=1` session) but writes no cookies, sessionStorage or IndexedDB.
 - `dogfood` on every event = the iid starts with `dog-` OR sessionStorage `site_dogfood === "1"` (Product yes, 9:43 AM ET Oct 3), the same rule the price card uses.
+- sessionStorage holds at most **one** key the tool writes: `em_ref` (Oct 3 2026, HANDOFF-PRICE-CARD §2.2), set only when the tool is opened with `?ref=guide-lightburn` or `?ref=guide-etsy-export` (exact, case-sensitive). Any other value is ignored: nothing stored, nothing sent (no "other"); an allowed ref already stored in this tab stays; a stored value outside the allow-list is ignored on read; storage blocked → nothing stored and no ref sent (no URL fallback). Any `ref` param (allowed or not) is removed from the address bar with `history.replaceState` (only `ref`; path, hash, other params and `history.state` kept; no new entry). `merge_downloaded` and the 3 card events carry it as the optional prop `ref` (server allow-list, `bad_ref` otherwise; every other event rejects it). Never localStorage; the referrer (`document.referrer`, the referring host) is never read. See `lib/engrave-merge/ref.ts`.
 
 ### 8.2 Events
 
@@ -418,7 +419,7 @@ Recipe Box / Recipe Box include-anyway, and fx11 all / Slate Coaster pick / Slat
 
 **Privacy and tracking**
 - AT-20: Playwright records **every** request after page load while processing fx05, downloading all 3 outputs and answering the price card. Assert: (a) no request URL or body contains any of `Fakename`, `Placeholder`, `Buyerson`, `Nowhereville`, `Grandpa`, `Zoë`, `1000000501`, `2000000501`, `3000000005`, `EM-TEST`, `fx05`; (b) the only non-static request is `POST /api/engrave-merge/e` (prefetch GETs from the shared header are fine); (c) every body's keys ⊆ the §8.2 allow-list; (d) `file_processed.props.file_fingerprint` = the fx05 value.
-- AT-21: localStorage holds only `em_iid` and `em_price` (§8.7). sessionStorage `site_dogfood` is read, never written, by the tool. No cookies, sessionStorage or IndexedDB are written by the tool.
+- AT-21: localStorage holds only `em_iid` and `em_price` (§8.7); sessionStorage: the tool writes only `em_ref` (allow-listed guide value only) and reads `site_dogfood`. No cookies or IndexedDB are written by the tool.
 - AT-22: `?dogfood=1` → iid starts `dog-` and events carry `dogfood:true`. The server/KPI script excludes them. Fixture fingerprints are dropped.
 - AT-23: The API rejects (400) unknown keys, strings in count fields, and bodies > 1 KB.
 - AT-24: `scripts/engrave-merge-kpis.mjs` on a synthetic event log prints T0, the 3 kill-bar numbers and the weekly metric correctly (include the synthetic log as a test fixture).
