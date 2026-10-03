@@ -1,19 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { TOOL_ABOUT } from "@/lib/tool-about";
 
-const PITCH =
-  "Drop your project lockfile and get a clear pass or fail, plus any copyleft hits you need to review — download the list when you want it.";
-const WHAT =
-  "License risk hides in dependency trees. People only find copyleft surprises late, when a deal or release is already on the clock.";
-const WHY =
-  "One drop → pass or fail, with the risky licenses listed. Cut the scavenger hunt before you ship. Stays in this browser.";
-const HOW = [
-  "Drop or choose your lockfile.",
-  "Run the check (one black pill).",
-  "Read pass or fail and any copyleft hits.",
-  "Download the list if you need it in a thread.",
-];
+const { pitch: PITCH, what: WHAT, why: WHY, how: HOW } = TOOL_ABOUT["license-gate"];
 
 export function AboutPanel({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);

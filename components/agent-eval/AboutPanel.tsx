@@ -1,21 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { TOOL_ABOUT } from "@/lib/tool-about";
 
-const PITCH =
-  "Walk a short checklist and get a clear go or no-go on whether an agent is ready to ship.";
-const WHAT =
-  "\u201cIs this agent ready?\u201d used to be a gut call. There\u2019s no shared list of what must pass before you ship.";
-const WHY =
-  "Score each must-have item. You only get go when every required item passes or doesn\u2019t apply. Any fail = no-go. Stays in this browser.";
-const HOW = [
-  "Name the agent and the date.",
-  "Score each checklist item: Pass, Fail, or Doesn\u2019t apply. Add a note if you need one.",
-  "Watch the badge flip to Go or No-go as you finish the required items.",
-  "Load a sample pass or fail to see a finished example.",
-  "Save, then copy for a thread.",
-  "Open a recent save to restore; Clear resets the form.",
-];
+const { pitch: PITCH, what: WHAT, why: WHY, how: HOW } = TOOL_ABOUT["agent-eval-go-no-go"];
 
 export function AboutPanel({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);

@@ -1,21 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { TOOL_ABOUT } from "@/lib/tool-about";
 
-const PITCH =
-  "Paste this week’s usage list (or type counts) and see which project burned the free deploy window — plus a one-liner ready for chat.";
-const WHAT =
-  "Free deploy quotas get chewed by whichever project redeploys the most. The usage file doesn’t shout the top burner at you.";
-const WHY =
-  "Know which project burned the window this week, with a one-liner you can drop in chat without rebuilding a spreadsheet. Stays in this browser.";
-const HOW = [
-  "Open the app (sample projects load first) or paste your usage list.",
-  "Tap Show which projects used the quota, or upload the file. Columns are flexible: project name, deploy count, optional hours.",
-  "Or add a row by hand: project name, deploys, optional hours.",
-  "Read the table (top burner highlighted) and the weekly one-liner.",
-  "Copy the one-liner or save the digest.",
-  "Open a recent digest to restore; Clear resets.",
-];
+const { pitch: PITCH, what: WHAT, why: WHY, how: HOW } = TOOL_ABOUT["hobby-deploy-burn-digest"];
 
 export function AboutPanel({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);

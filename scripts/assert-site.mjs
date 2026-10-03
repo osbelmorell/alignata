@@ -489,3 +489,44 @@ test("art: tool stickers + icons with FINAL alt, every file a real WebP of the r
   for (const f of CLAY_FILES) assert.ok(!existsSync(f), `${f} is gone`);
   assert.equal(CLAY_FILES.length, 54);
 });
+
+test("copy (COPY.md, LOCKED): About fixes, tool story titles/deks, v2 dek trims; Deploy Decision has no story", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { getApps, toolsOrder, TOOL_STORY, storyHref, toolAbout } = await import("../lib/apps.ts");
+  const { TOOL_ABOUT } = await import("../lib/tool-about.ts");
+  const { posts } = await import("../content/posts.ts");
+  const meta = await import("../lib/daily-digest/meta.ts");
+  assert.equal(TOOL_ABOUT["stripe-cleaver"].how[1], 'Tap "Run the cleaver".');
+  assert.match(TOOL_ABOUT["stripe-cleaver"].why, /^One drop, one download\. /);
+  assert.equal(TOOL_ABOUT["license-gate"].how[1], 'Tap "Run the check".');
+  const lg = getApps().find((a) => a.id === "license-gate");
+  assert.equal(lg.how[1], 'Tap "Run the check".', "public/apps.json matches");
+  for (const f of ["public/apps.json", "lib/tool-about.ts"]) assert.ok(!readFileSync(f, "utf8").includes("(one black pill)"), `${f}: no "(one black pill)"`);
+  for (const t of ["stripe-cleaver", "license-gate"]) assert.ok(!readFileSync(`components/${t}/AboutPanel.tsx`, "utf8").includes("one black pill"));
+  assert.deepEqual(TOOL_STORY["stripe-cleaver"], { title: "Get Stripe payouts into your books", dek: "Fees get their own rows, and the file never leaves your browser." });
+  assert.deepEqual(TOOL_STORY["license-gate"], { title: "Catch license problems before release", dek: "Copyleft hits show up now, not when a release is on the clock." });
+  const order = toolsOrder(getApps());
+  for (const a of order) {
+    if (a.id === "deploy-decision-card") {
+      assert.equal(TOOL_STORY[a.id], undefined, "Deploy Decision: plain /apps row, no story");
+      assert.equal(storyHref(a.id), null);
+      continue;
+    }
+    const st = TOOL_STORY[a.id];
+    assert.ok(st, `${a.id} has a story title + dek`);
+    assert.ok(st.title.length <= 40, `${a.id} title ≤ 40`);
+    assert.ok(st.dek.length <= 70 && /^[A-Z][^.]*\.$/.test(st.dek), `${a.id} dek ≤ 70, one sentence`);
+    assert.equal(storyHref(a.id), `/apps/${a.id}`);
+    const ab = toolAbout(a);
+    assert.ok(ab && ab.pitch && ab.what && ab.why && ab.how.length, `${a.id}: story body = existing About text`);
+  }
+  for (const p of posts) assert.ok(meta.postCardDek(p).length <= 70, `${p.slug}: card dek ≤ 70 (${meta.postCardDek(p).length})`);
+  const trims = {
+    "break-loops-when-progress-stalls": "Check progress every few steps and change course when an agent stalls.",
+    "keep-hard-rules-sticky": "Repeat the must-follow rules every turn so long chats keep them.",
+    "system-one-and-jev-deep-dive": "How TypeSafe's decision model works and when it beats a chat model.",
+    "paperclip-deep-dive": "A tool for running AI agent teams: setup, risks, and how it compares.",
+    "reuse-the-same-key-when-a-tool-retries": "Reuse one request ID on retries so payments and deploys run once.",
+  };
+  for (const [slug, dek] of Object.entries(trims)) assert.equal(meta.postCardDek(posts.find((p) => p.slug === slug)), dek, `${slug}: COPY.md v2 trim`);
+});

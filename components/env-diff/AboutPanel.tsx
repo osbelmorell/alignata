@@ -1,21 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { TOOL_ABOUT } from "@/lib/tool-about";
 
-const PITCH =
-  "Paste two setting lists and see what's missing, extra, or different — secrets stay masked so you can share the report.";
-const WHAT =
-  "Staging and live settings drift apart, and you usually find out mid-scare. Diffing raw lists by eye is slow and can leak secrets into chat.";
-const WHY =
-  "One shareable check: what's missing, extra, or changed, with secret-like keys flagged and values hidden. Stays in this browser.";
-const HOW = [
-  "Label the two sides (for example staging and live).",
-  "Paste into each box — key lists, key=value lines, or Load sample.",
-  "Run the diff.",
-  "Read the counts (missing / extra / changed / secret-like) and the tables. Secret values stay masked.",
-  "Copy a one-liner or the report for a thread.",
-  "Open a recent snapshot to restore.",
-];
+const { pitch: PITCH, what: WHAT, why: WHY, how: HOW } = TOOL_ABOUT["env-diff-snapshot"];
 
 export function AboutPanel({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);

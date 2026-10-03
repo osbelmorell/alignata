@@ -1,5 +1,6 @@
 import catalog from "@/public/apps.json";
 import type { AppsCatalog, HubApp } from "@/lib/types";
+import { TOOL_ABOUT, type ToolAbout } from "@/lib/tool-about";
 
 const data = catalog as AppsCatalog;
 
@@ -62,4 +63,34 @@ export function toolArt(id: string): ToolArt {
   const a = TOOL_ART[id];
   if (!a) throw new Error(`No art for tool ${id}`);
   return a;
+}
+
+/**
+ * Tool story title + dek (COPY.md, LOCKED 7:40 PM ET Oct 2: Brand Creator + Voice Gate PASS). The title is also the
+ * card title, so the title-<slug> morph pairs. Deploy Decision Card has no story (CEO 7:41 PM ET): a plain /apps row.
+ */
+export const TOOL_STORY: Record<string, { title: string; dek: string }> = {
+  "stripe-cleaver": { title: "Get Stripe payouts into your books", dek: "Fees get their own rows, and the file never leaves your browser." },
+  "license-gate": { title: "Catch license problems before release", dek: "Copyleft hits show up now, not when a release is on the clock." },
+  "engrave-merge": { title: "Stop retyping Etsy names into LightBurn", dek: "Orders that need a look get flagged before you engrave." },
+  "enterprise-scorecard": { title: "Is each part of the business on track?", dek: "Red, yellow, or green for each one, with the last result and date." },
+  "llm-feature-cost-tag": { title: "Split the AI bill by feature", dek: "Paste your usage rows, and any feature at 40% or more gets flagged." },
+  "what-changed-card": { title: "See what changed during an incident", dek: "Deploys, config, flags, and outside services, all on one card." },
+  "hobby-deploy-burn-digest": { title: "Find what's eating your deploy quota", dek: "Paste your usage list and the busiest project goes to the top." },
+  "env-diff-snapshot": { title: "Spot drift between staging and prod", dek: "Secret values stay masked, so you can share the result safely." },
+  "agent-eval-go-no-go": { title: "Ship agents on a rule, not a hunch", dek: "Fill in the required checks, and the page says go or no-go." },
+  "agent-bundle-tag": { title: "Know which version of an agent is live", dek: "Save each prompt and model setup, then compare any two." },
+};
+
+/** Story page path for a tool, or null when it has none (Deploy Decision Card: row body and Open both go to the tool). */
+export function storyHref(id: string): string | null {
+  return TOOL_STORY[id] ? `/apps/${id}` : null;
+}
+
+/** The tool's existing About text, reused verbatim as its story body (SPEC v2 §4). Engrave Merge: its apps.json entry. */
+export function toolAbout(app: HubApp): ToolAbout | null {
+  const a = TOOL_ABOUT[app.id];
+  if (a) return a;
+  if (app.pitch && app.what && app.why && app.how?.length) return { pitch: app.pitch, what: app.what, why: app.why, how: app.how };
+  return null;
 }

@@ -1,21 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { TOOL_ABOUT } from "@/lib/tool-about";
 
-const PITCH =
-  "See which product feature is burning the AI bill, day by day — and get a heads-up when one feature eats most of the spend.";
-const WHAT =
-  "The bill shows up as one total. You can’t tell which feature is driving it until it’s already out of hand.";
-const WHY =
-  "Spot a heavy feature early (alert when one takes 40% or more of cost). Stays in this browser — no accounts.";
-const HOW = [
-  "Open the app, or Load sample to see a week with an alert.",
-  "Upload a file or paste your spend rows, then tap Show the bill by feature.",
-  "Each row needs a feature name and a cost in dollars (date, tokens, and model are optional).",
-  "Read the totals and the daily table by feature.",
-  "Alert means that feature is 40% or more of spend — dig in or cut.",
-  "Clear wipes the local data when you’re done testing.",
-];
+const { pitch: PITCH, what: WHAT, why: WHY, how: HOW } = TOOL_ABOUT["llm-feature-cost-tag"];
 
 export function AboutPanel({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);

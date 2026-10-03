@@ -35,7 +35,7 @@ export type Post = {
   tag?: PostTag;
   /** Per-article sticker art (card + story hero + alt + pad). Required: there is no fallback art. */
   hero: PostHero;
-  /** Optional shorter one-line dek for index / Next article cards. Omitted = `dek`. */
+  /** One-line dek (≤70, COPY.md v2) for cards AND the story page under the H1, so they match. Omitted = `dek`. */
   cardDek?: string;
   pullQuote?: PostPullQuote;
   sourceNote?: string;
@@ -48,7 +48,7 @@ export const posts: Post[] = [
     slug: "reuse-the-same-key-when-a-tool-retries",
     title: "Reuse the same key when a tool retries",
     dek: "Prevents double-charges on payment or deploy retries.",
-    cardDek: "Reuse one request ID on retries so payments and deploys don't run twice.",
+    cardDek: "Reuse one request ID on retries so payments and deploys run once.",
     hero: {
       src: "/art/digest/reuse-the-same-key-when-a-tool-retries-sticker.webp",
       alt: "A brass key on a ring, with a white outline of the same key behind it.",
@@ -328,7 +328,7 @@ export const posts: Post[] = [
     slug: "system-one-and-jev-deep-dive",
     title: "System One & Jev — TypeSafe’s hosted typed-decision model",
     dek: "Full board brief on TypeSafe’s System One category and Jev (Almeida): how the API works, when it beats LLMs, vs open Laya.",
-    cardDek: "How TypeSafe's hosted decision model works and when it beats a chat model.",
+    cardDek: "How TypeSafe's decision model works and when it beats a chat model.",
     hero: {
       src: "/art/digest/system-one-and-jev-deep-dive-sticker.webp",
       alt: "An open pocket compass with a green face and a chain.",
@@ -409,7 +409,7 @@ export const posts: Post[] = [
     slug: "paperclip-deep-dive",
     title: "Paperclip deep dive — control plane for multi-agent companies",
     dek: "Full board brief on Paperclip (from NetworkChuck’s Sep 24 video): org-layer for AI agent teams, install path, risks (skills/CVEs/budgets), vs OpenClaw.",
-    cardDek: "A tool for running teams of AI agents, with setup, risks, and how it compares.",
+    cardDek: "A tool for running AI agent teams: setup, risks, and how it compares.",
     hero: {
       src: "/art/digest/paperclip-deep-dive-sticker.webp",
       alt: "A giant paperclip holding a small stack of cards, the top one yellow.",
@@ -523,7 +523,7 @@ export const posts: Post[] = [
     slug: "keep-hard-rules-sticky",
     title: "Keep hard rules sticky",
     dek: "Soft reminders fade in long chats. Re-inject the non-negotiables every turn.",
-    cardDek: "Repeat the must-follow rules every turn so long chats don't forget them.",
+    cardDek: "Repeat the must-follow rules every turn so long chats keep them.",
     hero: {
       src: "/art/digest/keep-hard-rules-sticky-sticker.webp",
       alt: "A yellow sticky note pinned flat with a pushpin.",
@@ -743,7 +743,7 @@ export const posts: Post[] = [
     slug: "break-loops-when-progress-stalls",
     title: "Break loops when progress stalls",
     dek: "A busy agent isn't always a working one. Check progress every few steps, and force a change of course when it stalls.",
-    cardDek: "Check progress every few steps, and change course when an agent stalls.",
+    cardDek: "Check progress every few steps and change course when an agent stalls.",
     hero: {
       src: "/art/digest/break-loops-when-progress-stalls-sticker.webp",
       alt: "A looped toy train track with a switch lever that sends the train off onto a straight exit.",

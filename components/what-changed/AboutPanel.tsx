@@ -1,21 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { TOOL_ABOUT } from "@/lib/tool-about";
 
-const PITCH =
-  "Build one card of what moved — deploys, settings, flags, upstreams — then mark go, hold, or verify. Copy it into a thread when you need it.";
-const WHAT =
-  "During a scare, \u201cwhat changed?\u201d is scattered across deploys, settings, flags, and upstream status. Nobody wants to assemble that from scratch under pressure.";
-const WHY =
-  "One pasteable card: what moved, in what window, and the current go / hold / verify call. Stays in this browser.";
-const HOW = [
-  "Pick how you\u2019ll enter changes: sample events, before/after settings, or a checklist.",
-  "Name the service and the time window.",
-  "Mark which kinds of change are in play (deploys, settings, flags, upstreams). Add short notes if you use the checklist.",
-  "For settings mode, paste the before and after into the two boxes.",
-  "Generate the card — read what moved and the decision badge.",
-  "Copy for a thread, or open a recent card to restore.",
-];
+const { pitch: PITCH, what: WHAT, why: WHY, how: HOW } = TOOL_ABOUT["what-changed-card"];
 
 export function AboutPanel({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);

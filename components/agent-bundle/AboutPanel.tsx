@@ -1,19 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { TOOL_ABOUT } from "@/lib/tool-about";
 
-const PITCH =
-  "Save what an agent is running — name, prompt, model, tools, environment — and compare any two versions.";
-const WHAT =
-  "Prompt, model, tools, and environment change with no paper trail. Hard to tell what “live” means versus last week’s draft.";
-const WHY =
-  "Tag what’s running before you mark it live, then see which fields moved between two saves. Stays in this browser.";
-const HOW = [
-  "Register: name, prompt, model; optional environment, tools note, mark live.",
-  "Save, then open History.",
-  "Compare the latest two, or pick any pair.",
-  "Copy a save or the diff when you need it in a thread.",
-];
+const { pitch: PITCH, what: WHAT, why: WHY, how: HOW } = TOOL_ABOUT["agent-bundle-tag"];
 
 export function AboutPanel({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);

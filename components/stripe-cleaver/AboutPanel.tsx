@@ -1,19 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { TOOL_ABOUT } from "@/lib/tool-about";
 
-const PITCH =
-  "Drop your Stripe payout file and download a sheet ready for QuickBooks or Xero — no retyping rows by hand.";
-const WHAT =
-  "Payout exports don’t match what books apps want. People retype or fight columns every payout cycle.";
-const WHY =
-  "One drop → one download. Cut the busywork between Stripe and your books. Stays in this browser.";
-const HOW = [
-  "Drop or choose your Stripe payout file.",
-  "Run the cleaver (one black pill).",
-  "Download the books-ready file.",
-  "Open it in QuickBooks or Xero.",
-];
+const { pitch: PITCH, what: WHAT, why: WHY, how: HOW } = TOOL_ABOUT["stripe-cleaver"];
 
 export function AboutPanel({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
