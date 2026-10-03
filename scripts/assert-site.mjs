@@ -1290,3 +1290,76 @@ test("Env Diff head wipe: a blocking inline script first in <head> clears the ke
   assert.equal(other.m.size, 1, "the head script acts on /env-diff only (/ and /apps clean up after hydration)");
   assert.doesNotThrow(() => runInNewContext(RETIRED_WIPE_INLINE_SCRIPT, { location: { pathname: "/env-diff" }, window: { get localStorage() { throw new Error("SecurityError"); }, sessionStorage: null } }));
 });
+
+/* ---------- Art + alt text (Product UI, Oct 3 2026) ---------- */
+
+const imgsWithoutAlt = (html) => [...html.matchAll(/<img\b[^>]*>/g)].map((m) => m[0]).filter((tag) => !/\salt="[^"]*\S[^"]*"/.test(tag));
+
+test("alt text: no <img> anywhere on the site has an empty or missing alt (every page rendered)", async () => {
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { readdirSync, existsSync } = await import("node:fs");
+  const { getApps, toolsOrder } = await import("../lib/apps.ts");
+  const { posts } = await import("../content/posts.ts");
+  const { ToolsList } = await import("../components/appstore/ToolsList.tsx");
+  const story = await import("../app/apps/[slug]/page.tsx");
+  const { default: Article } = await import("../app/daily-digest/[slug]/page.tsx");
+  const pages = [];
+  const add = (path, html) => pages.push([path, html]);
+  add("/", renderToStaticMarkup(createElement((await import("../app/page.tsx")).default)));
+  add("/apps", renderToStaticMarkup(createElement(ToolsList, { apps: toolsOrder(getApps()) })));
+  add("/daily-digest", renderToStaticMarkup(createElement((await import("../app/daily-digest/page.tsx")).default)));
+  for (const { slug } of story.generateStaticParams()) add(`/apps/${slug}`, renderToStaticMarkup(await story.default({ params: Promise.resolve({ slug }) })));
+  for (const p of posts) add(`/daily-digest/${p.slug}`, renderToStaticMarkup(await Article({ params: Promise.resolve({ slug: p.slug }) })));
+  // every other top-level route (tool routes, the retired /env-diff page)
+  for (const d of readdirSync("app", { withFileTypes: true })) {
+    if (!d.isDirectory() || ["apps", "daily-digest", "api"].includes(d.name) || !existsSync(`app/${d.name}/page.tsx`)) continue;
+    const m = await import(`../app/${d.name}/page.tsx`);
+    add(`/${d.name}`, renderToStaticMarkup(await m.default({})));
+  }
+  assert.ok(pages.length >= 3 + 9 + 24 + 11, `pages rendered: ${pages.length}`);
+  let imgs = 0;
+  for (const [path, html] of pages) {
+    imgs += (html.match(/<img\b/g) || []).length;
+    assert.deepEqual(imgsWithoutAlt(html), [], `${path}: every <img> has a non-empty alt`);
+  }
+  assert.ok(imgs > 100, `images checked: ${imgs}`);
+  assert.deepEqual(imgsWithoutAlt('<img src="a.webp" alt="">'), ['<img src="a.webp" alt="">'], "self-check: empty alt is caught");
+  assert.deepEqual(imgsWithoutAlt('<img src="a.webp">'), ['<img src="a.webp">'], "self-check: missing alt is caught");
+});
+
+test("alt text: every listed tool hero + icon and all 24 Digest heroes carry their FINAL (non-empty) alt", async () => {
+  const { getApps, toolsOrder, toolArt } = await import("../lib/apps.ts");
+  const { posts } = await import("../content/posts.ts");
+  let heroes = 0, icons = 0;
+  for (const a of toolsOrder(getApps())) {
+    const t = toolArt(a.id);
+    assert.ok(t.iconAlt.trim(), `${a.id}: icon alt`);
+    icons++;
+    if (t.art) { assert.ok(t.alt.trim(), `${a.id}: hero alt`); heroes++; }
+    else assert.equal(a.id, "deploy-decision-card", "only Deploy Decision is icon-only");
+  }
+  assert.deepEqual([heroes, icons], [9, 10]);
+  assert.equal(toolArt("agent-eval-go-no-go").alt, "A black and white checkered flag waving on a pole.", "Agent Eval: 'checkered'");
+  assert.equal(posts.length, 24);
+  for (const p of posts) assert.ok(p.hero.alt.trim(), `${p.slug}: hero alt`);
+});
+
+test("Digest heroes #3, #4, #8, #21: the current sticker files (not .v2), 1920×1080, pad = palette.json colour", async () => {
+  const { createHash } = await import("node:crypto");
+  const { readFileSync, existsSync } = await import("node:fs");
+  const { getPost } = await import("../content/posts.ts");
+  const want = {
+    "the-ai-safety-paradox": ["56f842e310dd4c9f26e07f6f3ac4a3bca7da239ce075f908193ca555a3f88749", "#F0CD5F"],
+    "ask-before-doing-what-wasnt-asked": ["0e9310cfb6c542870776529de3df358c62f8edd45118da70f840e4b467b26a23", "#EE83C3"],
+    "refuse-answers-sources-do-not-support": ["8e881972b6b1b488d6f903fc530f9be94b553bfac985ebc322bc8e2ae2ccc74c", "#F0CD5F"],
+    "compare-models-only-under-a-locked-setup": ["ca591e9604e83c65aaf648c601f77fdd1fafd111c8bd35230d070b7894a04074", "#96E4B7"],
+  };
+  for (const [slug, [sha, pad]] of Object.entries(want)) {
+    const f = `public/art/digest/${slug}-sticker.webp`;
+    assert.equal(createHash("sha256").update(readFileSync(f)).digest("hex"), sha, `${slug}: mockups-art/art/digest/${slug}-sticker.webp, byte for byte`);
+    assert.deepEqual(await webpSize(f), [1920, 1080]);
+    assert.equal(getPost(slug).hero.pad, pad, `${slug}: pad = palette.json`);
+    assert.ok(!existsSync(`public/art/digest/${slug}.v2.webp`) && !existsSync(`public/art/digest/${slug}-sticker.v2.webp`), "no .v2 file");
+  }
+});
