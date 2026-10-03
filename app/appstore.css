@@ -96,6 +96,16 @@ a.fx-text-link:focus-visible { outline: 3px solid var(--ink); outline-offset: 2p
   .fx-story-dek { margin-top: 20px; font-size: 22px; }
 }
 .fx-app-row.fx-story-row { margin-top: 24px; padding: 16px 0; gap: 10px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); max-width: 680px; }
+/* Phone fold (SPEC §4/§10, QA 48773f3): the story's first Open must end at or above y=660 at 390x844 even when the H1
+   wraps to 3 lines. Tighter spacing from the hero to the app row on phone only; titles are never clamped, copy unchanged,
+   desktop (>= 900px) untouched. */
+@media (max-width: 899.98px) {
+  .fx-story-head { padding-top: 16px; }
+  .fx-story-title { margin-top: 4px; line-height: 1.05; }
+  .fx-story-dek { margin-top: 8px; }
+  .fx-story-head > .fx-story-row { margin-top: 16px; }
+  .fx-app-row.fx-story-row { padding: 12px 0; }
+}
 .fx-story-col .fx-prose { margin: 48px 0 0; max-width: 680px; }
 @media (min-width: 900px) { .fx-story-col .fx-prose { margin-top: 72px; } }
 .fx-prose .fx-lead { font-size: 19px; line-height: 1.45; }

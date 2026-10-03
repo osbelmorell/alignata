@@ -5,6 +5,7 @@ import { SITE_EVENT_PROPS, validateSiteEvent } from "../lib/site/events.ts";
 import {
   ARTICLES_KEY,
   DOGFOOD_KEY,
+  DOGFOOD_LINKS,
   articleSlug,
   dogfoodHref,
   dogfoodSession,
@@ -783,4 +784,63 @@ test("sitemap: adds exactly the tool stories (no Deploy Decision story); everyth
   assert.equal(new Set(urls).size, urls.length);
   const robots = (await import("../app/robots.ts")).default();
   assert.deepEqual(robots, { rules: { userAgent: "*", allow: "/" }, sitemap: "https://alignata.com/sitemap.xml" }, "robots unchanged");
+});
+
+/* ---------- QA 48773f3 fixes: dogfood on card/row links; phone story fold ---------- */
+
+test("dogfood: card + row links (a.fx-stretch) on / and /apps get ?dogfood=1 exactly like the Open pills", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { createElement } = await import("react");
+  const { getApps, toolsOrder } = await import("../lib/apps.ts");
+  const { ToolsList } = await import("../components/appstore/ToolsList.tsx");
+  const Home = (await import("../app/page.tsx")).default;
+  assert.equal(DOGFOOD_LINKS, "a[data-tool-slug], a.fx-stretch");
+  const matches = (a) => a.getAttribute("data-tool-slug") !== null || (a.attrs.class || "").split(" ").includes("fx-stretch");
+  const O = "https://alignata.com";
+  const pages = {
+    "/": anchors(renderToStaticMarkup(await Home())),
+    "/apps": anchors(renderToStaticMarkup(createElement(ToolsList, { apps: toolsOrder(getApps()) }))),
+  };
+  for (const [page, links] of Object.entries(pages)) {
+    const cards = links.filter((a) => (a.attrs.class || "").split(" ").includes("fx-stretch"));
+    assert.ok(cards.length >= (page === "/apps" ? 11 : 5), `${page}: card/row links found (${cards.length})`);
+    for (const a of cards) {
+      assert.ok(matches(a), `${page} ${a.attrs.href}: matched by DOGFOOD_LINKS`);
+      assert.equal(dogfoodHref(a.attrs.href, O), `${a.attrs.href}?dogfood=1`, `${page} ${a.attrs.href}: gets ?dogfood=1`);
+    }
+    for (const a of links.filter((a) => a.getAttribute("data-tool-slug"))) assert.ok(matches(a), `${page}: Open pills still matched`);
+    if (page === "/apps") {
+      const stories = cards.filter((a) => a.attrs.href.startsWith("/apps/")).map((a) => a.attrs.href);
+      assert.equal(stories.length, 10, "/apps: the 10 row bodies → stories, e.g. /apps/stripe-cleaver");
+      assert.ok(stories.includes("/apps/stripe-cleaver"));
+    }
+  }
+  // Rewriting a card href never adds tracking: tool_open still needs data-tool-slug.
+  const story = pages["/apps"].find((a) => a.attrs.href === "/apps/stripe-cleaver");
+  const sent = await captureBeacons(() => assert.equal(trackToolOpen("/apps", story.getAttribute("data-tool-slug") ? story : null, { sid: SID, vid: VID, dogfood: true }, false), false));
+  assert.equal(sent.length, 0);
+  // Same mechanism, both places: on arrival (querySelectorAll) and on tap (closest), before any tracking.
+  const { readFileSync } = await import("node:fs");
+  const tracker = readFileSync("components/site/SiteTracker.tsx", "utf8");
+  assert.match(tracker, /if \(dogfood\) document\.querySelectorAll\(DOGFOOD_LINKS\)\.forEach\(markToolLink\);/);
+  assert.match(tracker, /if \(dogfoodRef\.current\) markToolLink\(\(e\.target as Element \| null\)\?\.closest\?\.\(DOGFOOD_LINKS\) \?\? null\);/);
+  assert.ok(!tracker.includes('"a[data-tool-slug]").forEach'), "no second, narrower selector left behind");
+});
+
+test("story fold (SPEC §4/§10): phone-only tighter spacing above the first app row; titles never clamped; desktop untouched", async () => {
+  const { readFileSync } = await import("node:fs");
+  const css = readFileSync("app/appstore.css", "utf8");
+  const phone = css.match(/@media \(max-width: 899\.98px\) \{\n  \.fx-story-head \{ padding-top: 16px; \}[\s\S]*?\n\}/);
+  assert.ok(phone, "phone story block present");
+  for (const r of [".fx-story-title { margin-top: 4px; line-height: 1.05; }", ".fx-story-dek { margin-top: 8px; }", ".fx-story-head > .fx-story-row { margin-top: 16px; }", ".fx-app-row.fx-story-row { padding: 12px 0; }"]) {
+    assert.ok(phone[0].includes(r), `phone: ${r}`);
+  }
+  assert.ok(!/line-clamp|text-overflow|-webkit-box/.test(css.slice(css.indexOf(".fx-story-title"), css.indexOf(".fx-story-dek"))), "story title never clamped or truncated");
+  // Desktop (>= 900px) rules unchanged.
+  assert.ok(css.includes("@media (min-width: 900px) {\n  .fx-story-head { padding-top: 48px; }"));
+  assert.ok(css.includes(".fx-story-title { margin-top: 16px; font-size: 40px; line-height: 1.05; }"));
+  assert.ok(css.includes(".fx-story-dek { margin-top: 20px; font-size: 22px; }"));
+  assert.ok(css.includes(".fx-app-row.fx-story-row { margin-top: 24px; padding: 16px 0;"), "base row spacing (desktop) unchanged");
+  // The rendered measurement (WebKit, 390x844: all 10 first Opens end <= 650; 1280: Cleaver <= 790) is
+  // /workspace/alignata-mockups/v2-story-fold-check.mjs against `next start`.
 });

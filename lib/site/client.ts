@@ -64,6 +64,14 @@ export function dogfoodHref(href: string, origin: string): string | null {
   }
 }
 
+/**
+ * Links that get ?dogfood=1 in a dogfood session (same mechanism as the tool links since 75a11f3: the href attribute is
+ * rewritten on arrival and again on tap, via dogfoodHref). Tool links (Open pills and the Deploy Decision row:
+ * a[data-tool-slug]) plus the stretched card/row links (a.fx-stretch: feed and Daily Digest cards, /apps row bodies →
+ * the stories). Rewriting an href never adds tracking: tool_open still keys off data-tool-slug only.
+ */
+export const DOGFOOD_LINKS = "a[data-tool-slug], a.fx-stretch";
+
 /** Never send from automated browsers (navigator.webdriver) or the owner's own device (EXCLUDED_IIDS). */
 export function shouldSkip(env: { webdriver?: boolean; local: KV | null }, excluded: readonly string[] = EXCLUDED_IIDS): boolean {
   if (env.webdriver) return true;
