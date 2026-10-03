@@ -7,6 +7,8 @@ import { AppRow } from "@/components/appstore/AppRow";
 import { StickyOpen } from "@/components/appstore/StickyOpen";
 import { SiteFooter } from "@/components/fantasy/SiteFooter";
 import { Morph, PageFade } from "@/components/appstore/Motion";
+import { GuidesLinks } from "@/components/guides/GuidesLinks";
+import { getGuides } from "@/lib/guides/guides";
 
 export const dynamicParams = false;
 
@@ -81,6 +83,8 @@ export default async function ToolStoryPage({ params }: { params: Promise<{ slug
                   </ol>
                 </div>
               ) : null}
+              {/* Published guides for this tool (Engrave Merge today); renders nothing while none is published. */}
+              <GuidesLinks tool={app.id} guides={getGuides()} />
               <div className="fx-story-end">
                 <AppRow app={app} pos={pos} variant="story" row="end" />
                 <Link className="fx-text-link" href="/apps">

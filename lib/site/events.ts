@@ -15,13 +15,14 @@ export const SITE_EVENT_PROPS = {
 /**
  * Optional props: accepted when present, never required, so clients cached before they existed keep validating.
  * tool_open.source (CEO, Oct 3 2026) = where the Open was tapped: feed (homepage feed card), apps (/apps list),
- * story (an in-page Open on /apps/<slug>) or sticky (the story's sticky Open bar). Older clients send no source;
+ * story (an in-page Open on /apps/<slug>), sticky (the story's sticky Open bar) or guide (the app row closing a
+ * /guides/<slug> page; added Oct 3 2026, older values unchanged). Older clients send no source;
  * the record is stored without one (no guessed default).
  */
 export const SITE_EVENT_OPTIONAL_PROPS: { readonly [E in keyof typeof SITE_EVENT_PROPS]?: readonly string[] } = {
   tool_open: ["source"],
 };
-export const TOOL_OPEN_SOURCES = ["feed", "apps", "story", "sticky"] as const;
+export const TOOL_OPEN_SOURCES = ["feed", "apps", "story", "sticky", "guide"] as const;
 export type ToolOpenSource = (typeof TOOL_OPEN_SOURCES)[number];
 
 export type SiteEventName = keyof typeof SITE_EVENT_PROPS;

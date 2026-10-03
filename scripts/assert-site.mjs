@@ -777,12 +777,14 @@ test("sitemap: adds exactly the tool stories (no Deploy Decision story); everyth
   const S = "https://alignata.com";
   const storySlugs = mod.generateStaticParams().map((p) => p.slug);
   const stories = urls.filter((u) => u.startsWith(`${S}/apps/`));
+  const guides = urls.filter((u) => u.startsWith(`${S}/guides/`));
+  assert.deepEqual(guides, [`${S}/guides/lightburn-variable-text-etsy-csv`, `${S}/guides/etsy-download-orders-csv-personalization`].sort((a, b) => urls.indexOf(a) - urls.indexOf(b)), "published guides, at the end");
   assert.deepEqual(stories.sort(), storySlugs.map((s) => `${S}/apps/${s}`).sort(), "story URLs = the static story pages");
   assert.equal(stories.length, 9);
   assert.ok(!stories.includes(`${S}/apps/deploy-decision-card`), "Deploy Decision has no story");
   const before = [S, `${S}/apps`, ...getApps().map((a) => `${S}${a.url}`), `${S}/daily-digest`, ...posts.map((p) => `${S}/daily-digest/${p.slug}`)];
-  assert.deepEqual(urls.filter((u) => !stories.includes(u)), before, "the 37 existing URLs, same order");
-  assert.equal(urls.length, 46);
+  assert.deepEqual(urls.filter((u) => !stories.includes(u) && !guides.includes(u)), before, "the 37 existing URLs, same order");
+  assert.equal(urls.length, 48);
   assert.equal(new Set(urls).size, urls.length);
   const robots = (await import("../app/robots.ts")).default();
   assert.deepEqual(robots, { rules: { userAgent: "*", allow: "/" }, sitemap: "https://alignata.com/sitemap.xml" }, "robots unchanged");
@@ -849,8 +851,8 @@ test("story fold (SPEC §4/§10): phone-only tighter spacing above the first app
 
 /* ---------- tool_open source tag + feed Opens + preview deploys don't store (CEO ruling, Oct 3 2026 6:33 AM ET) ---------- */
 
-test("tool_open source: validator accepts feed|apps|story|sticky, still accepts old clients without it, rejects anything else", () => {
-  assert.deepEqual([...TOOL_OPEN_SOURCES], ["feed", "apps", "story", "sticky"]);
+test("tool_open source: validator accepts feed|apps|story|sticky|guide, still accepts old clients without it, rejects anything else", () => {
+  assert.deepEqual([...TOOL_OPEN_SOURCES], ["feed", "apps", "story", "sticky", "guide"], "guide added Oct 3; older values unchanged");
   assert.deepEqual(SITE_EVENT_OPTIONAL_PROPS, { tool_open: ["source"] });
   assert.deepEqual(SITE_EVENT_PROPS.tool_open, ["slug", "position"], "required props unchanged");
   for (const source of TOOL_OPEN_SOURCES) {
@@ -1362,4 +1364,127 @@ test("Digest heroes #3, #4, #8, #21: the current sticker files (not .v2), 1920×
     assert.equal(getPost(slug).hero.pad, pad, `${slug}: pad = palette.json`);
     assert.ok(!existsSync(`public/art/digest/${slug}.v2.webp`) && !existsSync(`public/art/digest/${slug}-sticker.v2.webp`), "no .v2 file");
   }
+});
+
+/* ---------- Guides /guides/<slug> (CEO + Product Copy GUIDES.md FINAL v2, Oct 3 2026) ---------- */
+
+const GUIDE_LB = "lightburn-variable-text-etsy-csv";
+const GUIDE_ETSY = "etsy-download-orders-csv-personalization";
+
+test("guides content: both FINAL guides (GUIDES.md v2) published, slugs, H1s, deks, cross-links, sample link; no 'blog'", async () => {
+  const { readFileSync, readdirSync, existsSync } = await import("node:fs");
+  const { getGuides } = await import("../lib/guides/guides.ts");
+  const gs = getGuides();
+  assert.deepEqual(gs.map((g) => [g.slug, g.title, g.draft, g.tool, g.ref, g.datePublished]), [
+    [GUIDE_ETSY, "How to download Etsy orders as a CSV, with personalization", false, "engrave-merge", "guide-etsy-export", "2026-10-03"],
+    [GUIDE_LB, "LightBurn Variable Text from an Etsy order CSV", false, "engrave-merge", "guide-lightburn", "2026-10-03"],
+  ].sort((a, b) => a[0].localeCompare(b[0])));
+  const lb = gs.find((g) => g.slug === GUIDE_LB), etsy = gs.find((g) => g.slug === GUIDE_ETSY);
+  assert.equal(lb.dek, "Engrave every buyer's name from one file, instead of typing each order into LightBurn.");
+  assert.equal(etsy.dek, "Where Etsy keeps what each buyer asked you to write: the Order Items file.");
+  assert.ok(lb.body.includes('- Your Etsy "Order Items" file. [How to download Etsy orders as a CSV](/guides/etsy-download-orders-csv-personalization) shows where to find it.'), "guide 1 → guide 2 (Product Copy fix)");
+  assert.ok(etsy.body.includes("To set up LightBurn, follow [LightBurn Variable Text from an Etsy order CSV](/guides/lightburn-variable-text-etsy-csv)."), "guide 2 → guide 1");
+  for (const g of gs) {
+    assert.ok(g.body.endsWith("[Download a sample Order Items file](/fixtures/engrave-merge/sample.csv)"), `${g.slug}: sample link last, no ref`);
+    assert.ok(!/\[SLUG-GUIDE|\[DATE\]|App row:/.test(g.body), `${g.slug}: no placeholders or notes left`);
+  }
+  assert.ok(existsSync("public/fixtures/engrave-merge/sample.csv"), "the existing Engrave Merge sample fixture");
+  const files = ["app/guides/[slug]/page.tsx", "lib/guides/guides.ts", "lib/guides/markdown.ts", "components/guides/GuideBody.tsx", "components/guides/GuidesLinks.tsx", ...readdirSync("content/guides").map((f) => `content/guides/${f}`)];
+  for (const f of files) assert.ok(!/blog/i.test(f + readFileSync(f, "utf8")), `${f}: never 'blog'`);
+});
+
+test("guide page: Digest story template (680 column, no hero), byline 'Alignata · Guide · Oct 3', prose, ONE Engrave Merge app row → ?ref=, JSON-LD Organization", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { getApps } = await import("../lib/apps.ts");
+  const mod = await import("../app/guides/[slug]/page.tsx");
+  assert.deepEqual(mod.generateStaticParams().map((p) => p.slug).sort(), [GUIDE_ETSY, GUIDE_LB].sort());
+  const em = getApps().find((a) => a.id === "engrave-merge");
+  assert.equal(em.blurb, "Turn Etsy orders into a LightBurn file, ready to engrave.", "live apps.json blurb");
+  for (const [slug, ref] of [[GUIDE_LB, "guide-lightburn"], [GUIDE_ETSY, "guide-etsy-export"]]) {
+    const html = renderToStaticMarkup(await mod.default({ params: Promise.resolve({ slug }) }));
+    const meta = await mod.generateMetadata({ params: Promise.resolve({ slug }) });
+    assert.equal(meta.robots, undefined, `${slug}: published → no robots override (indexable on production)`);
+    assert.equal(meta.alternates.canonical, `/guides/${slug}`);
+    assert.ok(html.includes(`<main class="fx-story fx-guide" data-guide="${slug}">`) && !html.includes("data-draft"));
+    assert.ok(!html.includes("fx-story-hero") && !html.includes("fx-eyebrow"), "no hero, no eyebrow");
+    const order = ['<h1 class="fx-story-title">', '<p class="fx-story-dek">', '<p class="fx-meta fx-story-meta"><span>Alignata · Guide · <time dateTime="2026-10-03">Oct 3</time></span></p>', '<div class="fx-prose">', "<h2>", '<div class="fx-story-end">'];
+    let at = -1;
+    for (const f of order) { const i = html.indexOf(f); assert.ok(i > at, `${slug} order: ${f}`); at = i; }
+    assert.ok(!/Osbel/.test(html), "byline is just Alignata");
+    assert.equal((html.match(/class="fx-app-row/g) || []).length, 1, "ONE app row");
+    assert.equal((html.match(/fx-primary/g) || []).length, 1, "one black pill");
+    assert.ok(html.includes(`<p class="fx-app-name">Engrave Merge</p><p class="fx-app-line">${em.blurb}</p>`));
+    assert.ok(html.includes('src="/art/engrave-merge-sticker-icon.webp" alt="A laser engraver burning a line onto a tag."'), "Engrave Merge icon + FINAL alt");
+    assert.match(html, new RegExp(`<a class="fx-open fx-primary" href="/engrave-merge\\?ref=${ref}" data-tool-slug="engrave-merge" data-tool-pos="6" data-tool-src="guide" aria-label="Open Engrave Merge">Open</a>`));
+    assert.ok(html.includes('<a href="/fixtures/engrave-merge/sample.csv" download="">Download a sample Order Items file</a>'), "sample: plain download, no ref");
+    assert.equal((html.match(/\?ref=/g) || []).length, 1, "ref only on the Open");
+    assert.deepEqual(imgsWithoutAlt(html), [], `${slug}: every <img> has an alt`);
+    const ld = JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+    assert.deepEqual(ld.author, { "@type": "Organization", name: "Alignata", url: "https://alignata.com" });
+    assert.equal(ld["@type"], "Article");
+    assert.equal(ld.datePublished, "2026-10-03");
+    assert.equal(ld.url, `https://alignata.com/guides/${slug}`);
+  }
+  const lb = renderToStaticMarkup(await mod.default({ params: Promise.resolve({ slug: GUIDE_LB }) }));
+  assert.ok(lb.includes("<li>Your Etsy &quot;Order Items&quot; file. <a href=\"/guides/etsy-download-orders-csv-personalization\">How to download Etsy orders as a CSV</a><span> shows where to find it.</span></li>") || lb.includes('href="/guides/etsy-download-orders-csv-personalization">How to download Etsy orders as a CSV</a>'), "cross-link renders");
+  assert.ok(lb.includes("<code>%11</code>") && lb.includes("<strong>One item per run:</strong>"), "inline code + bold");
+  assert.ok(lb.includes('<a href="https://docs.lightburnsoftware.com/latest/Reference/VariableText/" rel="noopener">LightBurn&#x27;s Variable Text guide</a>'));
+  assert.ok(lb.includes("<h2>What you need</h2>") && lb.includes('<ol start="1"'), "### → h2, numbered steps");
+});
+
+test("guides: draft vs published (fixtures): drafts render noindex, out of sitemap, unlinked; published → sitemap with lastmod + Guides block", async () => {
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { loadGuides, guideSitemapEntries, guideMetadata, publishedGuides } = await import("../lib/guides/guides.ts");
+  const { GuidesLinks } = await import("../components/guides/GuidesLinks.tsx");
+  const draftOnly = loadGuides("scripts/__fixtures__/guides-draft-only");
+  const mixed = loadGuides("scripts/__fixtures__/guides-mixed");
+  assert.deepEqual(draftOnly.map((g) => [g.slug, g.draft]), [["fixture-draft-guide", true]]);
+  // draft-only: nothing anywhere
+  assert.deepEqual(guideMetadata(draftOnly[0]).robots, { index: false, follow: false }, "draft → noindex, nofollow");
+  assert.deepEqual(guideSitemapEntries(draftOnly), [], "draft → not in the sitemap");
+  assert.equal(renderToStaticMarkup(createElement(GuidesLinks, { tool: "engrave-merge", guides: draftOnly })), "", "no published guide → the block renders nothing");
+  // mixed: only the published one is listed / in the sitemap
+  assert.deepEqual(publishedGuides(mixed).map((g) => g.slug), ["fixture-published-guide"]);
+  assert.equal(guideMetadata(mixed.find((g) => !g.draft)).robots, undefined);
+  assert.deepEqual(guideSitemapEntries(mixed), [{ url: "https://alignata.com/guides/fixture-published-guide", lastModified: "2026-10-06" }], "lastmod = updated, else datePublished");
+  const block = renderToStaticMarkup(createElement(GuidesLinks, { tool: "engrave-merge", guides: mixed }));
+  assert.equal(block, '<nav class="fx-guides" aria-label="Guides" data-guides="engrave-merge"><h2>Guides</h2><ul><li><a class="fx-text-link" href="/guides/fixture-published-guide">Fixture published guide</a></li></ul></nav>');
+  assert.ok(!block.includes("fixture-draft-guide"), "drafts never linked");
+  assert.equal(renderToStaticMarkup(createElement(GuidesLinks, { tool: "stripe-cleaver", guides: mixed })), "", "only the guide's own tool");
+  // bad files fail the build
+  const { parseGuide } = await import("../lib/guides/guides.ts");
+  assert.throws(() => parseGuide("x", "no frontmatter"));
+  assert.throws(() => parseGuide("x", '---\ntitle: "t"\ndek: d\ndatePublished: 2026-10-03\ndraft: maybe\ntool: t\nref: r\n---\nb'), /draft/);
+  assert.throws(() => parseGuide("Bad_Slug", '---\ntitle: "t"\ndek: d\ndatePublished: 2026-10-03\ndraft: true\ntool: t\nref: r\n---\nb'), /kebab/);
+});
+
+test("guides live state: sitemap has both with lastmod; the Engrave Merge story lists both; nothing else links a guide", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { createElement } = await import("react");
+  const entries = (await import("../app/sitemap.ts")).default().filter((e) => e.url.includes("/guides/"));
+  assert.deepEqual(entries.map((e) => [e.url.replace("https://alignata.com", ""), e.lastModified]).sort(), [[`/guides/${GUIDE_ETSY}`, "2026-10-03"], [`/guides/${GUIDE_LB}`, "2026-10-03"]]);
+  const story = await import("../app/apps/[slug]/page.tsx");
+  for (const { slug } of story.generateStaticParams()) {
+    const html = renderToStaticMarkup(await story.default({ params: Promise.resolve({ slug }) }));
+    const links = [...html.matchAll(/href="(\/guides\/[^"]+)"/g)].map((m) => m[1]);
+    if (slug === "engrave-merge") {
+      assert.deepEqual(links.sort(), [`/guides/${GUIDE_ETSY}`, `/guides/${GUIDE_LB}`].sort());
+      assert.ok(html.indexOf('<nav class="fx-guides"') < html.indexOf('<div class="fx-story-end">'), "block after the About body, before the end row");
+    } else assert.deepEqual(links, [], `${slug}: no Guides block`);
+  }
+  const { default: Home } = await import("../app/page.tsx");
+  const { ToolsList } = await import("../components/appstore/ToolsList.tsx");
+  const { getApps, toolsOrder } = await import("../lib/apps.ts");
+  for (const html of [renderToStaticMarkup(createElement(Home)), renderToStaticMarkup(createElement(ToolsList, { apps: toolsOrder(getApps()) }))]) assert.ok(!html.includes("/guides/"));
+});
+
+test("guides tracking: the guide Open counts as tool_open {slug, position, source: guide}; validator stays backwards-compatible", () => {
+  assert.equal(toolOpenPage(`/guides/${GUIDE_LB}`), true);
+  assert.equal(toolOpenPage("/guides"), false);
+  assert.equal(toolOpenSource(`/guides/${GUIDE_LB}`, "guide"), "guide");
+  assert.equal(toolOpenSource(`/guides/${GUIDE_LB}`, null), "guide", "derived from the page");
+  for (const s of ["feed", "apps", "story", "sticky", "guide"]) assert.ok(validateSiteEvent(env("tool_open", { slug: "engrave-merge", position: 6, source: s })).ok, s);
+  assert.ok(validateSiteEvent(env("tool_open", { slug: "engrave-merge", position: 6 })).ok, "no source still fine");
+  assert.ok(validateSiteEvent(env("page_view", { path: `/guides/${GUIDE_LB}` })).ok, "page_view path");
 });

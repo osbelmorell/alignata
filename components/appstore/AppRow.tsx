@@ -46,19 +46,22 @@ export function OpenPill({
   homeTarget = false,
   tabIndex,
   src,
+  href,
 }: {
   app: HubApp;
   pos: number;
   primary?: boolean;
   homeTarget?: boolean;
   tabIndex?: number;
-  /** tool_open source tag: feed (homepage card), apps (/apps), story (in-page story row), sticky (sticky bar). */
+  /** tool_open source tag: feed (homepage card), apps (/apps), story (in-page story row), sticky (sticky bar), guide. */
   src: ToolOpenSource;
+  /** Override the tool URL (guides add ?ref=<guide>). */
+  href?: string;
 }) {
   return (
     <a
       className={`fx-open${primary ? " fx-primary" : ""}`}
-      href={app.url}
+      href={href ?? app.url}
       data-tool-slug={app.id}
       data-tool-pos={pos}
       data-tool-src={src}
@@ -68,5 +71,20 @@ export function OpenPill({
     >
       Open
     </a>
+  );
+}
+
+/** A guide's closing app row: the black Open (the page's one primary) straight to the tool with the guide's ?ref=. */
+export function GuideAppRow({ app, pos, href }: { app: HubApp; pos: number; href: string }) {
+  const art = toolArt(app.id);
+  return (
+    <div className="fx-app-row fx-story-row" data-row="guide">
+      <Img className="fx-icon" src={art.icon} alt={art.iconAlt} width={256} height={256} decoding="async" />
+      <div className="fx-app-meta">
+        <p className="fx-app-name">{app.name}</p>
+        <p className="fx-app-line">{app.blurb}</p>
+      </div>
+      <OpenPill app={app} pos={pos} primary src="guide" href={href} />
+    </div>
   );
 }

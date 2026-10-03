@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getApps, storyHref, toolsOrder } from "@/lib/apps";
 import { posts } from "@/content/posts";
+import { guideSitemapEntries } from "@/lib/guides/guides";
 
 export const dynamic = "force-static";
 
@@ -8,8 +9,9 @@ const SITE = "https://alignata.com";
 
 /**
  * Home, /apps, every tool listed in public/apps.json (the /apps catalog), each tool's story /apps/<slug> (every tool
- * with a story; Deploy Decision Card has none), /daily-digest and each digest article. Unlisted tools (not in apps.json) and redirect-only paths
- * (/blog, /llm-digest) are never included.
+ * with a story; Deploy Decision Card has none), /daily-digest and each digest article, then each PUBLISHED guide
+ * /guides/<slug> with lastmod (draft guides never). Unlisted tools (not in apps.json) and redirect-only paths are never
+ * included.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const tools = getApps()
@@ -19,5 +21,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     .map((a) => storyHref(a.id))
     .filter((h): h is string => !!h);
   const paths = ["/", "/apps", ...tools, ...stories, "/daily-digest", ...posts.map((p) => `/daily-digest/${p.slug}`)];
-  return [...new Set(paths)].map((p) => ({ url: p === "/" ? SITE : `${SITE}${p}` }));
+  return [...[...new Set(paths)].map((p) => ({ url: p === "/" ? SITE : `${SITE}${p}` })), ...guideSitemapEntries()];
 }

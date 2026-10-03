@@ -148,25 +148,29 @@ export function homeClickTarget(explicit: string | null | undefined, path: strin
   return t && HOME_TARGET_RE.test(t) ? t : null;
 }
 
+const GUIDE_PATH_RE = /^\/guides\/[a-z0-9][a-z0-9-]{0,99}$/;
+
 /**
  * Pages where tapping a tool link (an Open pill: a[data-tool-slug]) counts as tool_open: the homepage feed (/, where
- * home_click is sent too), /apps (the list), and a tool story /apps/<slug> (its row Opens and the sticky Open bar).
+ * home_click is sent too), /apps (the list), a tool story /apps/<slug> (its row Opens and the sticky Open bar) and a
+ * guide /guides/<slug> (its closing app row).
  * Card and row bodies that open a story are plain links without data-tool-slug, so they are never counted as
  * tool_open. Tool routes send nothing.
  */
 export function toolOpenPage(path: string): boolean {
-  return path === "/" || path === "/apps" || /^\/apps\/[a-z0-9][a-z0-9-]{0,99}$/.test(path);
+  return path === "/" || path === "/apps" || /^\/apps\/[a-z0-9][a-z0-9-]{0,99}$/.test(path) || GUIDE_PATH_RE.test(path);
 }
 
 /**
- * Where an Open was tapped: the link's data-tool-src (set by OpenPill: feed | apps | story | sticky), else derived
- * from the page (/ → feed, /apps → apps, /apps/<slug> → story).
+ * Where an Open was tapped: the link's data-tool-src (set by OpenPill: feed | apps | story | sticky | guide), else
+ * derived from the page (/ → feed, /apps → apps, /apps/<slug> → story, /guides/<slug> → guide).
  */
 export function toolOpenSource(path: string, attr: string | null): ToolOpenSource | null {
   if (attr && (TOOL_OPEN_SOURCES as readonly string[]).includes(attr)) return attr as ToolOpenSource;
   if (path === "/") return "feed";
   if (path === "/apps") return "apps";
   if (/^\/apps\/[a-z0-9][a-z0-9-]{0,99}$/.test(path)) return "story";
+  if (GUIDE_PATH_RE.test(path)) return "guide";
   return null;
 }
 
