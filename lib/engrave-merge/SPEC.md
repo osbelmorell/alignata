@@ -320,7 +320,8 @@ How multi-line quoted cells render (we avoid them), and whether a BOM would leak
 - Only the fields below are ever sent. **Never** file names, text, names, order/listing/transaction IDs, SKUs, item names, font names, or settings content.
 - The client builds each payload from an allow-list. The server **re-validates** it and drops unknown keys and bad types: integers 0–100000, fingerprint `^[0-9a-f]{64}$`, iid `^(dog-)?[0-9a-f-]{36}$`. Body ≤ 1 KB. No IP or user-agent is stored by our code.
 - Send with `navigator.sendBeacon('/api/engrave-merge/e', blob)` (same-origin, fire-and-forget). Failures are silent and never block the tool.
-- localStorage holds exactly **one** key: `em_iid` = `crypto.randomUUID()`, created on first visit. No cookies, sessionStorage or IndexedDB from this tool.
+- localStorage holds exactly **one** key: `em_iid` = `crypto.randomUUID()`, created on first visit. No cookies or IndexedDB from this tool.
+- sessionStorage holds at most **one** key: `em_ref` (Oct 3 2026), set when the tool is opened with `?ref=`: `guide-lightburn`, `guide-etsy-export`, or `other` for any other value. Every event sent in that tab carries it as the optional prop `ref` (validated against the same three values). The referrer is never read or stored. See `lib/engrave-merge/ref.ts`.
 
 ### 8.2 Events
 
@@ -398,7 +399,7 @@ Recipe Box / Recipe Box include-anyway, and fx11 all / Slate Coaster pick / Slat
 
 **Privacy and tracking**
 - AT-20: Playwright records **every** request after page load while processing fx05, downloading all 3 outputs and tapping pro interest. Assert: (a) no request URL or body contains any of `Fakename`, `Placeholder`, `Buyerson`, `Nowhereville`, `Grandpa`, `Zoë`, `1000000501`, `2000000501`, `3000000005`, `EM-TEST`, `fx05`; (b) the only non-static request is `POST /api/engrave-merge/e` (prefetch GETs from the shared header are fine); (c) every body's keys ⊆ the §8.2 allow-list; (d) `file_processed.props.file_fingerprint` = the fx05 value.
-- AT-21: localStorage holds only `em_iid`. No cookies, sessionStorage or IndexedDB are written by the tool.
+- AT-21: localStorage holds only `em_iid`; sessionStorage holds only `em_ref` (allow-list or `other`). No cookies or IndexedDB are written by the tool.
 - AT-22: `?dogfood=1` → iid starts `dog-` and events carry `dogfood:true`. The server/KPI script excludes them. Fixture fingerprints are dropped.
 - AT-23: The API rejects (400) unknown keys, strings in count fields, and bodies > 1 KB.
 - AT-24: `scripts/engrave-merge-kpis.mjs` on a synthetic event log prints T0, the 3 kill-bar numbers and the weekly metric correctly (include the synthetic log as a test fixture).

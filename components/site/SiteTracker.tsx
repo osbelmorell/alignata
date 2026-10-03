@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Analytics, type BeforeSendEvent } from "@vercel/analytics/next";
+import { vaBeforeSend } from "@/lib/site/analytics";
 import { DOGFOOD_LINKS, SID_KEY, VID_KEY, dogfoodHref, dogfoodSession, getOrCreateId, homeClickTarget, routeEvents, sendSiteEvent, shouldSkip, trackToolOpen } from "@/lib/site/client";
 
 const safe = <T,>(f: () => T): T | null => {
@@ -21,7 +22,8 @@ function excluded(): boolean {
   return shouldSkip({ webdriver: navigator.webdriver, local }) || dogfoodSession(location.search, session);
 }
 
-const beforeSend = (event: BeforeSendEvent) => (excluded() ? null : event);
+/** Vercel Analytics: dropped when excluded; otherwise reported without the guide `ref` param (lib/site/analytics.ts). */
+const beforeSend = (event: BeforeSendEvent) => vaBeforeSend(event, excluded());
 
 /** Dogfood session: add ?dogfood=1 to a tool link (data-tool-slug) or card/row link (fx-stretch), so the run counts as a test. */
 function markToolLink(a: Element | null) {

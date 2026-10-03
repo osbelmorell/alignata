@@ -16,7 +16,7 @@ import { process as runProcess } from "@/lib/engrave-merge/process";
 import { summaryView } from "@/lib/engrave-merge/summary";
 import { SummaryPanel } from "@/components/engrave-merge/SummaryPanel";
 import { RECIPE_FILE_NAME, buildRecipe, parseRecipe } from "@/lib/engrave-merge/recipe";
-import { fileRef, initInstallId, sendEvent } from "@/lib/engrave-merge/track";
+import { fileRef, initGuideRef, initInstallId, sendEvent } from "@/lib/engrave-merge/track";
 import {
   DEFAULT_SETTINGS,
   type ListingRecipe,
@@ -82,6 +82,7 @@ export function EngraveMergeDesk() {
 
   useEffect(() => {
     iidRef.current = initInstallId(window.location.search);
+    initGuideRef(window.location.search);
     sendEvent(iidRef.current, "page_open");
   }, []);
   useEffect(

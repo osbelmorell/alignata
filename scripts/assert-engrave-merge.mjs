@@ -1263,3 +1263,124 @@ test("Event endpoint: preview deploys don't store (VERCEL_ENV=preview → 204 sk
     process.env = saved;
   }
 });
+
+/* ---------- Guide ref tag (CEO, Oct 3 2026; lib/engrave-merge/ref.ts) ---------- */
+
+test("guide ref: ?ref= → guide-lightburn | guide-etsy-export | other, kept in sessionStorage em_ref only, never the referrer", async () => {
+  const { GUIDE_REFS, REF_KEY, REF_VALUES, initRef, normalizeRef } = await import("../lib/engrave-merge/ref.ts");
+  assert.deepEqual([...GUIDE_REFS], ["guide-lightburn", "guide-etsy-export"]);
+  assert.deepEqual([...REF_VALUES], ["guide-lightburn", "guide-etsy-export", "other"]);
+  assert.equal(REF_KEY, "em_ref");
+  for (const v of ["guide-lightburn", "guide-etsy-export"]) assert.equal(normalizeRef(v), v);
+  for (const v of ["", "twitter", "GUIDE-LIGHTBURN", "guide-lightburn ", "https://evil.example/", "x".repeat(500)]) assert.equal(normalizeRef(v), "other", JSON.stringify(v));
+  const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), m }; };
+  const s = mem();
+  assert.equal(initRef("?ref=guide-lightburn", s), "guide-lightburn");
+  assert.deepEqual([...s.m], [["em_ref", "guide-lightburn"]], "only em_ref, only the allowed value");
+  assert.equal(initRef("", s), "guide-lightburn", "later loads in the same tab reuse it");
+  assert.equal(initRef("?ref=newsletter&utm_source=x", s), "other");
+  assert.deepEqual([...s.m], [["em_ref", "other"]]);
+  assert.equal(initRef("", mem()), null, "no ref, nothing stored");
+  const tampered = mem(); tampered.setItem("em_ref", "https://referrer.example/page");
+  assert.equal(initRef("", tampered), null, "a stored value outside the allow-list is ignored");
+  const blocked = { getItem() { throw new Error("denied"); }, setItem() { throw new Error("denied"); } };
+  assert.equal(initRef("?ref=guide-etsy-export", blocked), "guide-etsy-export", "storage blocked: this load only");
+  assert.equal(initRef("?ref=guide-etsy-export", null), "guide-etsy-export");
+  const src = readFileSync(join(root, "lib/engrave-merge/ref.ts"), "utf8") + readFileSync(join(root, "lib/engrave-merge/track.ts"), "utf8");
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  assert.ok(!/referrer|localStorage\.setItem\(REF/i.test(code), "never reads the referrer; ref never in localStorage");
+  assert.match(readFileSync(join(root, "lib/engrave-merge/ref.ts"), "utf8"), /"If one of our guides sent you, we also note which one, as part of those counts\."/, "FINAL Privacy line recorded in one spot");
+});
+
+test("guide ref: events carry optional ref (allow-list only); old clients without it unchanged; handler stores it as sent", async () => {
+  const base = { v: 1, event: "page_open", iid: "11111111-2222-4333-8444-555555555555", dogfood: false };
+  assert.ok(validateEvent({ ...base, props: {} }).ok, "no ref: as before");
+  for (const ref of ["guide-lightburn", "guide-etsy-export", "other"]) {
+    const v = validateEvent({ ...base, props: { ref } });
+    assert.ok(v.ok, ref);
+    assert.deepEqual(v.event.props, { ref });
+    const f = validateEvent({ ...base, event: "file_processed", props: { row_count: 3, item_count: 3, exception_count: 0, small_file: true, ref } });
+    assert.ok(f.ok, `file_processed + ${ref}`);
+  }
+  for (const ref of ["", "guide", "Guide-Lightburn", "https://x.example", 1, true, null]) {
+    const v = validateEvent({ ...base, props: { ref } });
+    assert.deepEqual([v.ok, v.reason], [false, "bad_ref"], JSON.stringify(ref));
+  }
+  // sendEvent adds this tab's ref to every event
+  const { initGuideRef, sendEvent } = await import("../lib/engrave-merge/track.ts");
+  const saved = { window: globalThis.window, navigator: Object.getOwnPropertyDescriptor(globalThis, "navigator") };
+  const store = new Map();
+  const sent = [];
+  try {
+    globalThis.window = { sessionStorage: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v) } };
+    Object.defineProperty(globalThis, "navigator", { value: { sendBeacon: (_u, blob) => (blob.text().then((t) => sent.push(JSON.parse(t))), true) }, configurable: true });
+    assert.equal(initGuideRef("?ref=guide-etsy-export"), "guide-etsy-export");
+    sendEvent(base.iid, "page_open");
+    sendEvent(base.iid, "pro_interest_tap");
+    await new Promise((r) => setTimeout(r, 20));
+    assert.deepEqual(sent.map((e) => [e.event, e.props]), [["page_open", { ref: "guide-etsy-export" }], ["pro_interest_tap", { ref: "guide-etsy-export" }]]);
+    for (const e of sent) assert.ok(validateEvent(e).ok, "server accepts what the client sends");
+    assert.deepEqual([...store], [["em_ref", "guide-etsy-export"]]);
+    store.clear();
+    sent.length = 0;
+    assert.equal(initGuideRef(""), null);
+    sendEvent(base.iid, "page_open");
+    await new Promise((r) => setTimeout(r, 20));
+    assert.deepEqual(sent[0].props, {}, "no ref → events exactly as before");
+  } finally {
+    globalThis.window = saved.window;
+    if (saved.navigator) Object.defineProperty(globalThis, "navigator", saved.navigator);
+  }
+  const desk = readFileSync(join(root, "components/engrave-merge/EngraveMergeDesk.tsx"), "utf8");
+  assert.match(desk, /iidRef\.current = initInstallId\(window\.location\.search\);\n\s+initGuideRef\(window\.location\.search\);\n\s+sendEvent\(iidRef\.current, "page_open"\);/, "read before the first event");
+  // every guide's ref is an allowed value
+  const { getGuides } = await import("../lib/guides/guides.ts");
+  for (const g of getGuides()) assert.ok(["guide-lightburn", "guide-etsy-export"].includes(g.ref), `${g.slug}: ${g.ref}`);
+});
+
+test("guide ref: address bar loses ONLY ?ref= after it is saved; Vercel Analytics URLs never carry ref; one beforeSend", async () => {
+  const { stripRefParam } = await import("../lib/engrave-merge/ref.ts");
+  const cases = [
+    ["/engrave-merge?ref=guide-lightburn", "/engrave-merge"],
+    ["/engrave-merge?ref=guide-lightburn&dogfood=1", "/engrave-merge?dogfood=1"],
+    ["/engrave-merge?dogfood=1&ref=guide-etsy-export&va=off#how", "/engrave-merge?dogfood=1&va=off#how"],
+    ["/engrave-merge?a=x%20y&ref=other&b=1+2", "/engrave-merge?a=x%20y&b=1+2"],
+    ["https://alignata.com/engrave-merge?dogfood=1&ref=guide-lightburn", "https://alignata.com/engrave-merge?dogfood=1"],
+    ["https://alignata.com/engrave-merge?referral=1&href=2&xref=3", "https://alignata.com/engrave-merge?referral=1&href=2&xref=3"],
+    ["/engrave-merge?ref&dogfood=1", "/engrave-merge?dogfood=1"],
+    ["/engrave-merge#ref=1", "/engrave-merge#ref=1"],
+    ["/engrave-merge", "/engrave-merge"],
+  ];
+  for (const [inp, out] of cases) assert.equal(stripRefParam(inp), out, inp);
+  // address bar: replaceState with ref removed, after em_ref is saved, Next's history.state kept
+  const { initGuideRef } = await import("../lib/engrave-merge/track.ts");
+  const saved = globalThis.window;
+  const log = [];
+  const store = new Map();
+  try {
+    const state = { __NA: true, tree: "next" };
+    globalThis.window = {
+      location: { pathname: "/engrave-merge", search: "?dogfood=1&ref=guide-lightburn&va=off", hash: "#top" },
+      history: { state, replaceState: (s, _t, url) => log.push(["replace", s, url, store.get("em_ref")]) },
+      sessionStorage: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => (log.push(["save", k, v]), store.set(k, v)) },
+    };
+    assert.equal(initGuideRef(window.location.search), "guide-lightburn");
+    assert.deepEqual(log, [["save", "em_ref", "guide-lightburn"], ["replace", state, "/engrave-merge?dogfood=1&va=off#top", "guide-lightburn"]], "saved first, then only ref removed");
+    log.length = 0;
+    window.location.search = "?dogfood=1";
+    initGuideRef(window.location.search);
+    assert.deepEqual(log, [], "no ref in the URL → address bar untouched");
+  } finally {
+    globalThis.window = saved;
+  }
+  // the ONE beforeSend: null when disabled, else ref stripped and every other param kept
+  const { vaBeforeSend } = await import("../lib/site/analytics.ts");
+  const ev = { type: "pageview", url: "https://alignata.com/engrave-merge?ref=guide-etsy-export&dogfood=1&va=off" };
+  assert.equal(vaBeforeSend(ev, true), null, "va disabled → nothing reported");
+  assert.deepEqual(vaBeforeSend(ev, false), { type: "pageview", url: "https://alignata.com/engrave-merge?dogfood=1&va=off" });
+  assert.deepEqual(vaBeforeSend({ type: "pageview", url: "https://alignata.com/apps" }, false), { type: "pageview", url: "https://alignata.com/apps" });
+  const tracker = readFileSync(join(root, "components/site/SiteTracker.tsx"), "utf8");
+  assert.equal((tracker.match(/beforeSend/g) || []).length >= 2 && (tracker.match(/const beforeSend =/g) || []).length, 1, "one beforeSend");
+  assert.match(tracker, /const beforeSend = \(event: BeforeSendEvent\) => vaBeforeSend\(event, excluded\(\)\);/);
+  assert.match(tracker, /<Analytics beforeSend=\{beforeSend\} \/>/);
+});
