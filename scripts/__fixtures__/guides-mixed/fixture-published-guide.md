@@ -5,6 +5,7 @@ datePublished: 2026-10-05
 updated: 2026-10-06
 draft: false
 tool: engrave-merge
+ref: guide-etsy-export
 ---
 
 Intro with **bold**, `code` and a [link](/guides/fixture-draft-guide).

@@ -1,11 +1,12 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Metadata } from "next";
+import { GUIDE_REFS } from "@/lib/engrave-merge/ref";
 
 /**
  * Guides (/guides/<slug>): content-driven, one Markdown file per guide in content/guides/<slug>.md (Product Copy drops
  * copy there). Frontmatter: title, dek, datePublished (YYYY-MM-DD), draft (true | false), tool (the app row at the end,
- * an apps.json id; its Open goes to the plain tool route). Optional: updated (YYYY-MM-DD, sitemap lastmod).
+ * an apps.json id), ref (the ?ref= tag on that tool's Open; must be an allow-listed GUIDE_REFS value). Optional: updated (YYYY-MM-DD, sitemap lastmod).
  * - draft: true → the page still renders (so QA can see it) but is noindex, nofollow, not in the sitemap, linked nowhere.
  * - draft: false → indexable, in sitemap.xml with lastmod, listed in the Guides block on its tool's story page.
  * Read at build time only (every guide page is static).
@@ -18,6 +19,7 @@ export type Guide = {
   updated?: string;
   draft: boolean;
   tool: string;
+  ref: string;
   body: string;
 };
 
@@ -52,6 +54,8 @@ export function parseGuide(slug: string, text: string): Guide {
   if (fm.updated && !DATE_RE.test(fm.updated)) throw new Error(`guide ${slug}: updated must be YYYY-MM-DD`);
   const draft = need("draft");
   if (draft !== "true" && draft !== "false") throw new Error(`guide ${slug}: draft must be true or false`);
+  const ref = need("ref");
+  if (!(GUIDE_REFS as readonly string[]).includes(ref)) throw new Error(`guide ${slug}: ref must be one of ${GUIDE_REFS.join(", ")}`);
   return {
     slug,
     title: need("title"),
@@ -60,6 +64,7 @@ export function parseGuide(slug: string, text: string): Guide {
     ...(fm.updated ? { updated: fm.updated } : {}),
     draft: draft === "true",
     tool: need("tool"),
+    ref,
     body: m[2].trim(),
   };
 }
@@ -81,6 +86,8 @@ export const getGuides = (): Guide[] => loadGuides();
 export const getGuide = (slug: string, guides: Guide[] = getGuides()): Guide | undefined => guides.find((g) => g.slug === slug);
 export const publishedGuides = (guides: Guide[] = getGuides()): Guide[] => guides.filter((g) => !g.draft);
 export const guidePath = (g: Pick<Guide, "slug">): string => `/guides/${g.slug}`;
+/** Where the guide's app-row Open goes: the tool route plus ?ref=<ref>. */
+export const guideToolHref = (toolUrl: string, g: Pick<Guide, "ref">): string => `${toolUrl}?ref=${encodeURIComponent(g.ref)}`;
 
 const SITE = "https://alignata.com";
 export const GUIDE_AUTHOR = "Alignata";

@@ -34,7 +34,7 @@ import {
   tabSession,
 } from "@/lib/engrave-merge/price";
 import { RECIPE_FILE_NAME, buildRecipe, parseRecipe } from "@/lib/engrave-merge/recipe";
-import { fileRef, initInstallId, sendEvent } from "@/lib/engrave-merge/track";
+import { fileRef, initGuideRef, initInstallId, sendEvent } from "@/lib/engrave-merge/track";
 import {
   DEFAULT_SETTINGS,
   type ListingRecipe,
@@ -110,6 +110,7 @@ export function EngraveMergeDesk() {
 
   useEffect(() => {
     iidRef.current = initInstallId(window.location.search);
+    initGuideRef(window.location.search);
     sendEvent(iidRef.current, "page_open");
   }, []);
   useEffect(

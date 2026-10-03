@@ -89,10 +89,10 @@ export const PRIVACY = {
     },
     {
       // Paragraph 1 ends with COPY.md §5's ship-together line for the Engrave Merge price card (replaces "...and when you tap
-      // "I'd pay".").
+      // "I'd pay"."), then the guide-ref line (FINAL 8:45 AM ET; CEO 9:13 AM ET: in, as the droppable ref commit).
       h2: "What we count",
       paras: [
-        "We keep our own small log of how the site is used: which pages you visit, which tool you open and where on the site you tapped it, which articles you read, and which links you tap on the homepage. On Engrave Merge, we also count when the page opens, when you download or print a result, and whether you saw the price question and how you answered it.",
+        "We keep our own small log of how the site is used: which pages you visit, which tool you open and where on the site you tapped it, which articles you read, and which links you tap on the homepage. On Engrave Merge, we also count when the page opens, when you download or print a result, and whether you saw the price question and how you answered it. If one of our guides sent you, we also note which one, as part of those counts.",
         // Session ID fix, FINAL (Brand Creator PASS + Voice Gate pre-approved exact text, 9:32 AM ET Oct 3).
         "Each entry has a random ID. A visitor ID stays in your browser until you clear this site's data, and a session ID usually lasts only as long as the tab. Engrave Merge keeps its own random ID in your browser, like the visitor ID.",
         "Our log doesn't hold your name, email address, IP address, browser details, file names or file contents.",

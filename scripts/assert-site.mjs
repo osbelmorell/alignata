@@ -1380,9 +1380,9 @@ test("guides content: both FINAL guides (GUIDES.md v2) published, slugs, H1s, de
   const { readFileSync, readdirSync, existsSync } = await import("node:fs");
   const { getGuides } = await import("../lib/guides/guides.ts");
   const gs = getGuides();
-  assert.deepEqual(gs.map((g) => [g.slug, g.title, g.draft, g.tool, g.datePublished]), [
-    [GUIDE_ETSY, "How to download Etsy orders as a CSV, with personalization", false, "engrave-merge", "2026-10-03"],
-    [GUIDE_LB, "LightBurn Variable Text from an Etsy order CSV", false, "engrave-merge", "2026-10-03"],
+  assert.deepEqual(gs.map((g) => [g.slug, g.title, g.draft, g.tool, g.ref, g.datePublished]), [
+    [GUIDE_ETSY, "How to download Etsy orders as a CSV, with personalization", false, "engrave-merge", "guide-etsy-export", "2026-10-03"],
+    [GUIDE_LB, "LightBurn Variable Text from an Etsy order CSV", false, "engrave-merge", "guide-lightburn", "2026-10-03"],
   ].sort((a, b) => a[0].localeCompare(b[0])));
   const lb = gs.find((g) => g.slug === GUIDE_LB), etsy = gs.find((g) => g.slug === GUIDE_ETSY);
   assert.equal(lb.dek, "Engrave every buyer's name from one file, instead of typing each order into LightBurn.");
@@ -1398,14 +1398,14 @@ test("guides content: both FINAL guides (GUIDES.md v2) published, slugs, H1s, de
   for (const f of files) assert.ok(!/blog/i.test(f + readFileSync(f, "utf8")), `${f}: never 'blog'`);
 });
 
-test("guide page: Digest story template (680 column, no hero), byline 'Alignata · Guide · Oct 3', prose, ONE Engrave Merge app row → plain /engrave-merge (no ?ref=), JSON-LD Organization", async () => {
+test("guide page: Digest story template (680 column, no hero), byline 'Alignata · Guide · Oct 3', prose, ONE Engrave Merge app row → ?ref=, JSON-LD Organization", async () => {
   const { renderToStaticMarkup } = await import("react-dom/server");
   const { getApps } = await import("../lib/apps.ts");
   const mod = await import("../app/guides/[slug]/page.tsx");
   assert.deepEqual(mod.generateStaticParams().map((p) => p.slug).sort(), [GUIDE_ETSY, GUIDE_LB].sort());
   const em = getApps().find((a) => a.id === "engrave-merge");
   assert.equal(em.blurb, "Turn Etsy orders into a LightBurn file, ready to engrave.", "live apps.json blurb");
-  for (const slug of [GUIDE_LB, GUIDE_ETSY]) {
+  for (const [slug, ref] of [[GUIDE_LB, "guide-lightburn"], [GUIDE_ETSY, "guide-etsy-export"]]) {
     const html = renderToStaticMarkup(await mod.default({ params: Promise.resolve({ slug }) }));
     const meta = await mod.generateMetadata({ params: Promise.resolve({ slug }) });
     assert.equal(meta.robots, undefined, `${slug}: published → no robots override (indexable on production)`);
@@ -1420,9 +1420,9 @@ test("guide page: Digest story template (680 column, no hero), byline 'Alignata 
     assert.equal((html.match(/fx-primary/g) || []).length, 1, "one black pill");
     assert.ok(html.includes(`<p class="fx-app-name">Engrave Merge</p><p class="fx-app-line">${em.blurb}</p>`));
     assert.ok(html.includes('src="/art/engrave-merge-sticker-icon.webp" alt="A laser engraver burning a line onto a tag."'), "Engrave Merge icon + FINAL alt");
-    assert.match(html, new RegExp(`<a class="fx-open fx-primary" href="/engrave-merge" data-tool-slug="engrave-merge" data-tool-pos="6" data-tool-src="guide" aria-label="Open Engrave Merge">Open</a>`));
+    assert.match(html, new RegExp(`<a class="fx-open fx-primary" href="/engrave-merge\\?ref=${ref}" data-tool-slug="engrave-merge" data-tool-pos="6" data-tool-src="guide" aria-label="Open Engrave Merge">Open</a>`));
     assert.ok(html.includes('<a href="/fixtures/engrave-merge/sample.csv" download="">Download a sample Order Items file</a>'), "sample: plain download, no ref");
-    assert.ok(!/[?&]ref=/.test(html), "no ?ref= anywhere on the page (ref tag dropped from this release)");
+    assert.equal((html.match(/\?ref=/g) || []).length, 1, "ref only on the Open");
     assert.deepEqual(imgsWithoutAlt(html), [], `${slug}: every <img> has an alt`);
     const ld = JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
     assert.deepEqual(ld.author, { "@type": "Organization", name: "Alignata", url: "https://alignata.com" });
@@ -1462,6 +1462,12 @@ test("guides: draft vs published (fixtures): drafts render noindex, out of sitem
   assert.throws(() => parseGuide("x", "no frontmatter"));
   assert.throws(() => parseGuide("x", '---\ntitle: "t"\ndek: d\ndatePublished: 2026-10-03\ndraft: maybe\ntool: t\nref: r\n---\nb'), /draft/);
   assert.throws(() => parseGuide("Bad_Slug", '---\ntitle: "t"\ndek: d\ndatePublished: 2026-10-03\ndraft: true\ntool: t\nref: r\n---\nb'), /kebab/);
+  // Guide ref allow-list: a guide may only tag its Open with guide-lightburn or guide-etsy-export ("other" is the tool's
+  // bucket for any unknown ?ref=, never a guide's own tag).
+  const fm = (ref) => `---\ntitle: "t"\ndek: d\ndatePublished: 2026-10-03\ndraft: true\ntool: engrave-merge\n${ref === undefined ? "" : `ref: ${ref}\n`}---\nb`;
+  for (const ok of ["guide-lightburn", "guide-etsy-export"]) assert.equal(parseGuide("x", fm(ok)).ref, ok);
+  for (const bad of ["other", "guide-x", "Guide-Lightburn", "r"]) assert.throws(() => parseGuide("x", fm(bad)), /ref must be one of guide-lightburn, guide-etsy-export/, bad);
+  assert.throws(() => parseGuide("x", fm(undefined)), /"ref" is required/);
 });
 
 test("guides live state: sitemap has both with lastmod; the Engrave Merge story lists both; nothing else links a guide", async () => {
@@ -1494,13 +1500,6 @@ test("guides tracking: the guide Open counts as tool_open {slug, position, sourc
   assert.ok(validateSiteEvent(env("page_view", { path: `/guides/${GUIDE_LB}` })).ok, "page_view path");
 });
 
-test("ref tag dropped from this release: no ref=guide- / em_ref anywhere in app, components, lib, content, public", async () => {
-  const { readdirSync, readFileSync, statSync } = await import("node:fs");
-  const { join } = await import("node:path");
-  const walk = (d) => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? walk(p) : [p]; });
-  const files = ["app", "components", "lib", "content", "public"].flatMap(walk).filter((f) => /\.(tsx?|mjs|js|md|json|css|html|txt)$/.test(f));
-  for (const f of files) assert.ok(!/ref=guide-|em_ref/.test(readFileSync(f, "utf8")), `${f}: no guide ref tag`);
-});
 
 test("Google Search Console: root layout metadata carries the exact verification token; built home page has the exact meta tag in <head>", async () => {
   const { readFileSync, existsSync } = await import("node:fs");
@@ -1628,7 +1627,7 @@ test("/privacy (COPY.md §5 v4 FINAL): no art, H1, dek, 'Last updated' + SHIP_DA
     "<h2>Services we use</h2><p>Vercel hosts the site, and Upstash stores our usage log. We don&#x27;t store your IP address. Vercel processes it briefly to serve and protect the site, and keeps its request logs for about an hour. Our fonts are hosted on our own site.</p>",
     "<p>Entries are deleted automatically after about 180 days (about 120 days for Engrave Merge).</p>",
     "<p>Each entry has a random ID. A visitor ID stays in your browser until you clear this site&#x27;s data, and a session ID usually lasts only as long as the tab. Engrave Merge keeps its own random ID in your browser, like the visitor ID.</p>",
-    "<h2>What we count</h2><p>We keep our own small log of how the site is used: which pages you visit, which tool you open and where on the site you tapped it, which articles you read, and which links you tap on the homepage. On Engrave Merge, we also count when the page opens, when you download or print a result, and whether you saw the price question and how you answered it.</p>",
+    "<h2>What we count</h2><p>We keep our own small log of how the site is used: which pages you visit, which tool you open and where on the site you tapped it, which articles you read, and which links you tap on the homepage. On Engrave Merge, we also count when the page opens, when you download or print a result, and whether you saw the price question and how you answered it. If one of our guides sent you, we also note which one, as part of those counts.</p>",
     "<p>Engrave Merge also keeps a small note on this device: how many files you&#x27;ve dropped into it, which days it showed you the price question, and your answer if you gave one. That way it doesn&#x27;t keep asking.</p><h2>Services we use</h2>",
     "<h2>Changes</h2><p>If we change what we collect, for example when paid plans arrive, we&#x27;ll update this page first and change the date at the top.</p>",
   ]) assert.ok(html.includes(f), `privacy has: ${f.slice(0, 80)}`);
