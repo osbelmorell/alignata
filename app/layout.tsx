@@ -23,6 +23,8 @@ export const metadata: Metadata = {
   },
   description: "Small tools for busy people, and AI techniques in plain English.",
   metadataBase: new URL("https://alignata.com"),
+  // Google Search Console ownership check (CEO, Oct 3 2026).
+  verification: { google: "hpF74ucSQwpql4ug5WHk_go4bnnz4rfUMzfdPM7xcRs" },
   ...(isPreview ? { robots: { index: false, follow: false } } : {}),
 };
 

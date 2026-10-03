@@ -1496,3 +1496,20 @@ test("ref tag dropped from this release: no ref=guide- / em_ref anywhere in app,
   const files = ["app", "components", "lib", "content", "public"].flatMap(walk).filter((f) => /\.(tsx?|mjs|js|md|json|css|html|txt)$/.test(f));
   for (const f of files) assert.ok(!/ref=guide-|em_ref/.test(readFileSync(f, "utf8")), `${f}: no guide ref tag`);
 });
+
+test("Google Search Console: root layout metadata carries the exact verification token; built home page has the exact meta tag in <head>", async () => {
+  const { readFileSync, existsSync } = await import("node:fs");
+  const TOKEN = "hpF74ucSQwpql4ug5WHk_go4bnnz4rfUMzfdPM7xcRs";
+  const TAG = `<meta name="google-site-verification" content="${TOKEN}"/>`;
+  const src = readFileSync("app/layout.tsx", "utf8");
+  assert.equal((src.match(/verification: \{ google: "([^"]+)" \}/) || [])[1], TOKEN, "metadata.verification.google is the exact token");
+  assert.equal(src.split("google-site-verification").length - 1, 0, "set through metadata only (no hand-written tag)");
+  // After `npm run build`: the prerendered home page has exactly one such tag, inside <head>.
+  const built = ".next/server/app/index.html";
+  if (existsSync(built)) {
+    const html = readFileSync(built, "utf8");
+    const head = html.slice(html.indexOf("<head>"), html.indexOf("</head>"));
+    assert.equal(head.split(TAG).length - 1, 1, `exactly one ${TAG} in <head>`);
+    assert.equal((html.match(/<meta name="google-site-verification"/g) || []).length, 1, "no second verification meta tag anywhere");
+  }
+});
