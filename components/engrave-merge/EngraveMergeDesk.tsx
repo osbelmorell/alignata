@@ -26,6 +26,7 @@ import {
   PRICE_KEY,
   type PriceAnswer,
   answerBlock,
+  shouldMoveFocus,
   storedAnswer,
   viewBlock,
   withPriceLock,
@@ -94,6 +95,7 @@ export function EngraveMergeDesk() {
   const [showWhere, setShowWhere] = useState(false);
   /** The "I'd pay" price card below the results (lib/engrave-merge/price.ts). */
   const [priceMode, setPriceMode] = useState<PriceCardMode>(null);
+  const [priceFocus, setPriceFocus] = useState(true); // focus the thanks line when it appears (cross-tab rule, §1.3)
   const priceViewSent = useRef(false);
   /** Uploads already counted by the price card in this page (lib/engrave-merge/price.ts countMade). */
   const priceCounted = useRef<Set<number>>(new Set());
@@ -246,12 +248,14 @@ export function EngraveMergeDesk() {
   };
 
   /**
-   * Show an answer's state: "pay" → thanks line (focus moves to it); "no" → the card just closes, nothing replaces it,
-   * and focus moves to the count line. Never sends anything.
+   * Show an answer's state: "pay" → thanks line; "no" → the card just closes, nothing replaces it. With moveFocus (a tap
+   * here, or focus was inside the card when another tab answered) focus goes to the thanks line / the count line, with
+   * preventScroll; otherwise it stays where it is. Never sends anything.
    */
-  const showAnswer = (a: PriceAnswer) => {
+  const showAnswer = (a: PriceAnswer, moveFocus = true) => {
+    setPriceFocus(moveFocus);
     setPriceMode(a === "pay" ? "thanks" : null);
-    if (a === "no") setTimeout(() => summaryRef.current?.querySelector<HTMLElement>("[data-count-line]")?.focus({ preventScroll: true }), 0);
+    if (a === "no" && moveFocus) setTimeout(() => summaryRef.current?.querySelector<HTMLElement>("[data-count-line]")?.focus({ preventScroll: true }), 0);
   };
 
   /**
@@ -278,7 +282,9 @@ export function EngraveMergeDesk() {
     const onStorage = (e: StorageEvent) => {
       if (e.key !== PRICE_KEY) return;
       const a = storedAnswer(localArea());
-      if (a) showAnswer(a);
+      if (!a) return;
+      // Focus rule (UX Lead 10:39 AM ET): read BEFORE the swap; move focus only if it was inside the card.
+      showAnswer(a, shouldMoveFocus(true, document.querySelector("[data-price-card]"), document.activeElement));
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -630,7 +636,7 @@ export function EngraveMergeDesk() {
           onIncludeShipped={onIncludeShipped}
         />
       )}
-      <PriceCard mode={priceMode} onSeen={onPriceSeen} onAnswer={onPriceAnswer} />
+      <PriceCard mode={priceMode} focusThanks={priceFocus} onSeen={onPriceSeen} onAnswer={onPriceAnswer} />
 
 
       <details className="mt-3 rounded-[var(--cb-radius-card-sm)] border border-[var(--cb-line)] bg-[var(--cb-surface)] px-4">

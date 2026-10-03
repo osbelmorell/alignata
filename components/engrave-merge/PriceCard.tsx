@@ -17,10 +17,13 @@ const textBtn =
  */
 export function PriceCard({
   mode,
+  focusThanks = true,
   onSeen,
   onAnswer,
 }: {
   mode: PriceCardMode;
+  /** Move focus to the thanks line when it appears (false when another tab answered and focus was elsewhere). */
+  focusThanks?: boolean;
   onSeen: () => void;
   onAnswer: (a: "pay" | "no") => void;
 }) {
@@ -51,8 +54,8 @@ export function PriceCard({
   }, [mode]);
 
   useEffect(() => {
-    if (mode === "thanks") thanksRef.current?.focus({ preventScroll: true });
-  }, [mode]);
+    if (mode === "thanks" && focusThanks) thanksRef.current?.focus({ preventScroll: true });
+  }, [mode, focusThanks]);
 
   if (mode === "thanks") {
     return (

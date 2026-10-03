@@ -1467,8 +1467,38 @@ test("price card Desk wiring (HANDOFF §1.3): view + answer only via the locked 
   assert.match(answer, /withPriceLock\(\(\) => \{\s*if \(needView\) sendView\(\);\s*const r = answerBlock\(/, "a tap: view (if not yet) then answer, in one locked block");
   assert.ok(answer.includes('x === "pay" ? sendEvent(iidRef.current, "price_intent") : sendEvent(iidRef.current, "price_dismiss")') && answer.includes("showAnswer(r.show)"), "sends through answerBlock only; shows the stored or tapped answer");
   const listener = desk.slice(desk.indexOf('window.addEventListener("storage"') - 400, desk.indexOf('window.removeEventListener("storage"'));
-  assert.ok(listener.includes("e.key !== PRICE_KEY") && listener.includes("storedAnswer(localArea())") && listener.includes("showAnswer(a)"), "storage listener on em_price");
+  assert.ok(listener.includes("e.key !== PRICE_KEY") && listener.includes("storedAnswer(localArea())") && listener.includes("showAnswer(a, "), "storage listener on em_price");
   assert.ok(!/sendEvent|viewBlock|answerBlock/.test(listener), "the listener never sends an event");
+});
+
+test("price card cross-tab focus rule (§1.3, UX Lead 10:39): another tab's answer moves focus ONLY if it was inside the card before the swap", async () => {
+  const { shouldMoveFocus } = await import("../lib/engrave-merge/price.ts");
+  // A tiny tree: body > [main > make, picker], [card > yes, no], [footer > about].
+  const node = (name, kids = []) => { const n = { name, kids, contains: (x) => x === n || kids.some((k) => k.contains(x)) }; return n; };
+  const yes = node("I'd pay $29"), no = node("No thanks"), card = node("card", [yes, no]);
+  const make = node("Make merge file"), picker = node("order picker"), about = node("footer About");
+  const body = node("body", [node("main", [make, picker]), card, node("footer", [about])]);
+  // Branch 1: focus was inside the card → move (pay → thanks line, no → count line).
+  for (const active of [yes, no, card]) assert.equal(shouldMoveFocus(true, card, active), true, `inside the card (${active.name}) → focus moves`);
+  // Branch 2: focus anywhere else → stays put (QA's preview start states: Make merge file, order picker, footer link, nothing focused).
+  for (const active of [make, picker, about, body, null, undefined]) assert.equal(shouldMoveFocus(true, card, active), false, `focus on ${active?.name ?? String(active)} → stays put`);
+  assert.equal(shouldMoveFocus(true, null, yes), false, "no card on screen → nothing to move from");
+  // A tap in this tab itself is unchanged: focus always moves.
+  for (const active of [yes, make, body, null]) assert.equal(shouldMoveFocus(false, card, active), true, "own tap → focus moves as always");
+});
+
+test("price card cross-tab focus wiring: the listener reads card.contains(activeElement) BEFORE the swap; both focus moves keep preventScroll", () => {
+  const desk = readFileSync("components/engrave-merge/EngraveMergeDesk.tsx", "utf8");
+  const listener = desk.slice(desk.indexOf("const onStorage = (e: StorageEvent) => {"), desk.indexOf('window.addEventListener("storage"'));
+  assert.match(listener, /showAnswer\(a, shouldMoveFocus\(true, document\.querySelector\("\[data-price-card\]"\), document\.activeElement\)\)/, "focus decision is taken from the live card before showAnswer swaps it");
+  const show = handlerBody("showAnswer");
+  assert.match(show, /const showAnswer = \(a: PriceAnswer, moveFocus = true\) =>/, "own taps default to moving focus");
+  assert.match(show, /setPriceFocus\(moveFocus\)/, "thanks line focus follows the rule");
+  assert.match(show, /if \(a === "no" && moveFocus\) setTimeout\(\(\) => summaryRef\.current\?\.querySelector<HTMLElement>\("\[data-count-line\]"\)\?\.focus\(\{ preventScroll: true \}\)/, "No → count line only when focus moves, preventScroll");
+  assert.match(handlerBody("onPriceAnswer"), /showAnswer\(r\.show\);/, "a tap in this tab is unchanged (always moves focus)");
+  assert.match(desk, /<PriceCard mode=\{priceMode\} focusThanks=\{priceFocus\}/);
+  const card = readFileSync("components/engrave-merge/PriceCard.tsx", "utf8");
+  assert.match(card, /if \(mode === "thanks" && focusThanks\) thanksRef\.current\?\.focus\(\{ preventScroll: true \}\);/, "thanks line focus only with focusThanks, preventScroll");
 });
 
 test("price card dogfood (RESOLVED 9:31 AM ET): dog- iid or site_dogfood=1 → no count, no card, no card event, em_price untouched; same flag on every event", async () => {
@@ -1544,7 +1574,7 @@ test("price card wiring: counted when the file is made (once per upload), after 
     assert.ok(!/countMade|shouldShowCard/.test(handlerBody(h)), `${h}: no count, no card`);
   const answer = handlerBody("onPriceAnswer");
   assert.ok(answer.indexOf("sendView()") < answer.indexOf("answerBlock("), "a tap before 50% still counts as seen first (views ≥ answers)");
-  assert.match(handlerBody("showAnswer"), /if \(a === "no"\) setTimeout\(\(\) => summaryRef\.current\?\.querySelector<HTMLElement>\("\[data-count-line\]"\)\?\.focus/, "No thanks → focus to the count line");
+  assert.match(handlerBody("showAnswer"), /if \(a === "no" && moveFocus\) setTimeout\(\(\) => summaryRef\.current\?\.querySelector<HTMLElement>\("\[data-count-line\]"\)\?\.focus/, "No thanks → focus to the count line");
   const card = deskSrc.indexOf("<PriceCard ");
   assert.ok(card > deskSrc.indexOf("<SummaryPanel") && card < deskSrc.indexOf("{COPY.guide}"), "below the results, before How to use this in LightBurn");
 });

@@ -37,7 +37,8 @@
  * - Storage blocked: no card; if it becomes blocked while a card is open, the view and the tap send nothing, nothing
  *   throws, and the UI still shows thanks / closes.
  * - Other tabs: a `storage` listener on em_price swaps an open card to thanks ("pay") or closes it ("no") when an
- *   answer lands from another tab. It never sends an event.
+ *   answer lands from another tab. It never sends an event. Focus moves only if it was inside the card right before
+ *   the swap (shouldMoveFocus), always with preventScroll; anywhere else it stays put.
  * Events (lib/engrave-merge/events.ts): price_card_view, price_intent ("I'd pay $29"), price_dismiss ("No thanks").
  * KPI: price_intent / price_card_view over devices that reached the 4th real file, dogfood excluded.
  */
@@ -211,6 +212,21 @@ function defaultLocks(): LockManagerLike | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Focus rule for an answer shown in this tab (HANDOFF §1.3, UX Lead 10:39 AM ET). A tap in this tab: focus moves as
+ * always (thanks line / count line). An answer from ANOTHER tab (storage listener): focus moves only if it was inside
+ * the card right before the swap (`card.contains(document.activeElement)`, read BEFORE the DOM changes); focus anywhere
+ * else (Make merge file, the order picker, a footer link, or nothing focused = body) stays put.
+ */
+export function shouldMoveFocus(
+  fromOtherTab: boolean,
+  card: Pick<Node, "contains"> | null | undefined,
+  active: Node | null | undefined,
+): boolean {
+  if (!fromOtherTab) return true;
+  return !!card && !!active && card.contains(active);
 }
 
 /** The stored answer, if any (for the cross-tab storage listener). Never throws. */

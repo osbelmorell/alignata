@@ -117,7 +117,7 @@ export const PRIVACY = {
     {
       h2: "Services we use",
       paras: [
-        "Vercel hosts the site, and Upstash stores our usage log. We don't store your IP address. Vercel processes it briefly to serve and protect the site, and keeps its request logs for about an hour. Our fonts are hosted on our own site.",
+        "Vercel hosts the site, and Upstash stores our usage log. We don't store your IP address. Vercel processes it briefly to serve and protect the site, and keeps its request logs for about a day. Our fonts are hosted on our own site.",
       ],
     },
     {
