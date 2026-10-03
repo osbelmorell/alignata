@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { HubChrome } from "@/components/HubChrome";
 import { SiteTracker } from "@/components/site/SiteTracker";
-import { Inter, Inter_Tight } from "next/font/google";
+import localFont from "next/font/local";
 import { SiteHeader } from "@/components/fantasy/SiteHeader";
 import "./globals.css";
 import "./fantasy.css";
@@ -10,8 +10,24 @@ import "./motion.css";
 import { MOTION_ON } from "@/lib/motion";
 import { RETIRED_WIPE_INLINE_SCRIPT } from "@/lib/site/retired-storage";
 
-const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-inter", display: "swap" });
-const interTight = Inter_Tight({ subsets: ["latin"], weight: ["600"], variable: "--font-inter-tight", display: "swap" });
+/**
+ * Self-hosted fonts (HANDOFF-COMPANY §6; Privacy "Our fonts are hosted on our own site."): the woff2 files live in
+ * app/fonts (Inter + Inter Tight, SIL OFL 1.1, app/fonts/OFL.txt) and are served from our own /_next/static/media.
+ * No request to fonts.googleapis.com / fonts.gstatic.com at build or run time, no preconnect. Same families, weights
+ * and latin subset as the previous Google-loader setup (byte-identical files to the ones it preloaded).
+ */
+const inter = localFont({
+  src: [{ path: "./fonts/Inter-latin-wght.woff2", weight: "400 600", style: "normal" }],
+  variable: "--font-inter",
+  display: "swap",
+  fallback: ["system-ui", "-apple-system", "Segoe UI", "Roboto", "Arial", "sans-serif"],
+});
+const interTight = localFont({
+  src: [{ path: "./fonts/InterTight-latin-600.woff2", weight: "600", style: "normal" }],
+  variable: "--font-inter-tight",
+  display: "swap",
+  fallback: ["system-ui", "-apple-system", "Segoe UI", "Roboto", "Arial", "sans-serif"],
+});
 
 /** Preview deployments (preview/* branches) stay unlisted; production is unchanged. */
 const isPreview = process.env.VERCEL_ENV === "preview";

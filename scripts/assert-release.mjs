@@ -92,3 +92,31 @@ test("built pages (npm run build first): no copy placeholder, no 'Paramount', no
   }
   assert.deepEqual(bad, [], `built pages that fail the release grep:\n  ${bad.join("\n  ")}`);
 });
+
+test("self-hosted fonts (HANDOFF-COMPANY §6): no Google Fonts in source, built pages or CSS; the woff2 files are ours", () => {
+  const GOOGLE = /fonts\.googleapis\.com|fonts\.gstatic\.com|next\/font\/google/;
+  const layout = readFileSync(join("app", "layout.tsx"), "utf8");
+  assert.ok(!/from "next\/font\/google"|https?:\/\/fonts\.(googleapis|gstatic)\.com/.test(layout) && layout.includes('from "next/font/local"'), "app/layout.tsx loads fonts with next/font/local");
+  for (const f of ["Inter-latin-wght.woff2", "InterTight-latin-600.woff2", "OFL.txt"]) assert.ok(existsSync(join("app", "fonts", f)), `app/fonts/${f}`);
+  const built = join(".next", "server", "app");
+  assert.ok(existsSync(built), "no build output: run `npm run build` before `npm run test:release`");
+  const files = [];
+  const walk = (dir, ext) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name);
+      if (e.isDirectory()) walk(p, ext);
+      else if (ext.some((x) => e.name.endsWith(x))) files.push(p);
+    }
+  };
+  walk(built, [".html"]);
+  walk(join(".next", "static"), [".css"]);
+  const hits = files.filter((p) => GOOGLE.test(readFileSync(p, "utf8")));
+  assert.deepEqual(hits, [], "no page or stylesheet references Google Fonts (no <link>, no preconnect, no @import)");
+  const css = files.filter((p) => p.endsWith(".css")).map((p) => readFileSync(p, "utf8")).join("\n");
+  const srcs = [...css.matchAll(/@font-face\s*{[^}]*src:\s*url\(([^)]+)\)/g)].map((m) => m[1].replace(/["']/g, ""));
+  assert.ok(srcs.length >= 2, `@font-face rules found: ${srcs.length}`);
+  for (const s of srcs) assert.match(s, /^(\/_next\/static\/media\/|\.\.\/media\/)[^/]+\.woff2$/, `font served from our own origin (relative to /_next/static/css): ${s}`);
+  const home = readFileSync(join(built, "index.html"), "utf8");
+  const preloads = [...home.matchAll(/<link rel="preload" href="([^"]+)" as="font"/g)].map((m) => m[1]);
+  assert.ok(preloads.length >= 2 && preloads.every((h) => h.startsWith("/_next/static/media/")), `font preloads are same-origin: ${preloads.join(" ")}`);
+});
