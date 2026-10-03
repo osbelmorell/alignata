@@ -1,18 +1,24 @@
 import Link from "next/link";
 import { getPostsNewestFirst } from "@/content/posts";
 import { getApps, toolsOrder } from "@/lib/apps";
-import { PostCard } from "@/components/fantasy/PostCard";
+import { postTag } from "@/lib/daily-digest/meta";
 import { SiteFooter } from "@/components/fantasy/SiteFooter";
-import { ToolCard } from "@/components/fantasy/ToolCard";
+import { ArticleStoryCard, ToolStoryCard } from "@/components/appstore/StoryCard";
 
 /**
- * Homepage (SPEC §5a, v1.5; reference alignata-mockups/site/home.html): one display line and two pills (no art,
- * no fade-in), then Tools (cards 01 + 02, "All tools"), then Daily Digest (3 newest, "All articles"), then the footer.
- * Every link carries data-home-target for the home_click tracker (targets as on main 63a78f8).
+ * Homepage as the Today feed (SPEC v2 §2; mock mockups-art/home.html). Top unchanged from v1.5 §5a: the locked line and
+ * two pills (black Tools = the one primary, outlined Daily Digest), no animation on first paint. Then five story cards,
+ * no section headings: Cleaver, the newest article, License Gate, the next two articles. Then "All tools" and
+ * "All articles". Deploy Decision Card never appears here. Tap targets for home_click are the same as v1.5.
  */
 export default function HomePage() {
-  const tools = toolsOrder(getApps()).slice(0, 2);
-  const posts = getPostsNewestFirst().slice(0, 3);
+  const order = toolsOrder(getApps());
+  const pos = (id: string) => order.findIndex((a) => a.id === id) + 1;
+  const tool = (id: string) => order.find((a) => a.id === id);
+  const [a1, a2, a3] = getPostsNewestFirst();
+  const cleaver = tool("stripe-cleaver");
+  const gate = tool("license-gate");
+  const eyebrow = (p: NonNullable<typeof a1>) => `Daily Digest · ${postTag(p)}`;
   return (
     <div className="fx-page">
       <main className="fx-wrap">
@@ -27,28 +33,21 @@ export default function HomePage() {
             </Link>
           </div>
         </section>
-        <section className="fx-home-sec" aria-labelledby="h-tools">
-          <h2 id="h-tools">Tools</h2>
-          <div className="fx-tools">
-            {tools.map((app, i) => (
-              <ToolCard key={app.id} app={app} pos={i + 1} homeTarget />
-            ))}
-          </div>
-          <Link className="fx-all-link" href="/apps" data-home-target="all-tools">
+        <section className="fx-feed" aria-label="Today">
+          {cleaver ? <ToolStoryCard app={cleaver} pos={pos(cleaver.id)} lead homeTarget /> : null}
+          {a1 ? <ArticleStoryCard post={a1} eyebrow={eyebrow(a1)} eager homeTarget /> : null}
+          {gate ? <ToolStoryCard app={gate} pos={pos(gate.id)} homeTarget /> : null}
+          {a2 ? <ArticleStoryCard post={a2} eyebrow={eyebrow(a2)} homeTarget /> : null}
+          {a3 ? <ArticleStoryCard post={a3} eyebrow={eyebrow(a3)} homeTarget /> : null}
+        </section>
+        <nav className="fx-feed-links" aria-label="More">
+          <Link className="fx-text-link" href="/apps" data-home-target="all-tools">
             All tools
           </Link>
-        </section>
-        <section className="fx-home-sec" aria-labelledby="h-digest">
-          <h2 id="h-digest">Daily Digest</h2>
-          <div className="fx-posts">
-            {posts.map((post, i) => (
-              <PostCard key={post.slug} post={post} feature={i === 0} homeTarget />
-            ))}
-          </div>
-          <Link className="fx-all-link" href="/daily-digest" data-home-target="all-articles">
+          <Link className="fx-text-link" href="/daily-digest" data-home-target="all-articles">
             All articles
           </Link>
-        </section>
+        </nav>
       </main>
       <SiteFooter />
     </div>

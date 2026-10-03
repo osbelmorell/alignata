@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ToolsPage } from "@/components/fantasy/ToolsPage";
+import { ToolsList } from "@/components/appstore/ToolsList";
 import { getApps, toolsOrder } from "@/lib/apps";
 
 export const metadata: Metadata = {
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function AppsPage() {
-  return <ToolsPage apps={toolsOrder(getApps())} />;
+  return <ToolsList apps={toolsOrder(getApps())} />;
 }

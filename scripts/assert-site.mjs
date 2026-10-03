@@ -259,11 +259,11 @@ test("baseline reader: only SCAN MATCH site:ev:* and LRANGE site:ev:<day>; never
   await assert.rejects(readStore({}), /No event store configured/);
 });
 
-test("/apps (v1.4): 11 tools, Cleaver 01 and License Gate 02 with custom art, the rest A–Z; tracking attrs = shown position", async () => {
+test("/apps (v2 §5): 11 app rows in /apps order; row body → story, soft Open → tool; tracking attrs = shown position", async () => {
   const { getApps, toolsOrder, toolArt } = await import("../lib/apps.ts");
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
-  const { ToolsPage } = await import("../components/fantasy/ToolsPage.tsx");
+  const { ToolsList } = await import("../components/appstore/ToolsList.tsx");
   const order = toolsOrder(getApps());
   assert.deepEqual(order.map((a) => a.name), [
     "Stripe→Books Cleaver", "License Risk Gate", "Agent Bundle Tag", "Agent Eval Go/No-Go", "Deploy Decision Card", "Engrave Merge",
@@ -271,17 +271,27 @@ test("/apps (v1.4): 11 tools, Cleaver 01 and License Gate 02 with custom art, th
   ]);
   assert.equal(order.find((a) => a.id === "stripe-cleaver").blurb, "Turn a Stripe payout file into a QuickBooks or Xero import.", "locked Cleaver line");
   for (const a of order) assert.ok(toolArt(a.id).icon, `${a.id} has an icon`);
-  const html = renderToStaticMarkup(createElement(ToolsPage, { apps: order }));
-  const attrs = [...html.matchAll(/<a class="(fx-stretch|fx-pill)" href="([^"]+)" data-tool-slug="([^"]+)" data-tool-pos="(\d+)"/g)].map((m) => [m[1], m[3], +m[4]]);
-  assert.equal(attrs.length, 22, "card link + Open on every card");
+  const html = renderToStaticMarkup(createElement(ToolsList, { apps: order }));
+  const rows = html.split('<li class="fx-arow"').slice(1);
+  assert.equal(rows.length, 11, "11 rows");
   order.forEach((a, i) => {
-    assert.deepEqual(attrs[2 * i], ["fx-stretch", a.id, i + 1]);
-    assert.deepEqual(attrs[2 * i + 1], ["fx-pill", a.id, i + 1]);
+    const r = rows[i];
+    assert.ok(r.startsWith(` data-slug="${a.id}" data-pos="${i + 1}"`), `row ${i + 1} is ${a.id}`);
+    const t = toolArt(a.id);
+    assert.ok(r.includes(`<img class="fx-icon" src="${t.icon}" alt="${t.iconAlt.replace(/'/g, "&#x27;")}"`), `${a.id} icon + FINAL alt`);
+    const open = [...r.matchAll(/<a class="fx-open" href="([^"]+)" data-tool-slug="([^"]+)" data-tool-pos="(\d+)" aria-label="Open ([^"]+)">Open<\/a>/g)];
+    assert.equal(open.length, 1, `${a.id}: one soft Open`);
+    assert.deepEqual([open[0][1], open[0][2], +open[0][3]], [a.url, a.id, i + 1], `${a.id}: Open → tool, tracked at its position`);
+    if (a.id === "deploy-decision-card") {
+      assert.ok(r.includes(`<a class="fx-stretch" href="${a.url}" data-tool-slug="${a.id}" data-tool-pos="${i + 1}">`), "Deploy Decision: row body → the tool (no story)");
+    } else {
+      assert.ok(r.includes(`<a class="fx-stretch" href="/apps/${a.id}">`), `${a.id}: row body → /apps/${a.id} (no tool_open on a story tap)`);
+    }
     assert.ok(SLUG_RE_OK(a.id), `${a.id} passes the tool_open slug check`);
   });
-  assert.equal((html.match(/fx-dot/g) || []).length, 1, "lime once: the dot before 01 /");
-  assert.equal((html.match(/>Open<\/a>/g) || []).length, 11, "every card has a visible Open");
-  for (let i = 1; i <= 11; i++) assert.ok(html.includes(`${String(i).padStart(2, "0")} /`), `number ${i}`);
+  assert.equal((html.match(/>Open<\/a>/g) || []).length, 11, "every row has a visible Open");
+  assert.ok(!html.includes("fx-primary"), "no black pill on /apps (soft Opens only)");
+  assert.ok(!/>(Get|Buy|Install)</.test(html), "Open, never Get");
 });
 const SLUG_RE_OK = (s) => validateSiteEvent({ v: 1, event: "tool_open", sid: SID, vid: VID, dogfood: false, props: { slug: s, position: 1 } }).ok;
 
@@ -389,20 +399,39 @@ test("Daily Digest: tags, real read time, sticker hero art + FINAL alt, verbatim
   assert.equal(seen.size, list.length);
 });
 
-test("Daily Digest pages render: index cards (feature first, one lime dot, no Open), article head order, 01. list, Next card", async () => {
+test("Daily Digest pages render: story cards (eyebrow = tag, title is the link, no Open), sticker art + FINAL alt, article story, 01. list", async () => {
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
   const { getPostsNewestFirst, getPost } = await import("../content/posts.ts");
-  const { PostCard } = await import("../components/fantasy/PostCard.tsx");
+  const meta = await import("../lib/daily-digest/meta.ts");
+  const { ArticleStoryCard } = await import("../components/appstore/StoryCard.tsx");
   const { ArticleBody } = await import("../components/daily-digest/ArticleBody.tsx");
+  const { default: Index } = await import("../app/daily-digest/page.tsx");
   const list = getPostsNewestFirst();
-  const cards = list.map((p, i) => renderToStaticMarkup(createElement(PostCard, { post: p, feature: i === 0, dot: i === 0 }))).join("");
+  const cards = renderToStaticMarkup(createElement(Index));
   assert.equal((cards.match(/data-post-card=/g) || []).length, 24);
-  assert.equal((cards.match(/fx-feature/g) || []).length, 1);
-  assert.equal((cards.match(/fx-dot/g) || []).length, 1);
+  assert.equal((cards.match(/fx-scard fx-lead/g) || []).length, 5, "a lead row every 5 cards (§3 desktop layout repeated)");
   assert.ok(!/>Open</.test(cards), "no Open pill on the digest");
-  assert.equal((cards.match(/<a class="fx-stretch" href="\/daily-digest\/[a-z0-9-]+">/g) || []).length, 24, "title is the link");
+  const esc = (t) => t.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
+  for (const p of list) {
+    assert.ok(cards.includes(`<a class="fx-stretch" href="/daily-digest/${p.slug}">`), `${p.slug}: title is the link`);
+    assert.ok(cards.includes(`<img src="/art/digest/${p.slug}-sticker.webp" alt="${esc(p.hero.alt)}" width="1920" height="1080"`), `${p.slug}: sticker + FINAL alt on the card`);
+    assert.ok(cards.includes(`style="--art-pad:${p.hero.pad}"`), `${p.slug}: pad colour`);
+    assert.ok(cards.includes(`<p class="fx-eyebrow">${meta.postTag(p)}</p>`), `${p.slug}: eyebrow = tag`);
+  }
+  const one = renderToStaticMarkup(createElement(ArticleStoryCard, { post: list[0], eyebrow: "Daily Digest · Technique", homeTarget: true }));
+  assert.ok(one.includes('<p class="fx-eyebrow">Daily Digest · Technique</p>'));
+  assert.ok(one.includes(`data-home-target="article:${list[0].slug}"`));
+  // article story page: hero first (same file as the card), eyebrow, H1, card dek, meta line, body, Next article
+  const { default: Article } = await import("../app/daily-digest/[slug]/page.tsx");
   const tech = getPost("break-loops-when-progress-stalls");
+  const page = renderToStaticMarkup(await Article({ params: Promise.resolve({ slug: tech.slug }) }));
+  const order = ["fx-story-hero", `src="/art/digest/${tech.slug}-sticker.webp"`, '<p class="fx-eyebrow">Daily Digest</p>', `<h1 class="fx-story-title">${tech.title}</h1>`,
+    `<p class="fx-story-dek">${meta.postCardDek(tech)}</p>`, `Technique · <time dateTime="2026-10-02">Oct 2</time> · ${meta.readMinutes(tech)} min read`, "<h2>The problem</h2>", "<h2>Next article</h2>", ">All articles</a>"];
+  let at = -1;
+  for (const frag of order) { const i = page.indexOf(frag); assert.ok(i > at, `article order: ${frag}`); at = i; }
+  assert.ok(page.includes(`alt="${esc(tech.hero.alt)}"`), "hero alt = FINAL");
+  assert.ok(!page.includes("fx-primary") && !/>Open</.test(page), "no Open on an article");
   const body = renderToStaticMarkup(createElement(ArticleBody, { paragraphs: tech.paragraphs }));
   assert.match(body, /<h2>Try it<\/h2><ol start="1" style="counter-reset:fx-ol 0"><li>After each tool step/);
   const essay = getPost("the-ai-safety-paradox");
@@ -410,6 +439,61 @@ test("Daily Digest pages render: index cards (feature first, one lime dot, no Op
   assert.equal((eb.match(/data-pullquote/g) || []).length, 1);
   assert.match(eb, /design the locks\. And not just design them[^<]*<\/p><figure class="fx-pullquote" data-pullquote="true" aria-hidden="true">/);
   assert.match(eb, /<p class="fx-byline">— Osbel Morell<\/p><\/div>$/);
+});
+
+test("homepage (v2 §2): feed order, one black pill, Open → tool with home_click + tool_open attrs, story link, no Deploy Decision", async () => {
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { default: Home } = await import("../app/page.tsx");
+  const html = renderToStaticMarkup(createElement(Home));
+  const feed = [...html.matchAll(/<article class="fx-scard[^"]*" data-kind="(tool|article)" data-(?:slug|post-card)="([^"]+)"/g)].map((m) => `${m[1]}:${m[2]}`);
+  assert.deepEqual(feed, ["tool:stripe-cleaver", "article:break-loops-when-progress-stalls", "tool:license-gate", "article:dont-follow-orders-in-tool-text", "article:the-ai-safety-paradox"]);
+  assert.ok(html.includes('class="fx-scard fx-lead" data-kind="tool" data-slug="stripe-cleaver"'), "Cleaver is the lead card");
+  for (const [slug, pos] of [["stripe-cleaver", 1], ["license-gate", 2]]) {
+    assert.ok(html.includes(`<a class="fx-stretch" href="/apps/${slug}">`), `${slug}: card title → story`);
+    assert.match(html, new RegExp(`<a class="fx-open" href="/${slug}" data-tool-slug="${slug}" data-tool-pos="${pos}" data-home-target="tool:${slug}" aria-label="Open [^"]+">Open</a>`), `${slug}: soft Open → tool`);
+  }
+  for (const t of ["tools-pill", "digest-pill", "all-tools", "all-articles", "article:break-loops-when-progress-stalls", "article:dont-follow-orders-in-tool-text", "article:the-ai-safety-paradox"]) {
+    assert.ok(html.includes(`data-home-target="${t}"`), `home_click target ${t}`);
+    assert.ok(validateSiteEvent(env("home_click", { target: t })).ok, `${t} validates`);
+  }
+  assert.ok(html.includes('<p class="fx-eyebrow">Daily Digest · Technique</p>') && html.includes('<p class="fx-eyebrow">Daily Digest · Essay</p>'));
+  assert.equal((html.match(/class="fx-pill"/g) || []).length, 1, "one black pill (Tools)");
+  assert.ok(!html.includes("fx-primary"), "feed Opens are soft");
+  assert.ok(!html.includes("deploy-decision"), "Deploy Decision never in the feed");
+  assert.ok(!/<h2[^>]*>(Tools|Daily Digest)<\/h2>/.test(html), "no section headings in the feed");
+});
+
+test("tool story (v2 §4): 10 static stories (no Deploy Decision), hero + H1 + black Open row, About body, end row, sticky bar", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { getApps, toolsOrder, toolArt, TOOL_STORY } = await import("../lib/apps.ts");
+  const mod = await import("../app/apps/[slug]/page.tsx");
+  const slugs = mod.generateStaticParams().map((p) => p.slug);
+  assert.equal(slugs.length, 10);
+  assert.ok(!slugs.includes("deploy-decision-card"));
+  assert.equal(mod.dynamicParams, false);
+  const order = toolsOrder(getApps());
+  for (const slug of slugs) {
+    const pos = order.findIndex((a) => a.id === slug) + 1;
+    const app = order[pos - 1];
+    const html = renderToStaticMarkup(await mod.default({ params: Promise.resolve({ slug }) }));
+    const t = toolArt(slug);
+    assert.ok(html.indexOf(`src="${t.art}"`) < html.indexOf('<h1 class="fx-story-title">'), `${slug}: hero above the H1`);
+    assert.ok(html.includes(`<h1 class="fx-story-title">${TOOL_STORY[slug].title.replace(/'/g, "&#x27;")}</h1>`), `${slug}: H1 = card title`);
+    const opens = [...html.matchAll(/<a class="fx-open fx-primary" href="([^"]+)" data-tool-slug="([^"]+)" data-tool-pos="(\d+)"/g)];
+    assert.equal(opens.length, 3, `${slug}: black Open in the first row, the end row and the sticky bar`);
+    for (const o of opens) assert.deepEqual([o[1], o[2], +o[3]], [app.url, slug, pos], `${slug}: Open → tool at its /apps position`);
+    assert.ok(html.includes('data-row="first"') && html.includes('data-row="end"'));
+    assert.ok(html.includes('data-sticky-open=""') && html.includes('aria-hidden="true"'), `${slug}: sticky bar starts hidden`);
+    assert.ok(html.includes(">All tools</a>"), `${slug}: ends with All tools`);
+    assert.ok(html.includes("<h2>What</h2>") && html.includes("<h2>Why</h2>") && html.includes("<h2>How</h2>"), `${slug}: About body`);
+    assert.ok(!/aria-label="Close|>×</.test(html), "no close (X)");
+  }
+  const cl = renderToStaticMarkup(await mod.default({ params: Promise.resolve({ slug: "stripe-cleaver" }) }));
+  assert.ok(cl.includes("<li>Tap &quot;Run the cleaver&quot;.</li>") && cl.includes("One drop, one download."), "Cleaver About fixes on the story");
+  const md = await mod.generateMetadata({ params: Promise.resolve({ slug: "license-gate" }) });
+  assert.equal(md.alternates.canonical, "/apps/license-gate");
+  assert.equal(md.title, "Catch license problems before release");
 });
 
 test("home_click: only allow-listed targets validate; extra or missing props are rejected", () => {

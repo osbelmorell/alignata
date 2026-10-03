@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 
 /**
  * Persistent tool chrome: on tool routes, always offer a path back to `/apps`
- * (All apps). Hidden on brand home, /apps, and /daily-digest so Alignata nav leads.
- * Clay Board light nav — paper bg, ink link — matches hub shell.
+ * (All apps). Hidden on brand home, /apps, the /apps/<slug> stories and /daily-digest so Alignata nav leads.
+ * Light nav — paper bg, ink link — on the one site container (.fx-wrap), so its left edge matches the header on every route.
  */
 export function HubChrome() {
   const pathname = usePathname();
@@ -14,6 +14,7 @@ export function HubChrome() {
     pathname === "/" ||
     pathname === "" ||
     pathname === "/apps" ||
+    pathname.startsWith("/apps/") ||
     pathname.startsWith("/daily-digest");
 
   if (hide) {
@@ -25,7 +26,7 @@ export function HubChrome() {
       aria-label="Apps"
       className="sticky top-0 z-50 border-b border-[var(--cb-line)] bg-[var(--cb-bg)]/95 backdrop-blur-sm"
     >
-      <div className="mx-auto flex w-full max-w-5xl items-center gap-2 px-3 py-1.5 sm:gap-3 sm:px-6 sm:py-2.5 lg:px-8">
+      <div className="fx-wrap flex items-center gap-2 py-1.5 sm:gap-3 sm:py-2.5">
         <Link
           href="/apps"
           className="inline-flex min-h-[44px] items-center gap-1 rounded-[var(--cb-radius-pill)] px-1.5 py-0.5 text-base font-medium text-[var(--cb-ink)] transition hover:bg-[var(--cb-surface)] sm:gap-1.5 sm:px-2 sm:py-1"

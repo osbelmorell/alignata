@@ -3,9 +3,9 @@ import { HubChrome } from "@/components/HubChrome";
 import { SiteTracker } from "@/components/site/SiteTracker";
 import { Inter, Inter_Tight } from "next/font/google";
 import { SiteHeader } from "@/components/fantasy/SiteHeader";
-import { Reveal } from "@/components/fantasy/Reveal";
 import "./globals.css";
 import "./fantasy.css";
+import "./appstore.css";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-inter", display: "swap" });
 const interTight = Inter_Tight({ subsets: ["latin"], weight: ["600"], variable: "--font-inter-tight", display: "swap" });
@@ -34,7 +34,6 @@ export default function RootLayout({
         <SiteHeader />
         <HubChrome />
         {children}
-        <Reveal />
         <SiteTracker />
       </body>
     </html>

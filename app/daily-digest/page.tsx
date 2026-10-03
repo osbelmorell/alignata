@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getPostsNewestFirst } from "@/content/posts";
-import { PostCard } from "@/components/fantasy/PostCard";
+import { ArticleStoryCard } from "@/components/appstore/StoryCard";
 
 export const metadata: Metadata = {
   title: "Daily Digest",
@@ -18,7 +18,11 @@ export const metadata: Metadata = {
   },
 };
 
-/** SPEC §7 /daily-digest: newest first; on desktop the newest is a full-width feature, then a 3-up grid. */
+/**
+ * /daily-digest (SPEC v2 §5): title and locked subline, then every article as a story card (no app row), newest first.
+ * Eyebrow = the tag (the page title already says Daily Digest). Desktop repeats the §3 layout: a full-width lead row,
+ * then a 2-up grid of 6 columns, every 5 cards.
+ */
 export default function DailyDigestIndexPage() {
   const posts = getPostsNewestFirst();
   return (
@@ -29,9 +33,9 @@ export default function DailyDigestIndexPage() {
           Proven AI techniques, deep dives, and the occasional essay, tested and written in plain English.
         </p>
       </section>
-      <section className="fx-posts" aria-label="All articles">
+      <section className="fx-feed" aria-label="All articles">
         {posts.map((post, i) => (
-          <PostCard key={post.slug} post={post} feature={i === 0} dot={i === 0} eager={i === 0} />
+          <ArticleStoryCard key={post.slug} post={post} lead={i % 5 === 0} eager={i === 0} />
         ))}
       </section>
     </main>

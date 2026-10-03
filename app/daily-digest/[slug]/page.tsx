@@ -3,9 +3,10 @@ import type { Metadata } from "next";
 import { getPost, posts } from "@/content/posts";
 import { notFound } from "next/navigation";
 import { ArticleBody } from "@/components/daily-digest/ArticleBody";
-import { PostCard } from "@/components/fantasy/PostCard";
+import { ArticleStoryCard } from "@/components/appstore/StoryCard";
+import { ArtFigure } from "@/components/appstore/ArtFigure";
 import { toPlainText } from "@/lib/daily-digest/blocks";
-import { heroImage, nextPost, postTag, readMinutes, shortDate } from "@/lib/daily-digest/meta";
+import { heroImage, nextPost, postCardDek, postTag, readMinutes, shortDate } from "@/lib/daily-digest/meta";
 
 export const dynamicParams = false;
 
@@ -40,8 +41,10 @@ export async function generateMetadata({
 }
 
 /**
- * SPEC §8 article: centred meta (tag · date · read time), H1 and dek first, then the 16:9 hero; body column max 680.
- * Ends with one "Next article" card (index style) and an "All articles" link.
+ * Article story (SPEC v2 §4; mock mockups-art/daily-digest-break-loops-when-progress-stalls.html). Hero directly under
+ * the header (the card's exact file, so the morph pairs), eyebrow "Daily Digest", H1 = the card title, the card dek
+ * (COPY.md v2 limit, so card and story match), then the meta line "Technique · Oct 2 · 4 min read". Body in the 680
+ * column (v1.5 §8 rules). Ends with one "Next article" card and "All articles".
  */
 export default async function DailyDigestPostPage({
   params,
@@ -55,46 +58,31 @@ export default async function DailyDigestPostPage({
   const next = nextPost(post.slug);
 
   return (
-    <main>
+    <main className="fx-story">
       <article>
-        <header className="fx-wrap">
-          <div className="fx-a-head">
-            <p className="fx-meta">
-              <span className="fx-dot" aria-hidden="true" />
+        <ArtFigure slug={post.slug} className="fx-story-hero" src={hero.src} alt={hero.alt} pad={hero.pad} hero />
+        <div className="fx-story-col">
+          <header className="fx-story-head">
+            <p className="fx-eyebrow">Daily Digest</p>
+            <h1 className="fx-story-title">{post.title}</h1>
+            <p className="fx-story-dek">{postCardDek(post)}</p>
+            <p className="fx-meta fx-story-meta">
               <span>
                 {postTag(post)} · <time dateTime={post.date}>{shortDate(post.date)}</time> · {readMinutes(post)} min read
               </span>
             </p>
-            <h1>{post.title}</h1>
-            <p className="fx-intro">{toPlainText(post.dek)}</p>
-          </div>
-          <figure className="fx-hero fx-art fx-reveal" style={{ background: hero.pad }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={hero.src}
-              sizes="(min-width: 1280px) 1184px, calc(100vw - 40px)"
-              alt={hero.alt}
-              width={hero.width}
-              height={hero.height}
-              fetchPriority="high"
-              decoding="async"
-            />
-          </figure>
-        </header>
-        <div className="fx-wrap">
+          </header>
           <ArticleBody paragraphs={post.paragraphs} sections={post.sections} pullQuote={post.pullQuote} />
           {post.sourceNote ? <p className="fx-prose fx-note">{post.sourceNote}</p> : null}
+          <aside className="fx-next" aria-label="Next article">
+            <h2>Next article</h2>
+            {next ? <ArticleStoryCard post={next} heading="h3" /> : null}
+            <Link className="fx-text-link" href="/daily-digest">
+              All articles
+            </Link>
+          </aside>
         </div>
       </article>
-      <div className="fx-wrap">
-        <aside className="fx-next" aria-label="Next article">
-          <h2>Next article</h2>
-          {next ? <PostCard post={next} heading="h3" /> : null}
-          <Link className="fx-all-link" href="/daily-digest">
-            All articles
-          </Link>
-        </aside>
-      </div>
     </main>
   );
 }
