@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getPostsNewestFirst } from "@/content/posts";
 import { ArticleStoryCard } from "@/components/appstore/StoryCard";
+import { PageFade } from "@/components/appstore/Motion";
 
 export const metadata: Metadata = {
   title: "Daily Digest",
@@ -26,18 +27,20 @@ export const metadata: Metadata = {
 export default function DailyDigestIndexPage() {
   const posts = getPostsNewestFirst();
   return (
-    <main className="fx-wrap">
-      <section className="fx-page-head">
-        <h1 className="fx-display">Daily Digest</h1>
-        <p className="fx-intro">
-          Proven AI techniques, deep dives, and the occasional essay, tested and written in plain English.
-        </p>
-      </section>
-      <section className="fx-feed" aria-label="All articles">
-        {posts.map((post, i) => (
-          <ArticleStoryCard key={post.slug} post={post} lead={i % 5 === 0} eager={i === 0} />
-        ))}
-      </section>
-    </main>
+    <PageFade>
+      <main className="fx-wrap">
+        <section className="fx-page-head">
+          <h1 className="fx-display">Daily Digest</h1>
+          <p className="fx-intro">
+            Proven AI techniques, deep dives, and the occasional essay, tested and written in plain English.
+          </p>
+        </section>
+        <section className="fx-feed" aria-label="All articles">
+          {posts.map((post, i) => (
+            <ArticleStoryCard key={post.slug} post={post} lead={i % 5 === 0} eager={i === 0} />
+          ))}
+        </section>
+      </main>
+    </PageFade>
   );
 }

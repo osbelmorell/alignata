@@ -1,5 +1,6 @@
 import type { HubApp } from "@/lib/types";
 import { toolArt } from "@/lib/apps";
+import { Img } from "@/components/appstore/Img";
 
 /**
  * App row (SPEC v2 §3/§4): icon, locked name + one-liner, and an Open pill straight to the tool.
@@ -26,8 +27,7 @@ export function AppRow({
   const art = toolArt(app.id);
   return (
     <div className={`fx-app-row${variant === "story" ? " fx-story-row" : ""}`} {...(row ? { "data-row": row } : {})}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="fx-icon" src={art.icon} alt={art.iconAlt} width={256} height={256} decoding="async" />
+      <Img className="fx-icon" src={art.icon} alt={art.iconAlt} width={256} height={256} decoding="async" />
       <div className="fx-app-meta">
         <p className="fx-app-name">{app.name}</p>
         <p className="fx-app-line">{app.blurb}</p>

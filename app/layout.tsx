@@ -6,6 +6,8 @@ import { SiteHeader } from "@/components/fantasy/SiteHeader";
 import "./globals.css";
 import "./fantasy.css";
 import "./appstore.css";
+import "./motion.css";
+import { MOTION_ON } from "@/lib/motion";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-inter", display: "swap" });
 const interTight = Inter_Tight({ subsets: ["latin"], weight: ["600"], variable: "--font-inter-tight", display: "swap" });
@@ -29,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${interTight.variable}`}>
+    <html lang="en" className={`${inter.variable} ${interTight.variable}`} data-motion={MOTION_ON ? "on" : "off"}>
       <body className="min-h-screen antialiased">
         <SiteHeader />
         <HubChrome />

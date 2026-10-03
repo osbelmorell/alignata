@@ -614,3 +614,52 @@ test("copy (COPY.md, LOCKED): About fixes, tool story titles/deks, v2 dek trims;
   };
   for (const [slug, dek] of Object.entries(trims)) assert.equal(meta.postCardDek(posts.find((p) => p.slug === slug)), dek, `${slug}: COPY.md v2 trim`);
 });
+
+test("motion (SPEC v2 §7): one switch, morph names on both sides, reduced motion, taps never wait", async () => {
+  const { existsSync, readFileSync } = await import("node:fs");
+  const read = (f) => readFileSync(f, "utf8");
+  const flag = read("lib/motion.ts");
+  assert.match(flag, /export const MOTION_ON: boolean = process\.env\.NEXT_PUBLIC_MOTION !== "off";/, "one flag, default on, NEXT_PUBLIC_MOTION=off turns it off");
+  const motion = read("components/appstore/Motion.tsx");
+  assert.match(motion, /MOTION_ON && !!VT/, "no <ViewTransition> rendered when the switch is off");
+  assert.match(motion, /share="morph" default="none"/, "morph pairs only; nothing else animates");
+  assert.ok(!/"use client"/.test(motion), "Motion wrappers are server components (no added client JS)");
+  assert.match(read("app/layout.tsx"), /data-motion=\{MOTION_ON \? "on" : "off"\}/, "<html data-motion> follows the switch");
+  assert.match(read("app/layout.tsx"), /import "\.\/motion\.css";/);
+  const css = read("app/motion.css");
+  const sels = css.split("\n").map((l) => l.match(/^\s*([^@/*\s}][^{}]*)\{/)?.[1]).filter(Boolean);
+  assert.ok(sels.length > 10, "motion.css rules parsed");
+  for (const sel of sels) {
+    if (/view-transition|^\s*(from|to)\b/.test(sel)) continue;
+    assert.match(sel, /html\[data-motion="on"\]/, `motion.css: "${sel.trim()}" is behind the switch`);
+  }
+  assert.match(css, /html\[data-motion="on"\] \.fx-header \{ view-transition-name: site-header; \}/, "header stays still");
+  assert.match(css, /::view-transition-group\(\.morph\) \{ animation-duration: 350ms;/, "morph 350ms (≤ 400ms)");
+  assert.match(css, /::view-transition \{ pointer-events: none; \}/, "a transition never swallows a tap");
+  const reduce = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));
+  assert.match(reduce, /::view-transition-group\(\*\)[^{]*\{\s*animation-duration: 0s !important; animation-delay: 0s !important;/, "reduced motion: no movement");
+  assert.match(read("app/fantasy.css"), /@media \(prefers-reduced-motion: reduce\) \{\s*\*, \*::before, \*::after \{ transition: none !important; animation: none !important;/, "reduced motion: no CSS transitions anywhere");
+  assert.match(css, /@media \(prefers-reduced-motion: no-preference\) and \(pointer: coarse\) \{\n[^\n]*\n\s*html\[data-motion="on"\] \.fx-scard:active/, "press scale: touch only, never reduced");
+  // Both sides of each pair carry the same name.
+  assert.match(read("components/appstore/ArtFigure.tsx"), /<Morph name=\{`art-\$\{slug\}`\}>/, "card art + story hero: art-<slug>");
+  const card = read("components/appstore/StoryCard.tsx");
+  assert.match(card, /<Morph name=\{`title-\$\{app\.id\}`\}>/, "tool card title: title-<slug>");
+  assert.match(card, /<Morph name=\{`title-\$\{post\.slug\}`\}>/, "article card title: title-<slug>");
+  assert.match(read("app/apps/[slug]/page.tsx"), /<Morph name=\{`title-\$\{app\.id\}`\}>\s*<h1/, "tool story H1: title-<slug>");
+  assert.match(read("app/daily-digest/[slug]/page.tsx"), /<Morph name=\{`title-\$\{post\.slug\}`\}>\s*<h1/, "article story H1: title-<slug>");
+  for (const f of ["app/apps/[slug]/page.tsx", "app/daily-digest/[slug]/page.tsx"]) assert.match(read(f), /<PageFade story>/, `${f}: story body fades in`);
+  for (const f of ["app/page.tsx", "app/daily-digest/page.tsx", "components/appstore/ToolsList.tsx"]) assert.match(read(f), /<PageFade>/, `${f}: 150ms crossfade`);
+  // React only plays enter/exit for a <ViewTransition> that is not inside a freshly inserted DOM node: the fade must
+  // be the outermost thing each page (and the Daily Digest layout) returns.
+  for (const f of ["app/page.tsx", "components/appstore/ToolsList.tsx", "app/apps/[slug]/page.tsx", "app/daily-digest/layout.tsx"]) {
+    assert.match(read(f), /return \(\n\s*<PageFade( story)?>\n/, `${f}: <PageFade> is outermost`);
+  }
+  // Rule 6: React holds a commit for an unloaded <img> inside a <ViewTransition> unless it has onLoad.
+  assert.match(read("components/appstore/Img.tsx"), /onLoad=\{noop\}/);
+  for (const f of ["components/appstore/ArtFigure.tsx", "components/appstore/AppRow.tsx", "components/appstore/ToolsList.tsx", "components/appstore/StickyOpen.tsx"]) {
+    assert.ok(!/<img\b/.test(read(f)), `${f}: images go through <Img> (never hold navigation)`);
+  }
+  for (const d of ["app", "app/apps", "app/apps/[slug]", "app/daily-digest", "app/daily-digest/[slug]"]) {
+    assert.ok(!existsSync(`${d}/loading.tsx`) && !existsSync(`${d}/loading.js`), `${d}: no loading fallback in front of the hero`);
+  }
+});

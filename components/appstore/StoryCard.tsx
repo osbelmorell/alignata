@@ -5,6 +5,7 @@ import { TOOL_STORY, toolArt } from "@/lib/apps";
 import { cardImage, postCardDek, postTag } from "@/lib/daily-digest/meta";
 import { AppRow } from "@/components/appstore/AppRow";
 import { ArtFigure } from "@/components/appstore/ArtFigure";
+import { Morph } from "@/components/appstore/Motion";
 
 /**
  * Story card (SPEC v2 §3): one rounded white card. Art full-bleed on top (4:3 phone, 16:9 desktop, never cropped),
@@ -20,11 +21,13 @@ export function ToolStoryCard({ app, pos, lead = false, homeTarget = false }: { 
       <ArtFigure slug={app.id} className="fx-scard-art" src={art.art} alt={art.alt} pad={art.pad} eager={lead} />
       <div className="fx-scard-text">
         <p className="fx-eyebrow">Tool</p>
-        <h2 className="fx-scard-title">
-          <Link className="fx-stretch" href={`/apps/${app.id}`}>
-            {story.title}
-          </Link>
-        </h2>
+        <Morph name={`title-${app.id}`}>
+          <h2 className="fx-scard-title">
+            <Link className="fx-stretch" href={`/apps/${app.id}`}>
+              {story.title}
+            </Link>
+          </h2>
+        </Morph>
         <p className="fx-scard-dek">{story.dek}</p>
       </div>
       <AppRow app={app} pos={pos} homeTarget={homeTarget} />
@@ -55,15 +58,17 @@ export function ArticleStoryCard({
       <ArtFigure slug={post.slug} className="fx-scard-art" src={art.src} alt={art.alt} pad={art.pad} eager={eager} />
       <div className="fx-scard-text">
         <p className="fx-eyebrow">{eyebrow ?? postTag(post)}</p>
-        <H className="fx-scard-title">
-          <Link
-            className="fx-stretch"
-            href={`/daily-digest/${post.slug}`}
-            {...(homeTarget ? { "data-home-target": `article:${post.slug}` } : {})}
-          >
-            {post.title}
-          </Link>
-        </H>
+        <Morph name={`title-${post.slug}`}>
+          <H className="fx-scard-title">
+            <Link
+              className="fx-stretch"
+              href={`/daily-digest/${post.slug}`}
+              {...(homeTarget ? { "data-home-target": `article:${post.slug}` } : {})}
+            >
+              {post.title}
+            </Link>
+          </H>
+        </Morph>
         <p className="fx-scard-dek">{postCardDek(post)}</p>
       </div>
     </article>

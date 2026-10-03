@@ -7,6 +7,7 @@ import { ArticleStoryCard } from "@/components/appstore/StoryCard";
 import { ArtFigure } from "@/components/appstore/ArtFigure";
 import { toPlainText } from "@/lib/daily-digest/blocks";
 import { heroImage, nextPost, postCardDek, postTag, readMinutes, shortDate } from "@/lib/daily-digest/meta";
+import { Morph, PageFade } from "@/components/appstore/Motion";
 
 export const dynamicParams = false;
 
@@ -58,31 +59,35 @@ export default async function DailyDigestPostPage({
   const next = nextPost(post.slug);
 
   return (
-    <main className="fx-story">
-      <article>
-        <ArtFigure slug={post.slug} className="fx-story-hero" src={hero.src} alt={hero.alt} pad={hero.pad} hero />
-        <div className="fx-story-col">
-          <header className="fx-story-head">
-            <p className="fx-eyebrow">Daily Digest</p>
-            <h1 className="fx-story-title">{post.title}</h1>
-            <p className="fx-story-dek">{postCardDek(post)}</p>
-            <p className="fx-meta fx-story-meta">
-              <span>
-                {postTag(post)} · <time dateTime={post.date}>{shortDate(post.date)}</time> · {readMinutes(post)} min read
-              </span>
-            </p>
-          </header>
-          <ArticleBody paragraphs={post.paragraphs} sections={post.sections} pullQuote={post.pullQuote} />
-          {post.sourceNote ? <p className="fx-prose fx-note">{post.sourceNote}</p> : null}
-          <aside className="fx-next" aria-label="Next article">
-            <h2>Next article</h2>
-            {next ? <ArticleStoryCard post={next} heading="h3" /> : null}
-            <Link className="fx-text-link" href="/daily-digest">
-              All articles
-            </Link>
-          </aside>
-        </div>
-      </article>
-    </main>
+    <PageFade story>
+      <main className="fx-story">
+        <article>
+          <ArtFigure slug={post.slug} className="fx-story-hero" src={hero.src} alt={hero.alt} pad={hero.pad} hero />
+          <div className="fx-story-col">
+            <header className="fx-story-head">
+              <p className="fx-eyebrow">Daily Digest</p>
+              <Morph name={`title-${post.slug}`}>
+                <h1 className="fx-story-title">{post.title}</h1>
+              </Morph>
+              <p className="fx-story-dek">{postCardDek(post)}</p>
+              <p className="fx-meta fx-story-meta">
+                <span>
+                  {postTag(post)} · <time dateTime={post.date}>{shortDate(post.date)}</time> · {readMinutes(post)} min read
+                </span>
+              </p>
+            </header>
+            <ArticleBody paragraphs={post.paragraphs} sections={post.sections} pullQuote={post.pullQuote} />
+            {post.sourceNote ? <p className="fx-prose fx-note">{post.sourceNote}</p> : null}
+            <aside className="fx-next" aria-label="Next article">
+              <h2>Next article</h2>
+              {next ? <ArticleStoryCard post={next} heading="h3" /> : null}
+              <Link className="fx-text-link" href="/daily-digest">
+                All articles
+              </Link>
+            </aside>
+          </div>
+        </article>
+      </main>
+    </PageFade>
   );
 }

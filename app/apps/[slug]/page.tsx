@@ -6,6 +6,7 @@ import { ArtFigure } from "@/components/appstore/ArtFigure";
 import { AppRow } from "@/components/appstore/AppRow";
 import { StickyOpen } from "@/components/appstore/StickyOpen";
 import { SiteFooter } from "@/components/fantasy/SiteFooter";
+import { Morph, PageFade } from "@/components/appstore/Motion";
 
 export const dynamicParams = false;
 
@@ -51,44 +52,48 @@ export default async function ToolStoryPage({ params }: { params: Promise<{ slug
   const { app, pos, story, art } = t;
   const about = toolAbout(app);
   return (
-    <div className="fx-page">
-      <main className="fx-story">
-        <article>
-          <ArtFigure slug={app.id} className="fx-story-hero" src={art.art} alt={art.alt} pad={art.pad} hero />
-          <div className="fx-story-col">
-            <header className="fx-story-head">
-              <p className="fx-eyebrow">Tool</p>
-              <h1 className="fx-story-title">{story.title}</h1>
-              <p className="fx-story-dek">{story.dek}</p>
-              <AppRow app={app} pos={pos} variant="story" row="first" />
-            </header>
-            {about ? (
-              <div className="fx-prose fx-about">
-                <p className="fx-lead">{about.pitch}</p>
-                <h2>What</h2>
-                <p>{about.what}</p>
-                <h2>Why</h2>
-                <p>{about.why}</p>
-                <h2>How</h2>
-                <ol style={{ counterReset: "fx-ol 0" }}>
-                  {about.how.map((step) => (
-                    <li key={step}>{step}</li>
-                  ))}
-                </ol>
+    <PageFade story>
+      <div className="fx-page">
+        <main className="fx-story">
+          <article>
+            <ArtFigure slug={app.id} className="fx-story-hero" src={art.art} alt={art.alt} pad={art.pad} hero />
+            <div className="fx-story-col">
+              <header className="fx-story-head">
+                <p className="fx-eyebrow">Tool</p>
+                <Morph name={`title-${app.id}`}>
+                  <h1 className="fx-story-title">{story.title}</h1>
+                </Morph>
+                <p className="fx-story-dek">{story.dek}</p>
+                <AppRow app={app} pos={pos} variant="story" row="first" />
+              </header>
+              {about ? (
+                <div className="fx-prose fx-about">
+                  <p className="fx-lead">{about.pitch}</p>
+                  <h2>What</h2>
+                  <p>{about.what}</p>
+                  <h2>Why</h2>
+                  <p>{about.why}</p>
+                  <h2>How</h2>
+                  <ol style={{ counterReset: "fx-ol 0" }}>
+                    {about.how.map((step) => (
+                      <li key={step}>{step}</li>
+                    ))}
+                  </ol>
+                </div>
+              ) : null}
+              <div className="fx-story-end">
+                <AppRow app={app} pos={pos} variant="story" row="end" />
+                <Link className="fx-text-link" href="/apps">
+                  All tools
+                </Link>
               </div>
-            ) : null}
-            <div className="fx-story-end">
-              <AppRow app={app} pos={pos} variant="story" row="end" />
-              <Link className="fx-text-link" href="/apps">
-                All tools
-              </Link>
             </div>
-          </div>
-        </article>
-      </main>
-      <SiteFooter />
-      <div className="fx-sticky-space" aria-hidden="true" />
-      <StickyOpen app={app} pos={pos} icon={art.icon} iconAlt={art.iconAlt} />
-    </div>
+          </article>
+        </main>
+        <SiteFooter />
+        <div className="fx-sticky-space" aria-hidden="true" />
+        <StickyOpen app={app} pos={pos} icon={art.icon} iconAlt={art.iconAlt} />
+      </div>
+    </PageFade>
   );
 }

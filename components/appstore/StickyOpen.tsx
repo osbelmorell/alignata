@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { HubApp } from "@/lib/types";
 import { OpenPill } from "@/components/appstore/AppRow";
+import { Img } from "@/components/appstore/Img";
 
 /**
  * Sticky Open bar, tool stories only (SPEC v2 §4 + v2.3 calls 3/3a): shown whenever NO in-page black Open is in the
@@ -58,8 +59,7 @@ export function StickyOpen({ app, pos, icon, iconAlt }: { app: HubApp; pos: numb
       data-sticky-open=""
     >
       <div className="fx-wrap">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="fx-icon" src={icon} alt={iconAlt} width={256} height={256} decoding="async" />
+        <Img className="fx-icon" src={icon} alt={iconAlt} width={256} height={256} decoding="async" />
         <p className="fx-app-name">{app.name}</p>
         <OpenPill app={app} pos={pos} primary tabIndex={on ? 0 : -1} />
       </div>

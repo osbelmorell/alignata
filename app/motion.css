@@ -1,0 +1,46 @@
+/*
+ * v2 motion (SPEC v2 §7). Everything here is scoped to html[data-motion="on"], set from the one switch in
+ * lib/motion.ts (NEXT_PUBLIC_MOTION=off turns it all off without touching layout). ::view-transition pseudos only
+ * exist while a React <ViewTransition> runs, and none are rendered with motion off.
+ */
+
+/* The header never moves during a transition (stable name, no group animation). */
+html[data-motion="on"] .fx-header { view-transition-name: site-header; }
+::view-transition { pointer-events: none; }
+::view-transition-group(site-header) { animation: none; z-index: 100; }
+::view-transition-old(site-header) { display: none; }
+::view-transition-new(site-header) { animation: none; }
+
+/* Card → story morph (art-<slug>, title-<slug>): 350ms, ≤400ms. */
+::view-transition-group(.morph) { animation-duration: 350ms; animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1); }
+/* Phone cards are 4:3 and the hero 16:9, both padded in the item's colour; keep each snapshot whole, never stretched. */
+::view-transition-old(.morph), ::view-transition-new(.morph) { height: 100%; object-fit: contain; }
+
+/* Top-level pages: 150ms crossfade only, no slides. Story body: fades in over 200ms. */
+::view-transition-group(root) { animation-duration: 150ms; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 150ms; }
+::view-transition-group(.fx-fade), ::view-transition-group(.fx-fade-story) { animation: none; }
+::view-transition-old(.fx-fade) { animation: 150ms ease-out both fx-vt-out; }
+::view-transition-new(.fx-fade) { animation: 150ms ease-out both fx-vt-in; }
+::view-transition-new(.fx-fade-story) { animation: 200ms ease-out both fx-vt-in; }
+@keyframes fx-vt-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fx-vt-out { from { opacity: 1; } to { opacity: 0; } }
+
+/* Press feedback: card scales to 0.98 for 100ms, touch only, not while its Open is the thing pressed. */
+@media (prefers-reduced-motion: no-preference) and (pointer: coarse) {
+  html[data-motion="on"] .fx-scard { transition: transform 100ms ease-out; }
+  html[data-motion="on"] .fx-scard:active:not(:has(.fx-open:active)) { transform: scale(0.98); }
+}
+
+/* Sticky Open bar slides up (layout and the visibility rule live in appstore.css). */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-motion="on"] .fx-sticky-open { transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 200ms; }
+  html[data-motion="on"] .fx-sticky-open.fx-on { transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s; }
+}
+
+/* Reduced motion: no movement or scaling at all; transitions resolve instantly. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*), ::view-transition-new(*), ::view-transition-group(*), ::view-transition-image-pair(*) {
+    animation-duration: 0s !important; animation-delay: 0s !important;
+  }
+}
