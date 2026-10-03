@@ -13,9 +13,6 @@ export const EVENT_PROPS = {
 } as const;
 
 export type EventName = keyof typeof EVENT_PROPS;
-/** Optional on every event: the guide that sent this tab (lib/engrave-merge/ref.ts). Old clients never send it. */
-export const OPTIONAL_PROPS = ["ref"] as const;
-export const REF_VALUES = ["guide-lightburn", "guide-etsy-export", "other"] as const;
 export const FILE_EVENTS: EventName[] = ["file_processed", "merge_downloaded", "exceptions_downloaded", "cutsheet_printed"];
 const COUNT_KEYS = new Set(["row_count", "item_count", "exception_count", "merge_row_count"]);
 const ENVELOPE_KEYS = new Set(["v", "event", "iid", "dogfood", "props"]);
@@ -52,7 +49,7 @@ export function validateEvent(raw: unknown): Validated {
   if (typeof raw.dogfood !== "boolean") return { ok: false, reason: "bad_dogfood" };
   const props = raw.props === undefined ? {} : raw.props;
   if (!isObj(props)) return { ok: false, reason: "bad_props" };
-  const allowed = new Set<string>([...EVENT_PROPS[event], ...OPTIONAL_PROPS]);
+  const allowed = new Set<string>(EVENT_PROPS[event]);
   const out: EventProps = {};
   for (const [k, v] of Object.entries(props)) {
     if (!allowed.has(k)) return { ok: false, reason: `unknown_prop:${k}` };
@@ -64,8 +61,6 @@ export function validateEvent(raw: unknown): Validated {
       if (typeof v !== "string" || !FINGERPRINT_RE.test(v)) return { ok: false, reason: "bad_fingerprint" };
     } else if (k === "small_file") {
       if (v !== true) return { ok: false, reason: "bad_small_file" };
-    } else if (k === "ref") {
-      if (typeof v !== "string" || !(REF_VALUES as readonly string[]).includes(v)) return { ok: false, reason: "bad_ref" };
     }
     out[k] = v as number | string | boolean;
   }

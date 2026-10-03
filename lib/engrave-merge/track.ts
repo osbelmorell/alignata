@@ -1,11 +1,9 @@
 import { type EventName, type EventProps } from "./events";
 import { MIN_ORDERS_FOR_FINGERPRINT } from "./fingerprint";
-import { type EmRef, initRef, removeRefFromAddressBar, sessionArea } from "./ref";
 
 /**
  * Anonymous count events (SPEC §8). The ONLY localStorage key this tool writes is
- * `em_iid` (a random id). The only sessionStorage key is `em_ref` (the guide that sent this tab, lib/engrave-merge/ref.ts).
- * No cookies or IndexedDB.
+ * `em_iid` (a random id). No cookies, sessionStorage or IndexedDB.
  */
 export const IID_KEY = "em_iid";
 export const EVENT_URL = "/api/engrave-merge/e";
@@ -40,24 +38,12 @@ export function fileRef(fingerprint: string, orderCount: number): EventProps {
   return orderCount >= MIN_ORDERS_FOR_FINGERPRINT ? { file_fingerprint: fingerprint } : { small_file: true };
 }
 
-let currentRef: EmRef | null = null;
-
-/**
- * Read ?ref= (allow-list or "other") / this tab's stored value once on load; every later event carries it. Once saved
- * to sessionStorage, ONLY the ref param is removed from the address bar (path, hash and other params kept).
- */
-export function initGuideRef(search: string): EmRef | null {
-  currentRef = initRef(search, sessionArea());
-  removeRefFromAddressBar();
-  return currentRef;
-}
-
 /** Fire-and-forget; failures are silent and never block the tool. */
 export function sendEvent(iid: string, event: EventName, props: EventProps = {}) {
   // Guard: a merge file with 0 rows is not a real download; never count it.
   if (event === "merge_downloaded" && !(Number(props.merge_row_count) > 0)) return;
   try {
-    const body = JSON.stringify({ v: 1, event, iid, dogfood: iid.startsWith("dog-"), props: currentRef ? { ...props, ref: currentRef } : props });
+    const body = JSON.stringify({ v: 1, event, iid, dogfood: iid.startsWith("dog-"), props });
     const blob = new Blob([body], { type: "application/json" });
     if (navigator.sendBeacon && navigator.sendBeacon(EVENT_URL, blob)) return;
     void fetch(EVENT_URL, { method: "POST", body, keepalive: true, headers: { "content-type": "application/json" } }).catch(
