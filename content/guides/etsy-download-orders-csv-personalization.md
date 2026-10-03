@@ -4,7 +4,6 @@ dek: "Where Etsy keeps what each buyer asked you to write: the Order Items file.
 datePublished: 2026-10-03
 draft: false
 tool: engrave-merge
-ref: guide-etsy-export
 ---
 
 If you sell personalized items, every name, date and message your buyers typed is in a file you can download from Etsy. It's just not where you'd expect. This guide shows which Etsy CSV to download, and where in it the personalization sits.

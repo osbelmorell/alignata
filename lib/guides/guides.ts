@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 /**
  * Guides (/guides/<slug>): content-driven, one Markdown file per guide in content/guides/<slug>.md (Product Copy drops
  * copy there). Frontmatter: title, dek, datePublished (YYYY-MM-DD), draft (true | false), tool (the app row at the end,
- * an apps.json id), ref (the ?ref= tag on that tool's Open). Optional: updated (YYYY-MM-DD, sitemap lastmod).
+ * an apps.json id; its Open goes to the plain tool route). Optional: updated (YYYY-MM-DD, sitemap lastmod).
  * - draft: true → the page still renders (so QA can see it) but is noindex, nofollow, not in the sitemap, linked nowhere.
  * - draft: false → indexable, in sitemap.xml with lastmod, listed in the Guides block on its tool's story page.
  * Read at build time only (every guide page is static).
@@ -18,7 +18,6 @@ export type Guide = {
   updated?: string;
   draft: boolean;
   tool: string;
-  ref: string;
   body: string;
 };
 
@@ -61,7 +60,6 @@ export function parseGuide(slug: string, text: string): Guide {
     ...(fm.updated ? { updated: fm.updated } : {}),
     draft: draft === "true",
     tool: need("tool"),
-    ref: need("ref"),
     body: m[2].trim(),
   };
 }
@@ -83,8 +81,6 @@ export const getGuides = (): Guide[] => loadGuides();
 export const getGuide = (slug: string, guides: Guide[] = getGuides()): Guide | undefined => guides.find((g) => g.slug === slug);
 export const publishedGuides = (guides: Guide[] = getGuides()): Guide[] => guides.filter((g) => !g.draft);
 export const guidePath = (g: Pick<Guide, "slug">): string => `/guides/${g.slug}`;
-/** Where the guide's app-row Open goes: the tool route plus ?ref=<ref>. */
-export const guideToolHref = (toolUrl: string, g: Pick<Guide, "ref">): string => `${toolUrl}?ref=${encodeURIComponent(g.ref)}`;
 
 const SITE = "https://alignata.com";
 export const GUIDE_AUTHOR = "Alignata";

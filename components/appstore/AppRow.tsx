@@ -46,7 +46,6 @@ export function OpenPill({
   homeTarget = false,
   tabIndex,
   src,
-  href,
 }: {
   app: HubApp;
   pos: number;
@@ -55,13 +54,11 @@ export function OpenPill({
   tabIndex?: number;
   /** tool_open source tag: feed (homepage card), apps (/apps), story (in-page story row), sticky (sticky bar), guide. */
   src: ToolOpenSource;
-  /** Override the tool URL (guides add ?ref=<guide>). */
-  href?: string;
 }) {
   return (
     <a
       className={`fx-open${primary ? " fx-primary" : ""}`}
-      href={href ?? app.url}
+      href={app.url}
       data-tool-slug={app.id}
       data-tool-pos={pos}
       data-tool-src={src}
@@ -74,8 +71,8 @@ export function OpenPill({
   );
 }
 
-/** A guide's closing app row: the black Open (the page's one primary) straight to the tool with the guide's ?ref=. */
-export function GuideAppRow({ app, pos, href }: { app: HubApp; pos: number; href: string }) {
+/** A guide's closing app row: the black Open (the page's one primary) straight to the tool route (no query string). */
+export function GuideAppRow({ app, pos }: { app: HubApp; pos: number }) {
   const art = toolArt(app.id);
   return (
     <div className="fx-app-row fx-story-row" data-row="guide">
@@ -84,7 +81,7 @@ export function GuideAppRow({ app, pos, href }: { app: HubApp; pos: number; href
         <p className="fx-app-name">{app.name}</p>
         <p className="fx-app-line">{app.blurb}</p>
       </div>
-      <OpenPill app={app} pos={pos} primary src="guide" href={href} />
+      <OpenPill app={app} pos={pos} primary src="guide" />
     </div>
   );
 }
