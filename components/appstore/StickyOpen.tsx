@@ -61,7 +61,7 @@ export function StickyOpen({ app, pos, icon, iconAlt }: { app: HubApp; pos: numb
       <div className="fx-wrap">
         <Img className="fx-icon" src={icon} alt={iconAlt} width={256} height={256} decoding="async" />
         <p className="fx-app-name">{app.name}</p>
-        <OpenPill app={app} pos={pos} primary tabIndex={on ? 0 : -1} />
+        <OpenPill app={app} pos={pos} primary tabIndex={on ? 0 : -1} src="sticky" />
       </div>
     </div>
   );

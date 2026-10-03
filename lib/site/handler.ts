@@ -3,11 +3,13 @@ import { appendSiteEvent, redisConfig } from "./store";
 
 /**
  * What happened to an accepted site event, sent back as `x-site-store` (status 204, empty body):
- * stored = appended to the store; skipped-config = no store env vars; error = the store call failed.
+ * stored = appended to the store; skipped-config = no store env vars; skipped-preview = a Vercel preview deploy
+ * (VERCEL_ENV=preview: validated, never written, so preview QA can't land in the production store); error = the
+ * store call failed.
  * Dogfood events are stored (flagged dogfood: true) so the pipeline can be checked; the baseline
  * script ignores them. The owner device and automated browsers never send (client-side skip).
  */
-export type SiteStoreResult = "stored" | "skipped-config" | "error";
+export type SiteStoreResult = "stored" | "skipped-config" | "skipped-preview" | "error";
 const noContent = (result: SiteStoreResult, event: string) => {
   console.log(`[site] event ${event} ${result}`); // one line, no ids or values
   return new Response(null, { status: 204, headers: { "Cache-Control": "no-store", "x-site-store": result } });
@@ -37,6 +39,8 @@ export async function handleSiteEvent(request: Request): Promise<Response> {
     .replace(/:\d+$/, "");
   const ts = Date.now();
   const record = { ...ev, ts, day: nyDay(ts), host, prod: host === SITE_PROD_HOST };
+  // Preview deploys don't store events (CEO, Oct 3 2026): same 204 to the client, no KV write.
+  if (process.env.VERCEL_ENV === "preview") return noContent("skipped-preview", ev.event);
   const cfg = redisConfig();
   if (!cfg) return noContent("skipped-config", ev.event);
   try {

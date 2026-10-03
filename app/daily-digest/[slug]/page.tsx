@@ -8,6 +8,8 @@ import { ArtFigure } from "@/components/appstore/ArtFigure";
 import { toPlainText } from "@/lib/daily-digest/blocks";
 import { heroImage, nextPost, postCardDek, postTag, readMinutes, shortDate } from "@/lib/daily-digest/meta";
 import { Morph, PageFade } from "@/components/appstore/Motion";
+import { Byline } from "@/components/daily-digest/Byline";
+import { articleJsonLd, jsonLdScript } from "@/lib/daily-digest/jsonld";
 
 export const dynamicParams = false;
 
@@ -61,6 +63,7 @@ export default async function DailyDigestPostPage({
   return (
     <PageFade story>
       <main className="fx-story">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(articleJsonLd(post)) }} />
         <article>
           <ArtFigure slug={post.slug} className="fx-story-hero" src={hero.src} alt={hero.alt} pad={hero.pad} hero />
           <div className="fx-story-col">
@@ -70,6 +73,7 @@ export default async function DailyDigestPostPage({
                 <h1 className="fx-story-title">{post.title}</h1>
               </Morph>
               <p className="fx-story-dek">{postCardDek(post)}</p>
+              <Byline post={post} />
               <p className="fx-meta fx-story-meta">
                 <span>
                   {postTag(post)} · <time dateTime={post.date}>{shortDate(post.date)}</time> · {readMinutes(post)} min read

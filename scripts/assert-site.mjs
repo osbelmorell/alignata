@@ -1,7 +1,7 @@
 // Unit tests for the first-party site tracker (validator, article n count, ids, skips, handler, baseline summary).
 import assert from "node:assert/strict";
 import test from "node:test";
-import { SITE_EVENT_PROPS, validateSiteEvent } from "../lib/site/events.ts";
+import { SITE_EVENT_OPTIONAL_PROPS, SITE_EVENT_PROPS, TOOL_OPEN_SOURCES, validateSiteEvent } from "../lib/site/events.ts";
 import {
   ARTICLES_KEY,
   DOGFOOD_KEY,
@@ -14,8 +14,10 @@ import {
   noteArticle,
   randomId,
   routeEvents,
+  sendSiteEvent,
   shouldSkip,
   toolOpenPage,
+  toolOpenSource,
   trackToolOpen,
 } from "../lib/site/client.ts";
 import { handleSiteEvent } from "../lib/site/handler.ts";
@@ -282,11 +284,11 @@ test("/apps (v2 §5): 11 app rows in /apps order; row body → story, soft Open 
     assert.ok(r.startsWith(` data-slug="${a.id}" data-pos="${i + 1}"`), `row ${i + 1} is ${a.id}`);
     const t = toolArt(a.id);
     assert.ok(r.includes(`<img class="fx-icon" src="${t.icon}" alt="${t.iconAlt.replace(/'/g, "&#x27;")}"`), `${a.id} icon + FINAL alt`);
-    const open = [...r.matchAll(/<a class="fx-open" href="([^"]+)" data-tool-slug="([^"]+)" data-tool-pos="(\d+)" aria-label="Open ([^"]+)">Open<\/a>/g)];
+    const open = [...r.matchAll(/<a class="fx-open" href="([^"]+)" data-tool-slug="([^"]+)" data-tool-pos="(\d+)" data-tool-src="apps" aria-label="Open ([^"]+)">Open<\/a>/g)];
     assert.equal(open.length, 1, `${a.id}: one soft Open`);
     assert.deepEqual([open[0][1], open[0][2], +open[0][3]], [a.url, a.id, i + 1], `${a.id}: Open → tool, tracked at its position`);
     if (a.id === "deploy-decision-card") {
-      assert.ok(r.includes(`<a class="fx-stretch" href="${a.url}" data-tool-slug="${a.id}" data-tool-pos="${i + 1}">`), "Deploy Decision: row body → the tool (no story)");
+      assert.ok(r.includes(`<a class="fx-stretch" href="${a.url}" data-tool-slug="${a.id}" data-tool-pos="${i + 1}" data-tool-src="apps">`), "Deploy Decision: row body → the tool (no story), source apps");
     } else {
       assert.ok(r.includes(`<a class="fx-stretch" href="/apps/${a.id}">`), `${a.id}: row body → /apps/${a.id} (no tool_open on a story tap)`);
     }
@@ -454,7 +456,7 @@ test("homepage (v2 §2): feed order, one black pill, Open → tool with home_cli
   assert.ok(html.includes('class="fx-scard fx-lead" data-kind="tool" data-slug="stripe-cleaver"'), "Cleaver is the lead card");
   for (const [slug, pos] of [["stripe-cleaver", 1], ["license-gate", 2]]) {
     assert.ok(html.includes(`<a class="fx-stretch" href="/apps/${slug}">`), `${slug}: card title → story`);
-    assert.match(html, new RegExp(`<a class="fx-open" href="/${slug}" data-tool-slug="${slug}" data-tool-pos="${pos}" data-home-target="tool:${slug}" aria-label="Open [^"]+">Open</a>`), `${slug}: soft Open → tool`);
+    assert.match(html, new RegExp(`<a class="fx-open" href="/${slug}" data-tool-slug="${slug}" data-tool-pos="${pos}" data-tool-src="feed" data-home-target="tool:${slug}" aria-label="Open [^"]+">Open</a>`), `${slug}: soft Open → tool, source feed`);
   }
   for (const t of ["tools-pill", "digest-pill", "all-tools", "all-articles", "article:break-loops-when-progress-stalls", "article:dont-follow-orders-in-tool-text", "article:the-ai-safety-paradox"]) {
     assert.ok(html.includes(`data-home-target="${t}"`), `home_click target ${t}`);
@@ -700,7 +702,8 @@ test("tool_open: story row Opens + sticky Open count (same event + payload); row
 
   assert.equal(toolOpenPage("/apps"), true);
   assert.equal(toolOpenPage("/apps/stripe-cleaver"), true);
-  for (const p of ["/", "/stripe-cleaver", "/daily-digest", "/daily-digest/a", "/apps/a/b", "/apps/", "/appsx"]) assert.equal(toolOpenPage(p), false, `${p}: no tool_open`);
+  assert.equal(toolOpenPage("/"), true, "homepage feed Opens count too (CEO, Oct 3)");
+  for (const p of ["/stripe-cleaver", "/daily-digest", "/daily-digest/a", "/apps/a/b", "/apps/", "/appsx"]) assert.equal(toolOpenPage(p), false, `${p}: no tool_open`);
 
   for (const { slug } of mod.generateStaticParams()) {
     const pos = order.findIndex((a) => a.id === slug) + 1;
@@ -712,9 +715,11 @@ test("tool_open: story row Opens + sticky Open count (same event + payload); row
     for (const a of tools) assert.ok(a.attrs.class.split(" ").includes("fx-open") && a.attrs.href === order[pos - 1].url, `${slug}: only Open pills carry data-tool-slug; plain <a href> to the tool`);
     const sent = await captureBeacons(() => tools.forEach((a) => assert.equal(trackToolOpen(`/apps/${slug}`, a, ids, false), true)));
     assert.equal(sent.length, 3, `${slug}: each Open sends one tool_open`);
-    for (const { url, body } of sent) {
+    const srcs = tools.map((a) => a.getAttribute("data-tool-src"));
+    assert.deepEqual(srcs, ["story", "story", "sticky"], `${slug}: first row + end row = story, sticky bar = sticky`);
+    for (const [i, { url, body }] of sent.entries()) {
       assert.equal(url, "/api/site/e");
-      assert.deepEqual(body, { v: 1, event: "tool_open", sid: SID, vid: VID, dogfood: false, props: { slug, position: pos } }, `${slug}: same payload as /apps, /apps position`);
+      assert.deepEqual(body, { v: 1, event: "tool_open", sid: SID, vid: VID, dogfood: false, props: { slug, position: pos, source: srcs[i] } }, `${slug}: /apps position + source`);
       assert.ok(validateSiteEvent(body).ok, `${slug}: passes the existing validator`);
     }
     // Everything else on a story (header, All tools, Next…) has no data-tool-slug, so closest() finds nothing.
@@ -732,9 +737,7 @@ test("tool_open: story row Opens + sticky Open count (same event + payload); row
   assert.equal(none.length, 0, "row-body taps send no tool_open");
   const appsOpens = list.filter((a) => a.attrs.class === "fx-open");
   const appsSent = await captureBeacons(() => appsOpens.forEach((a) => trackToolOpen("/apps", a, ids, false)));
-  assert.deepEqual(appsSent.map((x) => x.body.props), order.map((a, i) => ({ slug: a.id, position: i + 1 })), "/apps Opens: unchanged payloads");
-  const home = await captureBeacons(() => trackToolOpen("/", appsOpens[0], ids, false));
-  assert.equal(home.length, 0, "homepage keeps home_click (no tool_open)");
+  assert.deepEqual(appsSent.map((x) => x.body.props), order.map((a, i) => ({ slug: a.id, position: i + 1, source: "apps" })), "/apps Opens: same payload + source apps");
 
   // Exclusions apply exactly as for /apps Opens: skipped devices send nothing; dogfood sends flagged, and the baseline drops it.
   const open = anchors(renderToStaticMarkup(await mod.default({ params: Promise.resolve({ slug: "stripe-cleaver" }) }))).find((a) => a.getAttribute("data-tool-slug"));
@@ -843,4 +846,229 @@ test("story fold (SPEC §4/§10): phone-only tighter spacing above the first app
   assert.ok(css.includes(".fx-app-row.fx-story-row { margin-top: 24px; padding: 16px 0;"), "base row spacing (desktop) unchanged");
   // The rendered measurement (WebKit, 390x844: all 10 first Opens end <= 650; 1280: Cleaver <= 790) is
   // /workspace/alignata-mockups/v2-story-fold-check.mjs against `next start`.
+});
+
+/* ---------- tool_open source tag + feed Opens + preview deploys don't store (CEO ruling, Oct 3 2026 6:33 AM ET) ---------- */
+
+test("tool_open source: validator accepts feed|apps|story|sticky, still accepts old clients without it, rejects anything else", () => {
+  assert.deepEqual([...TOOL_OPEN_SOURCES], ["feed", "apps", "story", "sticky"]);
+  assert.deepEqual(SITE_EVENT_OPTIONAL_PROPS, { tool_open: ["source"] });
+  assert.deepEqual(SITE_EVENT_PROPS.tool_open, ["slug", "position"], "required props unchanged");
+  for (const source of TOOL_OPEN_SOURCES) {
+    const v = validateSiteEvent(env("tool_open", { slug: "stripe-cleaver", position: 1, source }));
+    assert.ok(v.ok, source);
+    assert.deepEqual(v.event.props, { slug: "stripe-cleaver", position: 1, source });
+  }
+  const old = validateSiteEvent(env("tool_open", { slug: "stripe-cleaver", position: 1 }));
+  assert.ok(old.ok, "a client cached before the source tag still validates");
+  assert.deepEqual(old.event.props, { slug: "stripe-cleaver", position: 1 }, "stored as sent: no guessed source");
+  for (const bad of ["", "Feed", "home", "nav", 1, null, true, "feed ", "x".repeat(50)]) {
+    const v = validateSiteEvent(env("tool_open", { slug: "stripe-cleaver", position: 1, source: bad }));
+    assert.equal(v.ok, false, `source ${JSON.stringify(bad)} rejected`);
+    assert.equal(v.reason, "bad_source");
+  }
+  for (const [ev, props] of [["page_view", { path: "/" }], ["home_click", { target: "tool:stripe-cleaver" }], ["apps_view", {}], ["article_view", { slug: "a", n: 1 }]]) {
+    const v = validateSiteEvent(env(ev, { ...props, source: "feed" }));
+    assert.equal(v.reason, "unknown_prop:source", `${ev}: source only on tool_open`);
+  }
+  assert.equal(validateSiteEvent(env("tool_open", { slug: "stripe-cleaver", source: "feed" })).reason, "missing_prop:position", "slug + position still required");
+  assert.equal(toolOpenSource("/", null), "feed");
+  assert.equal(toolOpenSource("/apps", null), "apps");
+  assert.equal(toolOpenSource("/apps/license-gate", null), "story");
+  assert.equal(toolOpenSource("/apps/license-gate", "sticky"), "sticky");
+  assert.equal(toolOpenSource("/apps/license-gate", "bogus"), "story", "unknown attribute → derived from the page");
+  assert.equal(toolOpenSource("/stripe-cleaver", null), null);
+});
+
+test("feed Open: sends home_click (unchanged) AND tool_open {source: feed}; card bodies send what they did; /apps row bodies untracked", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { createElement } = await import("react");
+  const { getApps, toolsOrder } = await import("../lib/apps.ts");
+  const { ToolsList } = await import("../components/appstore/ToolsList.tsx");
+  const Home = (await import("../app/page.tsx")).default;
+  const order = toolsOrder(getApps());
+  const ids = { sid: SID, vid: VID, dogfood: false };
+  const links = anchors(renderToStaticMarkup(createElement(Home)));
+  const opens = links.filter((a) => a.getAttribute("data-tool-slug"));
+  assert.deepEqual(opens.map((a) => a.getAttribute("data-tool-slug")), ["stripe-cleaver", "license-gate"], "the two feed Opens are the only tool links on /");
+  // Mirrors SiteTracker's "/" branch: home_click from data-home-target / path, then trackToolOpen on the closest a[data-tool-slug].
+  const tapHome = (a) => {
+    const target = homeClickTarget(a.getAttribute("data-home-target"), new URL(a.attrs.href, "https://alignata.com").pathname);
+    if (target) sendSiteEvent(ids, "home_click", { target });
+    trackToolOpen("/", a.getAttribute("data-tool-slug") ? a : null, ids, false);
+  };
+  for (const a of opens) {
+    const slug = a.getAttribute("data-tool-slug");
+    const sent = await captureBeacons(() => tapHome(a));
+    assert.deepEqual(sent.map((x) => x.body.event), ["home_click", "tool_open"], `${slug}: both events`);
+    assert.deepEqual(sent[0].body.props, { target: `tool:${slug}` }, `${slug}: home_click unchanged`);
+    assert.deepEqual(sent[1].body.props, { slug, position: order.findIndex((x) => x.id === slug) + 1, source: "feed" }, `${slug}: tool_open source feed, /apps position`);
+    for (const x of sent) assert.ok(validateSiteEvent(x.body).ok);
+  }
+  // Feed card bodies: exactly what they sent before (home_click for article cards; nothing for the tool card titles).
+  const bodies = links.filter((a) => (a.attrs.class || "").split(" ").includes("fx-stretch"));
+  assert.equal(bodies.length, 5);
+  for (const a of bodies) {
+    const sent = await captureBeacons(() => tapHome(a));
+    const art = a.attrs.href.startsWith("/daily-digest/");
+    assert.deepEqual(sent.map((x) => `${x.body.event}:${x.body.props.target}`), art ? [`home_click:article:${a.attrs.href.split("/")[2]}`] : [], `${a.attrs.href}: unchanged`);
+  }
+  // /apps row bodies → story: nothing.
+  const rows = anchors(renderToStaticMarkup(createElement(ToolsList, { apps: order }))).filter((a) => a.attrs.class === "fx-stretch" && a.attrs.href.startsWith("/apps/"));
+  const none = await captureBeacons(() => rows.forEach((a) => trackToolOpen("/apps", a.getAttribute("data-tool-slug") ? a : null, ids, false)));
+  assert.equal(none.length, 0);
+  // Skips unchanged on every surface; dogfood still flagged.
+  const owner = shouldSkip({ webdriver: false, local: mem({ em_iid: OWNER }) });
+  const skipped = await captureBeacons(() => { for (const p of ["/", "/apps", "/apps/stripe-cleaver"]) assert.equal(trackToolOpen(p, opens[0], ids, owner), false); });
+  assert.equal(skipped.length, 0, "EXCLUDED_IIDS device: nothing on any surface");
+  const dog = await captureBeacons(() => trackToolOpen("/", opens[0], { ...ids, dogfood: true }, false));
+  assert.equal(dog[0].body.dogfood, true);
+  // Wiring in the tracker.
+  const { readFileSync } = await import("node:fs");
+  const tracker = readFileSync("components/site/SiteTracker.tsx", "utf8");
+  const home = tracker.slice(tracker.indexOf('if (location.pathname === "/") {'), tracker.indexOf("return;\n      }", tracker.indexOf('if (location.pathname === "/") {')));
+  assert.ok(home.indexOf('sendSiteEvent(ids.current, "home_click", { target })') < home.indexOf("trackToolOpen(location.pathname"), "feed: home_click first, then tool_open");
+  assert.equal((tracker.match(/trackToolOpen\(/g) || []).length, 2, "two call sites: / and the rest");
+});
+
+test("baseline: tool_open from every source (and legacy no-source) counts exactly as before; dogfood still excluded", () => {
+  const T = Date.parse("2026-10-03T14:00:00Z");
+  const ev = (event, sid, props = {}, extra = {}) => ({ v: 1, event, sid, vid: "v" + sid, dogfood: false, props, ts: T, day: "2026-10-03", host: "alignata.com", prod: true, ...extra });
+  const events = [
+    ev("page_view", "a", { path: "/apps" }), ev("apps_view", "a"),
+    ev("tool_open", "a", { slug: "stripe-cleaver", position: 1, source: "apps" }),
+    ev("tool_open", "b", { slug: "stripe-cleaver", position: 1, source: "feed" }),
+    ev("tool_open", "c", { slug: "license-gate", position: 2, source: "story" }),
+    ev("tool_open", "c", { slug: "license-gate", position: 2, source: "sticky" }),
+    ev("tool_open", "d", { slug: "engrave-merge", position: 6 }),
+    ev("tool_open", "z", { slug: "engrave-merge", position: 6, source: "feed" }, { dogfood: true }),
+  ];
+  const w = summarize(events, { until: T + 1 }).window;
+  const legacy = summarize(events.map((e) => (e.event === "tool_open" ? { ...e, props: { slug: e.props.slug, position: e.props.position } } : e)), { until: T + 1 }).window;
+  assert.equal(w.toolOpens, 5, "all sources count; dogfood excluded");
+  assert.deepEqual(w, legacy, "the source tag changes no baseline number");
+  assert.deepEqual(w.toolOpenBySlug, { "license-gate": 2, "stripe-cleaver": 2, "engrave-merge": 1 });
+});
+
+test("preview deploys don't store: VERCEL_ENV=preview → 204 skipped-preview, no KV write; production → stored", async () => {
+  const saved = { ...process.env };
+  const origFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (u) => (calls.push(String(u)), new Response(JSON.stringify([{ result: 1 }, { result: 1 }]), { status: 200 }));
+  const post = (body) => handleSiteEvent(new Request("https://alignata-git-x.vercel.app/api/site/e", { method: "POST", body }));
+  try {
+    process.env.KV_REST_API_URL = "https://kv.example";
+    process.env.KV_REST_API_TOKEN = "t";
+    process.env.VERCEL_ENV = "preview";
+    for (const [e, props] of [["page_view", { path: "/" }], ["tool_open", { slug: "stripe-cleaver", position: 1, source: "sticky" }], ["home_click", { target: "tool:stripe-cleaver" }]]) {
+      const r = await post(JSON.stringify(env(e, props)));
+      assert.equal(r.status, 204, `${e}: same success to the client`);
+      assert.equal(await r.text(), "");
+      assert.equal(r.headers.get("x-site-store"), "skipped-preview");
+    }
+    assert.equal((await post("nope")).status, 400, "still validated on preview");
+    assert.equal(calls.length, 0, "preview: no KV write");
+    for (const v of ["production", undefined, "development"]) {
+      if (v === undefined) delete process.env.VERCEL_ENV;
+      else process.env.VERCEL_ENV = v;
+      const r = await post(JSON.stringify(env("tool_open", { slug: "stripe-cleaver", position: 1, source: "apps" })));
+      assert.equal(r.status, 204);
+      assert.equal(r.headers.get("x-site-store"), "stored", `VERCEL_ENV=${v}: stored as before`);
+    }
+    assert.equal(calls.length, 3);
+  } finally {
+    globalThis.fetch = origFetch;
+    process.env = saved;
+  }
+});
+
+test("Daily Digest dates: every article card (home feed, /daily-digest, Next article) shows its date as 'Oct 2'", async () => {
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { getPostsNewestFirst, getPost } = await import("../content/posts.ts");
+  const { shortDate } = await import("../lib/daily-digest/meta.ts");
+  assert.equal(shortDate("2026-10-02"), "Oct 2");
+  assert.equal(shortDate("2026-09-28"), "Sep 28");
+  const dated = (html, slug, date) =>
+    new RegExp(`data-post-card="${slug}"[\\s\\S]*?<p class="fx-meta fx-scard-date"><time dateTime="${date}">${shortDate(date)}</time></p></div>`).test(html);
+  const { default: Index } = await import("../app/daily-digest/page.tsx");
+  const index = renderToStaticMarkup(createElement(Index));
+  const list = getPostsNewestFirst();
+  assert.equal((index.match(/fx-scard-date/g) || []).length, list.length, "one date per digest card");
+  for (const p of list) assert.ok(dated(index, p.slug, p.date), `${p.slug}: dated on /daily-digest`);
+  const { default: Home } = await import("../app/page.tsx");
+  const home = renderToStaticMarkup(createElement(Home));
+  const homeArticles = [...home.matchAll(/data-kind="article" data-post-card="([^"]+)"/g)].map((m) => m[1]);
+  assert.equal(homeArticles.length, 3);
+  assert.equal((home.match(/fx-scard-date/g) || []).length, 3, "dates on article cards only, not tool cards");
+  for (const slug of homeArticles) assert.ok(dated(home, slug, getPost(slug).date), `${slug}: dated on the home feed`);
+  const { default: Article } = await import("../app/daily-digest/[slug]/page.tsx");
+  const page = renderToStaticMarkup(await Article({ params: Promise.resolve({ slug: "break-loops-when-progress-stalls" }) }));
+  const next = page.slice(page.indexOf("<h2>Next article</h2>"));
+  const nextSlugs = [...next.matchAll(/data-post-card="([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(nextSlugs.length >= 1);
+  for (const slug of nextSlugs) assert.ok(dated(next, slug, getPost(slug).date), `${slug}: dated in Next article`);
+});
+
+test("Daily Digest kind + byline: default technique, AI Safety Paradox is an essay; byline under title+dek", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { posts, getPost } = await import("../content/posts.ts");
+  const meta = await import("../lib/daily-digest/meta.ts");
+  const author = await import("../lib/daily-digest/author.ts");
+  assert.equal(meta.postKind(getPost("the-ai-safety-paradox")), "essay");
+  assert.equal(meta.postKind(getPost("break-loops-when-progress-stalls")), "technique");
+  assert.equal(meta.postKind({ ...getPost("break-loops-when-progress-stalls"), kind: undefined }), "technique", "no kind → technique");
+  for (const p of posts) assert.equal(meta.postKind(p) === "essay", meta.postTag(p) === "Essay", `${p.slug}: kind essay ⇔ tag Essay`);
+  assert.equal(author.TECHNIQUE_BYLINE, "Daily Digest · Edited by Osbel Morell");
+  assert.equal(author.ESSAY_BYLINE, "By Osbel Morell");
+  assert.ok(author.AUTHOR_BIO.length > 0, "bio is one constant (placeholder until approved; see test:release)");
+  const { default: Article } = await import("../app/daily-digest/[slug]/page.tsx");
+  const render = async (slug) => renderToStaticMarkup(await Article({ params: Promise.resolve({ slug }) }));
+  const esc = (t) => t.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
+  const essay = getPost("the-ai-safety-paradox");
+  const ep = await render(essay.slug);
+  const eOrder = [`<h1 class="fx-story-title">${essay.title}</h1>`, `<p class="fx-story-dek">${meta.postCardDek(essay)}</p>`,
+    `<div class="fx-author" data-byline="essay"><p class="fx-author-name">By Osbel Morell</p><p class="fx-author-bio">${esc(author.AUTHOR_BIO)}</p></div>`,
+    `Essay · <time dateTime="${essay.date}">${meta.shortDate(essay.date)}</time>`];
+  let at = -1;
+  for (const f of eOrder) { const i = ep.indexOf(f); assert.ok(i > at, `essay order: ${f}`); at = i; }
+  assert.ok(!ep.includes("Edited by"), "essay has no edited-by line");
+  for (const p of posts.filter((x) => meta.postKind(x) === "technique")) {
+    const tp = await render(p.slug);
+    const i = tp.indexOf('<div class="fx-author" data-byline="technique"><p class="fx-author-name">Daily Digest · Edited by Osbel Morell</p></div>');
+    assert.ok(i > tp.indexOf('<p class="fx-story-dek">') && i < tp.indexOf("fx-story-meta") , `${p.slug}: technique byline after dek, before meta`);
+    assert.ok(!tp.includes(esc(author.AUTHOR_BIO)), `${p.slug}: no bio on techniques`);
+  }
+});
+
+test("Daily Digest JSON-LD: Article with datePublished; essay author Person, technique author Organization + editor Person", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { getPost } = await import("../content/posts.ts");
+  const { articleJsonLd, jsonLdScript } = await import("../lib/daily-digest/jsonld.ts");
+  const { default: Article } = await import("../app/daily-digest/[slug]/page.tsx");
+  const ld = async (slug) => {
+    const html = renderToStaticMarkup(await Article({ params: Promise.resolve({ slug }) }));
+    const m = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g);
+    assert.equal(m?.length, 1, `${slug}: one JSON-LD script`);
+    return JSON.parse(m[0].replace(/^<script[^>]*>/, "").replace(/<\/script>$/, ""));
+  };
+  const essay = getPost("the-ai-safety-paradox");
+  const e = await ld(essay.slug);
+  assert.equal(e["@context"], "https://schema.org");
+  assert.equal(e["@type"], "Article");
+  assert.equal(e.headline, essay.title);
+  assert.equal(e.datePublished, essay.date);
+  assert.equal(e.url, `https://alignata.com/daily-digest/${essay.slug}`);
+  assert.equal(e.image, `https://alignata.com/art/digest/${essay.slug}-sticker.webp`);
+  assert.deepEqual(e.author, { "@type": "Person", name: "Osbel Morell" });
+  assert.equal(e.editor, undefined);
+  const tech = getPost("break-loops-when-progress-stalls");
+  const t = await ld(tech.slug);
+  assert.equal(t.datePublished, "2026-10-02");
+  assert.deepEqual(t.author, { "@type": "Organization", name: "Alignata Daily Digest", url: "https://alignata.com/daily-digest" });
+  assert.deepEqual(t.editor, { "@type": "Person", name: "Osbel Morell" });
+  assert.deepEqual(t, articleJsonLd(tech));
+  const s = jsonLdScript({ x: "</script><!-- a & b" });
+  assert.ok(!s.includes("<") && !s.includes(">") && !s.includes("&"), "escaped");
+  assert.deepEqual(JSON.parse(s), { x: "</script><!-- a & b" });
 });

@@ -33,7 +33,8 @@ function markToolLink(a: Element | null) {
 /**
  * Before-baseline tracking for the redesign (renders nothing visible):
  * Vercel Web Analytics pageviews, plus first-party site events to /api/site/e —
- * page_view on every route, apps_view on /apps, tool_open when an Open is tapped on /apps or a tool story (/apps/<slug>, incl. the sticky bar),
+ * page_view on every route, apps_view on /apps, tool_open {slug, position, source} when an Open is tapped on the feed, /apps,
+ * a tool story or its sticky bar,
  * article_view {slug, n} on a Daily Digest article, home_click {target} when a link on `/` is tapped. Ids: sid (sessionStorage), vid (localStorage).
  * In a dogfood session, tool links and card/row links (DOGFOOD_LINKS) get ?dogfood=1 so our test runs stay marked.
  */
@@ -74,9 +75,11 @@ export function SiteTracker() {
         }
         const target = homeClickTarget(link.getAttribute("data-home-target"), path);
         if (target) sendSiteEvent(ids.current, "home_click", { target });
+        // A feed Open also counts as tool_open (source: feed); card bodies carry no data-tool-slug.
+        trackToolOpen(location.pathname, (e.target as Element | null)?.closest?.("a[data-tool-slug]") ?? null, ids.current, skip.current);
         return;
       }
-      // tool_open: Opens on /apps and on a tool story /apps/<slug> (row Opens + sticky bar). Row-body story links carry no data-tool-slug.
+      // tool_open: Opens on /apps (source apps) and on a tool story /apps/<slug> (story, or sticky for the bar). Row-body story links carry no data-tool-slug.
       trackToolOpen(location.pathname, (e.target as Element | null)?.closest?.("a[data-tool-slug]") ?? null, ids.current, skip.current);
     };
     // middle-click opens a new tab without a click event

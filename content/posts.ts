@@ -10,6 +10,8 @@
  * renders after `paragraphs`, each heading as <h2>.
  */
 export type PostTag = "Technique" | "Deep dive" | "Essay";
+/** Byline + JSON-LD kind (board GO, Oct 3 2026). Omitted = "technique". Essays carry the author's byline. */
+export type PostKind = "essay" | "technique";
 
 /**
  * Hero art (SPEC v2 §3/§4, sticker batch v3.1, Oct 2 2026). One 16:9 file (1920×1080) under public/art/digest/,
@@ -33,6 +35,8 @@ export type Post = {
   date: string;
   /** Index + article meta tag. Omitted = "Technique". */
   tag?: PostTag;
+  /** Byline kind. Omitted = "technique" ("Daily Digest · Edited by …"); "essay" = "By …" + bio. */
+  kind?: PostKind;
   /** Per-article sticker art (card + story hero + alt + pad). Required: there is no fallback art. */
   hero: PostHero;
   /** One-line dek (≤70, COPY.md v2) for cards AND the story page under the H1, so they match. Omitted = `dek`. */
@@ -716,6 +720,7 @@ export const posts: Post[] = [
     cardDek: "Asking the inmates to guard the prison.",
     date: "2026-10-01",
     tag: "Essay",
+    kind: "essay",
     hero: {
       src: "/art/digest/the-ai-safety-paradox-sticker.webp",
       alt: "A red firework rocket with a fire extinguisher strapped to its side.",

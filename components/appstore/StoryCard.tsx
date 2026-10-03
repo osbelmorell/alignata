@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Post } from "@/content/posts";
 import type { HubApp } from "@/lib/types";
 import { TOOL_STORY, toolArt } from "@/lib/apps";
-import { cardImage, postCardDek, postTag } from "@/lib/daily-digest/meta";
+import { cardImage, postCardDek, postTag, shortDate } from "@/lib/daily-digest/meta";
 import { AppRow } from "@/components/appstore/AppRow";
 import { ArtFigure } from "@/components/appstore/ArtFigure";
 import { Morph } from "@/components/appstore/Motion";
@@ -70,6 +70,9 @@ export function ArticleStoryCard({
           </H>
         </Morph>
         <p className="fx-scard-dek">{postCardDek(post)}</p>
+        <p className="fx-meta fx-scard-date">
+          <time dateTime={post.date}>{shortDate(post.date)}</time>
+        </p>
       </div>
     </article>
   );

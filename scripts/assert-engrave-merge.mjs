@@ -1228,3 +1228,34 @@ test('role="status" regions hold only text: no button or other interactive eleme
   // the helper itself catches a button inside a status region
   assert.ok(INTERACTIVE.test(statusRegions('<div role="status"><p>x</p><button>y</button></div>')[0].inner));
 });
+
+test("Event endpoint: preview deploys don't store (VERCEL_ENV=preview → 204 skipped-preview, no KV write); production stores; filters unchanged", async () => {
+  const saved = { ...process.env };
+  const realFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (u) => (calls.push(String(u)), new Response(JSON.stringify([{ result: 1 }, { result: 1 }]), { status: 200 }));
+  const req = (who = iid, extra = {}) =>
+    new Request("https://alignata-git-x.vercel.app/api/engrave-merge/e", { method: "POST", body: JSON.stringify({ v: 1, event: "page_open", iid: who, dogfood: false, props: {}, ...extra }) });
+  try {
+    process.env.KV_REST_API_URL = "https://kv.invalid";
+    process.env.KV_REST_API_TOKEN = "t";
+    process.env.VERCEL_ENV = "preview";
+    const r = await handleEvent(req());
+    assert.equal(r.status, 204);
+    assert.equal(await r.text(), "");
+    assert.equal(r.headers.get("x-em-store"), "skipped-preview");
+    assert.equal((await handleEvent(req(EXCLUDED_IIDS[0]))).headers.get("x-em-store"), "skipped-filter", "EXCLUDED_IIDS still filtered first");
+    assert.equal((await handleEvent(new Request("https://x/api/engrave-merge/e", { method: "POST", body: "nope" }))).status, 400, "still validated");
+    assert.equal(calls.length, 0, "preview: no KV write");
+    for (const v of ["production", undefined]) {
+      if (v === undefined) delete process.env.VERCEL_ENV;
+      else process.env.VERCEL_ENV = v;
+      assert.equal((await handleEvent(req())).headers.get("x-em-store"), "stored", `VERCEL_ENV=${v}: stored`);
+      assert.equal((await handleEvent(req(EXCLUDED_IIDS[0]))).headers.get("x-em-store"), "skipped-filter");
+    }
+    assert.equal(calls.length, 2);
+  } finally {
+    globalThis.fetch = realFetch;
+    process.env = saved;
+  }
+});

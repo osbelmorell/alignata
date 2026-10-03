@@ -12,8 +12,20 @@ export const SITE_EVENT_PROPS = {
   home_click: ["target"],
 } as const;
 
+/**
+ * Optional props: accepted when present, never required, so clients cached before they existed keep validating.
+ * tool_open.source (CEO, Oct 3 2026) = where the Open was tapped: feed (homepage feed card), apps (/apps list),
+ * story (an in-page Open on /apps/<slug>) or sticky (the story's sticky Open bar). Older clients send no source;
+ * the record is stored without one (no guessed default).
+ */
+export const SITE_EVENT_OPTIONAL_PROPS: { readonly [E in keyof typeof SITE_EVENT_PROPS]?: readonly string[] } = {
+  tool_open: ["source"],
+};
+export const TOOL_OPEN_SOURCES = ["feed", "apps", "story", "sticky"] as const;
+export type ToolOpenSource = (typeof TOOL_OPEN_SOURCES)[number];
+
 export type SiteEventName = keyof typeof SITE_EVENT_PROPS;
-export type SiteEventProps = { path?: string; slug?: string; position?: number; n?: number; target?: string };
+export type SiteEventProps = { path?: string; slug?: string; position?: number; n?: number; target?: string; source?: ToolOpenSource };
 
 export interface SiteEventEnvelope {
   v: 1;
@@ -59,9 +71,10 @@ export function validateSiteEvent(raw: unknown): SiteValidated {
   if (typeof raw.dogfood !== "boolean") return { ok: false, reason: "bad_dogfood" };
   const props = raw.props === undefined ? {} : raw.props;
   if (!isObj(props)) return { ok: false, reason: "bad_props" };
-  const allowed: readonly string[] = SITE_EVENT_PROPS[event];
-  for (const k of Object.keys(props)) if (!allowed.includes(k)) return { ok: false, reason: `unknown_prop:${k}` };
-  for (const k of allowed) if (!(k in props)) return { ok: false, reason: `missing_prop:${k}` };
+  const required: readonly string[] = SITE_EVENT_PROPS[event];
+  const optional: readonly string[] = SITE_EVENT_OPTIONAL_PROPS[event] ?? [];
+  for (const k of Object.keys(props)) if (!required.includes(k) && !optional.includes(k)) return { ok: false, reason: `unknown_prop:${k}` };
+  for (const k of required) if (!(k in props)) return { ok: false, reason: `missing_prop:${k}` };
   const out: SiteEventProps = {};
   if ("path" in props) {
     if (typeof props.path !== "string" || !PATH_RE.test(props.path) || props.path.includes("//")) {
@@ -84,6 +97,12 @@ export function validateSiteEvent(raw: unknown): SiteValidated {
   if ("target" in props) {
     if (typeof props.target !== "string" || !HOME_TARGET_RE.test(props.target)) return { ok: false, reason: "bad_target" };
     out.target = props.target;
+  }
+  if ("source" in props) {
+    if (typeof props.source !== "string" || !(TOOL_OPEN_SOURCES as readonly string[]).includes(props.source)) {
+      return { ok: false, reason: "bad_source" };
+    }
+    out.source = props.source as ToolOpenSource;
   }
   return { ok: true, event: { v: 1, event, sid: raw.sid, vid: raw.vid, dogfood: raw.dogfood, props: out } };
 }

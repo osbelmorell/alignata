@@ -12,6 +12,7 @@
     "engrave:kpis": "node --import tsx scripts/engrave-merge-kpis.mjs",
     "lint:engrave": "eslint app/engrave-merge app/api/engrave-merge components/engrave-merge lib/engrave-merge scripts/assert-engrave-merge.mjs scripts/engrave-merge-kpis.mjs",
     "test:site": "node --import tsx --test scripts/assert-site.mjs",
+    "test:release": "node --import tsx --test scripts/assert-release.mjs",
     "site:baseline": "node scripts/site-baseline.mjs"
   },
   "dependencies": {

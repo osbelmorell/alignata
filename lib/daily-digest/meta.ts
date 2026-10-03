@@ -1,4 +1,4 @@
-import type { Post, PostHero, PostTag } from "@/content/posts";
+import type { Post, PostHero, PostKind, PostTag } from "@/content/posts";
 import { getPostsNewestFirst } from "@/content/posts";
 import { parseArticle, parseSections, toPlainText, type ArticleBlock } from "@/lib/daily-digest/blocks";
 
@@ -6,6 +6,11 @@ export const READ_WPM = 230;
 
 export function postTag(post: Post): PostTag {
   return post.tag ?? "Technique";
+}
+
+/** Byline kind; omitted = "technique". */
+export function postKind(post: Post): PostKind {
+  return post.kind ?? "technique";
 }
 
 export function postHero(post: Post): PostHero {

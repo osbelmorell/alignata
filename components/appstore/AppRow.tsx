@@ -1,4 +1,5 @@
 import type { HubApp } from "@/lib/types";
+import type { ToolOpenSource } from "@/lib/site/events";
 import { toolArt } from "@/lib/apps";
 import { Img } from "@/components/appstore/Img";
 
@@ -32,7 +33,7 @@ export function AppRow({
         <p className="fx-app-name">{app.name}</p>
         <p className="fx-app-line">{app.blurb}</p>
       </div>
-      <OpenPill app={app} pos={pos} primary={variant === "story"} homeTarget={homeTarget} />
+      <OpenPill app={app} pos={pos} primary={variant === "story"} homeTarget={homeTarget} src={variant === "story" ? "story" : "feed"} />
     </div>
   );
 }
@@ -44,12 +45,15 @@ export function OpenPill({
   primary = false,
   homeTarget = false,
   tabIndex,
+  src,
 }: {
   app: HubApp;
   pos: number;
   primary?: boolean;
   homeTarget?: boolean;
   tabIndex?: number;
+  /** tool_open source tag: feed (homepage card), apps (/apps), story (in-page story row), sticky (sticky bar). */
+  src: ToolOpenSource;
 }) {
   return (
     <a
@@ -57,6 +61,7 @@ export function OpenPill({
       href={app.url}
       data-tool-slug={app.id}
       data-tool-pos={pos}
+      data-tool-src={src}
       {...(homeTarget ? { "data-home-target": `tool:${app.id}` } : {})}
       {...(tabIndex !== undefined ? { tabIndex } : {})}
       aria-label={`Open ${app.name}`}

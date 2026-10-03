@@ -35,14 +35,14 @@ export function ToolsList({ apps }: { apps: HubApp[] }) {
                           {app.name}
                         </Link>
                       ) : (
-                        <a className="fx-stretch" href={app.url} data-tool-slug={app.id} data-tool-pos={pos}>
+                        <a className="fx-stretch" href={app.url} data-tool-slug={app.id} data-tool-pos={pos} data-tool-src="apps">
                           {app.name}
                         </a>
                       )}
                     </p>
                     <p className="fx-app-line">{app.blurb}</p>
                   </div>
-                  <OpenPill app={app} pos={pos} />
+                  <OpenPill app={app} pos={pos} src="apps" />
                 </li>
               );
             })}

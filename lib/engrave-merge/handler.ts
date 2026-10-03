@@ -5,10 +5,11 @@ import { appendEvent, redisConfig } from "./store";
 /**
  * What happened to an accepted event, sent back as `x-em-store` (status stays 204, body empty):
  * stored = appended to the store; skipped-config = no store env vars; skipped-filter = fixture
- * fingerprint or EXCLUDED_IIDS device; error = the store call failed. Dogfood events are stored
+ * fingerprint or EXCLUDED_IIDS device; skipped-preview = a Vercel preview deploy (VERCEL_ENV=preview: validated,
+ * never written); error = the store call failed. Dogfood events are stored
  * (flagged dogfood: true) so we can confirm the pipeline; the KPI script ignores them.
  */
-export type StoreResult = "stored" | "skipped-config" | "skipped-filter" | "error";
+export type StoreResult = "stored" | "skipped-config" | "skipped-filter" | "skipped-preview" | "error";
 const noContent = (result: StoreResult, event: string) => {
   // One line, no ids or values.
   console.log(`[engrave-merge] event ${event} ${result}`);
@@ -25,7 +26,8 @@ const bad = (reason: string) =>
  * - Adds ts (server time), day (America/New_York) and host; marks prod = host is alignata.com.
  * - Stores nothing about the caller (no IP, no user agent).
  * - No store configured → validated, then 204 no-op.
- * - Every 204 carries `x-em-store` (stored | skipped-config | skipped-filter | error) and logs one line
+ * - Preview deploys (VERCEL_ENV=preview) validate and filter as usual but never write (204, skipped-preview).
+ * - Every 204 carries `x-em-store` (stored | skipped-config | skipped-filter | skipped-preview | error) and logs one line
  *   `[engrave-merge] event <name> <result>` (no ids, no values).
  */
 export async function handleEvent(
@@ -58,6 +60,8 @@ export async function handleEvent(
   const record = { ...ev, ts, day: nyDay(ts), host, prod: host === PROD_HOST };
   const line = JSON.stringify(record);
 
+  // Preview deploys don't store events (CEO, Oct 3 2026): same 204 to the tool, no KV write.
+  if (process.env.VERCEL_ENV === "preview") return noContent("skipped-preview", ev.event);
   const cfg = redisConfig();
   if (!cfg) return noContent("skipped-config", ev.event);
   try {
