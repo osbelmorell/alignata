@@ -25,6 +25,9 @@ const nextConfig: NextConfig = {
         statusCode: 301 as const,
       })),
       { source: "/llm-digest/:path*", destination: "/daily-digest", statusCode: 301 },
+      // Env Diff Snapshot retired (Oct 3 2026): its old story URL goes to the retired tool route, so old links hit the
+      // storage wipe and the retired page (HANDOFF-ENVDIFF.md).
+      { source: "/apps/env-diff-snapshot", destination: "/env-diff", statusCode: 301 },
     ];
   },
 };

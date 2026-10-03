@@ -8,6 +8,7 @@ import "./fantasy.css";
 import "./appstore.css";
 import "./motion.css";
 import { MOTION_ON } from "@/lib/motion";
+import { RETIRED_WIPE_INLINE_SCRIPT } from "@/lib/site/retired-storage";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-inter", display: "swap" });
 const interTight = Inter_Tight({ subsets: ["latin"], weight: ["600"], variable: "--font-inter-tight", display: "swap" });
@@ -32,6 +33,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${interTight.variable}`} data-motion={MOTION_ON ? "on" : "off"}>
+      <head>
+        {/* Retired Env Diff: wipe its saved data before anything renders (acts on /env-diff only). */}
+        <script dangerouslySetInnerHTML={{ __html: RETIRED_WIPE_INLINE_SCRIPT }} />
+      </head>
       <body className="min-h-screen antialiased">
         <SiteHeader />
         <HubChrome />

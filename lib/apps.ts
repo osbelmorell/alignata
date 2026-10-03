@@ -18,7 +18,11 @@ export function sortApps(apps: HubApp[]): HubApp[] {
   });
 }
 
-/** SPEC §5: Cleaver 01 and License Gate 02 lead; the other 9 follow A–Z by name, so positions 1–11 are unchanged. */
+/**
+ * SPEC §5: Cleaver 01 and License Gate 02 lead; the other 8 follow A–Z by name (positions 1–10). Env Diff Snapshot was
+ * retired on Oct 3 2026 (it kept pasted env text in localStorage), so it is no longer listed and the tools after it moved
+ * up one: Hobby Deploy Burn Digest 9→8, LLM Feature-Cost Tag 10→9, What-Changed Card 11→10. Positions always match the row shown.
+ */
 export const FEATURED_TOOLS = ["stripe-cleaver", "license-gate"] as const;
 
 /**
@@ -45,7 +49,6 @@ export const TOOL_ART: Record<string, ToolArt> = {
   "deploy-decision-card": art("deploy-decision-card", "#EE83C3", null, "A balance scale with two brass pans."),
   "engrave-merge": art("engrave-merge", "#EFC3BB", "A laser engraver on a rail burning a line onto a paper tag.", "A laser engraver burning a line onto a tag."),
   "enterprise-scorecard": art("enterprise-scorecard", "#C5C6FB", "A round pressure gauge with green, yellow and red bands and one needle.", "A pressure gauge."),
-  "env-diff-snapshot": art("env-diff-snapshot", "#96E4B7", "A magnifying glass over two paper sheets whose lines don't match up.", "A magnifying glass."),
   "hobby-deploy-burn-digest": art("hobby-deploy-burn-digest", "#B94C4A", "A lit match, half burnt down, with a yellow flame.", "A lit match."),
   "llm-feature-cost-tag": art("llm-feature-cost-tag", "#F0CD5F", "A pink price tag hanging from a steel cog.", "A steel cog with a pink price tag."),
   "what-changed-card": art("what-changed-card", "#EE83C3", "A rubber stamp lifting off a paper sheet, leaving a round mark.", "A rubber stamp."),
@@ -77,7 +80,6 @@ export const TOOL_STORY: Record<string, { title: string; dek: string }> = {
   "llm-feature-cost-tag": { title: "Split the AI bill by feature", dek: "Paste your usage rows, and any feature at 40% or more gets flagged." },
   "what-changed-card": { title: "See what changed during an incident", dek: "Deploys, config, flags, and outside services, all on one card." },
   "hobby-deploy-burn-digest": { title: "Find what's eating your deploy quota", dek: "Paste your usage list and the busiest project goes to the top." },
-  "env-diff-snapshot": { title: "Spot drift between staging and prod", dek: "Secret values stay masked, so you can share the result safely." },
   "agent-eval-go-no-go": { title: "Ship agents on a rule, not a hunch", dek: "Fill in the required checks, and the page says go or no-go." },
   "agent-bundle-tag": { title: "Know which version of an agent is live", dek: "Save each prompt and model setup, then compare any two." },
 };

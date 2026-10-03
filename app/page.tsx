@@ -5,6 +5,7 @@ import { postTag } from "@/lib/daily-digest/meta";
 import { SiteFooter } from "@/components/fantasy/SiteFooter";
 import { ArticleStoryCard, ToolStoryCard } from "@/components/appstore/StoryCard";
 import { PageFade } from "@/components/appstore/Motion";
+import { RetiredStorageCleanup } from "@/components/site/RetiredStorageCleanup";
 
 /**
  * Homepage as the Today feed (SPEC v2 §2; mock mockups-art/home.html). Top unchanged from v1.5 §5a: the locked line and
@@ -52,6 +53,7 @@ export default function HomePage() {
           </nav>
         </main>
         <SiteFooter />
+        <RetiredStorageCleanup />
       </div>
     </PageFade>
   );

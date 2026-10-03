@@ -149,3 +149,7 @@ a.fx-text-link:focus-visible { outline: 3px solid var(--ink); outline-offset: 2p
 .fx-arow .fx-icon { width: 56px; height: 56px; border-radius: 14px; }
 .fx-arow:focus-within { outline: 3px solid var(--ink); outline-offset: 2px; }
 @media (min-width: 1024px) { .fx-tools-head .fx-display { font-size: 96px; } }
+
+/* /env-diff retired page (Oct 3): story column, no hero; H1 + dek + one black pill, then room before the footer. */
+.fx-retired-cta { margin-top: 32px; padding-bottom: var(--section); }
+.fx-retired-cta a.fx-pill { width: auto; min-width: 120px; padding: 0 28px; }

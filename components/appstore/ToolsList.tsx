@@ -7,8 +7,8 @@ import { PageFade } from "@/components/appstore/Motion";
 import { Img } from "@/components/appstore/Img";
 
 /**
- * /apps (SPEC v2 §5): title, the locked subline, then all 11 tools as 88px app rows in /apps order (positions 1–11
- * unchanged). Row body → the tool's story (/apps/<slug>); the soft Open → the tool. Deploy Decision Card has no story
+ * /apps (SPEC v2 §5): title, the locked subline, then all 10 listed tools as 88px app rows in /apps order (positions
+ * 1–10, = the row shown; Env Diff Snapshot retired Oct 3 2026). Row body → the tool's story (/apps/<slug>); the soft Open → the tool. Deploy Decision Card has no story
  * (CEO 7:40 PM ET Oct 2), so its row body and its Open both go straight to the tool (both counted as tool_open).
  */
 export function ToolsList({ apps }: { apps: HubApp[] }) {

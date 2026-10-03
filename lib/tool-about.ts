@@ -70,22 +70,6 @@ export const TOOL_ABOUT: Record<string, ToolAbout> = {
       "Open a recent save to restore; Clear resets the form.",
     ],
   },
-  "env-diff-snapshot": {
-    pitch:
-      "Paste two setting lists and see what's missing, extra, or different — secrets stay masked so you can share the report.",
-    what:
-      "Staging and live settings drift apart, and you usually find out mid-scare. Diffing raw lists by eye is slow and can leak secrets into chat.",
-    why:
-      "One shareable check: what's missing, extra, or changed, with secret-like keys flagged and values hidden. Stays in this browser.",
-    how: [
-      "Label the two sides (for example staging and live).",
-      "Paste into each box — key lists, key=value lines, or Load sample.",
-      "Run the diff.",
-      "Read the counts (missing / extra / changed / secret-like) and the tables. Secret values stay masked.",
-      "Copy a one-liner or the report for a thread.",
-      "Open a recent snapshot to restore.",
-    ],
-  },
   "llm-feature-cost-tag": {
     pitch:
       "See which product feature is burning the AI bill, day by day — and get a heads-up when one feature eats most of the spend.",

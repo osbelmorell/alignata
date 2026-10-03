@@ -264,7 +264,7 @@ test("baseline reader: only SCAN MATCH site:ev:* and LRANGE site:ev:<day>; never
   await assert.rejects(readStore({}), /No event store configured/);
 });
 
-test("/apps (v2 §5): 11 app rows in /apps order; row body → story, soft Open → tool; tracking attrs = shown position", async () => {
+test("/apps (v2 §5): 10 app rows in /apps order (Env Diff retired); row body → story, soft Open → tool; tracking attrs = shown position", async () => {
   const { getApps, toolsOrder, toolArt } = await import("../lib/apps.ts");
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
@@ -272,13 +272,13 @@ test("/apps (v2 §5): 11 app rows in /apps order; row body → story, soft Open 
   const order = toolsOrder(getApps());
   assert.deepEqual(order.map((a) => a.name), [
     "Stripe→Books Cleaver", "License Risk Gate", "Agent Bundle Tag", "Agent Eval Go/No-Go", "Deploy Decision Card", "Engrave Merge",
-    "Enterprise Scorecard", "Env Diff Snapshot", "Hobby Deploy Burn Digest", "LLM Feature-Cost Tag", "What-Changed Card",
+    "Enterprise Scorecard", "Hobby Deploy Burn Digest", "LLM Feature-Cost Tag", "What-Changed Card",
   ]);
   assert.equal(order.find((a) => a.id === "stripe-cleaver").blurb, "Turn a Stripe payout file into a QuickBooks or Xero import.", "locked Cleaver line");
   for (const a of order) assert.ok(toolArt(a.id).icon, `${a.id} has an icon`);
   const html = renderToStaticMarkup(createElement(ToolsList, { apps: order }));
   const rows = html.split('<li class="fx-arow"').slice(1);
-  assert.equal(rows.length, 11, "11 rows");
+  assert.equal(rows.length, 10, "10 rows");
   order.forEach((a, i) => {
     const r = rows[i];
     assert.ok(r.startsWith(` data-slug="${a.id}" data-pos="${i + 1}"`), `row ${i + 1} is ${a.id}`);
@@ -294,7 +294,7 @@ test("/apps (v2 §5): 11 app rows in /apps order; row body → story, soft Open 
     }
     assert.ok(SLUG_RE_OK(a.id), `${a.id} passes the tool_open slug check`);
   });
-  assert.equal((html.match(/>Open<\/a>/g) || []).length, 11, "every row has a visible Open");
+  assert.equal((html.match(/>Open<\/a>/g) || []).length, 10, "every row has a visible Open");
   assert.ok(!html.includes("fx-primary"), "no black pill on /apps (soft Opens only)");
   assert.ok(!/>(Get|Buy|Install)</.test(html), "Open, never Get");
 });
@@ -337,7 +337,6 @@ const TOOL_FINAL_ALT = [
   ["deploy-decision-card", null, "A balance scale with two brass pans."],
   ["engrave-merge", "A laser engraver on a rail burning a line onto a paper tag.", "A laser engraver burning a line onto a tag."],
   ["enterprise-scorecard", "A round pressure gauge with green, yellow and red bands and one needle.", "A pressure gauge."],
-  ["env-diff-snapshot", "A magnifying glass over two paper sheets whose lines don't match up.", "A magnifying glass."],
   ["hobby-deploy-burn-digest", "A lit match, half burnt down, with a yellow flame.", "A lit match."],
   ["llm-feature-cost-tag", "A pink price tag hanging from a steel cog.", "A steel cog with a pink price tag."],
   ["what-changed-card", "A rubber stamp lifting off a paper sheet, leaving a round mark.", "A rubber stamp."],
@@ -469,12 +468,12 @@ test("homepage (v2 §2): feed order, one black pill, Open → tool with home_cli
   assert.ok(!/<h2[^>]*>(Tools|Daily Digest)<\/h2>/.test(html), "no section headings in the feed");
 });
 
-test("tool story (v2 §4): 10 static stories (no Deploy Decision), hero + H1 + black Open row, About body, end row, sticky bar", async () => {
+test("tool story (v2 §4): 9 static stories (no Deploy Decision), hero + H1 + black Open row, About body, end row, sticky bar", async () => {
   const { renderToStaticMarkup } = await import("react-dom/server");
   const { getApps, toolsOrder, toolArt, TOOL_STORY } = await import("../lib/apps.ts");
   const mod = await import("../app/apps/[slug]/page.tsx");
   const slugs = mod.generateStaticParams().map((p) => p.slug);
-  assert.equal(slugs.length, 10);
+  assert.equal(slugs.length, 9);
   assert.ok(!slugs.includes("deploy-decision-card"));
   assert.equal(mod.dynamicParams, false);
   const order = toolsOrder(getApps());
@@ -574,7 +573,7 @@ test("art: tool stickers + icons with FINAL alt, every file a real WebP of the r
   }
   const files = readdirSync("public/art", { recursive: true }).map(String).filter((f) => /\.[a-z]+$/.test(f));
   for (const f of files) assert.match(f, /^(digest\/)?[a-z0-9-]+-sticker(-icon)?\.webp$/, `public/art/${f} is sticker art (no clay, no fallback tile)`);
-  assert.equal(files.length, 24 + 10 + 11, "24 Digest heroes + 10 tool heroes + 11 icons");
+  assert.equal(files.length, 24 + 9 + 10, "24 Digest heroes + 9 tool heroes + 10 icons");
   for (const f of CLAY_FILES) assert.ok(!existsSync(f), `${f} is gone`);
   assert.equal(CLAY_FILES.length, 54);
 });
@@ -729,7 +728,7 @@ test("tool_open: story row Opens + sticky Open count (same event + payload); row
   // /apps: unchanged. Open pills send exactly as before; a row-body tap opens the story with a plain link and sends nothing.
   const list = anchors(renderToStaticMarkup(createElement(ToolsList, { apps: order })));
   const bodies = list.filter((a) => a.attrs.class === "fx-stretch" && a.attrs.href.startsWith("/apps/"));
-  assert.equal(bodies.length, 10, "10 row bodies open a story");
+  assert.equal(bodies.length, 9, "9 row bodies open a story");
   for (const b of bodies) assert.equal(b.getAttribute("data-tool-slug"), null, `${b.attrs.href}: row body has no tracking attrs`);
   const none = await captureBeacons(() => {
     for (const b of bodies) assert.equal(trackToolOpen("/apps", b.getAttribute("data-tool-slug") ? b : null, ids, false), false);
@@ -779,11 +778,11 @@ test("sitemap: adds exactly the tool stories (no Deploy Decision story); everyth
   const storySlugs = mod.generateStaticParams().map((p) => p.slug);
   const stories = urls.filter((u) => u.startsWith(`${S}/apps/`));
   assert.deepEqual(stories.sort(), storySlugs.map((s) => `${S}/apps/${s}`).sort(), "story URLs = the static story pages");
-  assert.equal(stories.length, 10);
+  assert.equal(stories.length, 9);
   assert.ok(!stories.includes(`${S}/apps/deploy-decision-card`), "Deploy Decision has no story");
   const before = [S, `${S}/apps`, ...getApps().map((a) => `${S}${a.url}`), `${S}/daily-digest`, ...posts.map((p) => `${S}/daily-digest/${p.slug}`)];
-  assert.deepEqual(urls.filter((u) => !stories.includes(u)), before, "the 38 existing URLs, same order");
-  assert.equal(urls.length, 48);
+  assert.deepEqual(urls.filter((u) => !stories.includes(u)), before, "the 37 existing URLs, same order");
+  assert.equal(urls.length, 46);
   assert.equal(new Set(urls).size, urls.length);
   const robots = (await import("../app/robots.ts")).default();
   assert.deepEqual(robots, { rules: { userAgent: "*", allow: "/" }, sitemap: "https://alignata.com/sitemap.xml" }, "robots unchanged");
@@ -806,7 +805,7 @@ test("dogfood: card + row links (a.fx-stretch) on / and /apps get ?dogfood=1 exa
   };
   for (const [page, links] of Object.entries(pages)) {
     const cards = links.filter((a) => (a.attrs.class || "").split(" ").includes("fx-stretch"));
-    assert.ok(cards.length >= (page === "/apps" ? 11 : 5), `${page}: card/row links found (${cards.length})`);
+    assert.ok(cards.length >= (page === "/apps" ? 10 : 5), `${page}: card/row links found (${cards.length})`);
     for (const a of cards) {
       assert.ok(matches(a), `${page} ${a.attrs.href}: matched by DOGFOOD_LINKS`);
       assert.equal(dogfoodHref(a.attrs.href, O), `${a.attrs.href}?dogfood=1`, `${page} ${a.attrs.href}: gets ?dogfood=1`);
@@ -814,7 +813,7 @@ test("dogfood: card + row links (a.fx-stretch) on / and /apps get ?dogfood=1 exa
     for (const a of links.filter((a) => a.getAttribute("data-tool-slug"))) assert.ok(matches(a), `${page}: Open pills still matched`);
     if (page === "/apps") {
       const stories = cards.filter((a) => a.attrs.href.startsWith("/apps/")).map((a) => a.attrs.href);
-      assert.equal(stories.length, 10, "/apps: the 10 row bodies → stories, e.g. /apps/stripe-cleaver");
+      assert.equal(stories.length, 9, "/apps: the 9 row bodies → stories, e.g. /apps/stripe-cleaver");
       assert.ok(stories.includes("/apps/stripe-cleaver"));
     }
   }
@@ -1071,4 +1070,223 @@ test("Daily Digest JSON-LD: Article with datePublished; essay author Person, tec
   const s = jsonLdScript({ x: "</script><!-- a & b" });
   assert.ok(!s.includes("<") && !s.includes(">") && !s.includes("&"), "escaped");
   assert.deepEqual(JSON.parse(s), { x: "</script><!-- a & b" });
+});
+
+/* ---------- Env Diff Snapshot retired (CEO, 8:25 AM ET Oct 3 2026) ---------- */
+
+test("Env Diff retired page (COPY.md §8 via HANDOFF-ENVDIFF.md): H1 + one black pill to /apps, noindex/nofollow, no tool UI or textarea", async () => {
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const mod = await import("../app/env-diff/page.tsx");
+  assert.deepEqual(mod.metadata.robots, { index: false, follow: false }, "robots noindex, nofollow");
+  assert.equal(mod.metadata.title, "Env Diff has been retired");
+  assert.equal(mod.metadata.description, "Anything it saved on this device has been deleted.");
+  const html = renderToStaticMarkup(createElement(mod.default));
+  assert.ok(html.includes('<main class="fx-story fx-retired" data-retired="env-diff-snapshot"><article><div class="fx-story-col"><header class="fx-story-head"><h1 class="fx-story-title">Env Diff has been retired</h1></header>'), "story column, H1, no hero / eyebrow");
+  assert.ok(!html.includes("fx-story-hero") && !html.includes("fx-eyebrow") && !/>Open</.test(html), "no hero, eyebrow or Open");
+  const links = [...html.matchAll(/<a [^>]*href="([^"]+)"[^>]*>([^<]*)<\/a>/g)].filter((m) => !html.slice(html.indexOf("<footer"), html.length).includes(m[0]));
+  assert.deepEqual(links.map((m) => [m[1], m[2]]), [["/apps", "See the tools"]], "exactly one link in the page body: See the tools → /apps");
+  assert.ok(html.includes('<div class="fx-retired-cta"><a class="fx-pill" href="/apps">See the tools</a></div>'), "the one black pill");
+  assert.equal((html.match(/class="fx-pill"/g) || []).length, 1);
+  assert.ok(!/<(textarea|input|button|select|form)\b/.test(html), "no tool UI");
+  assert.ok(!/Diff snapshot|Load sample|Paste/i.test(html), "no tool copy");
+  const visible = html.replace(/<footer[\s\S]*<\/footer>/, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  assert.equal(visible, "Env Diff has been retired See the tools", "server HTML: the H1 plus the pill; the deleted line is client-only");
+  assert.ok(!html.includes("has been deleted") && !html.includes("data-storage-deleted"), "never server-rendered");
+  const { readFileSync } = await import("node:fs");
+  const chrome = readFileSync("components/HubChrome.tsx", "utf8");
+  assert.match(chrome, /pathname === "\/env-diff"/, "the tool-route '← All tools' bar is hidden here (the page has its one Tools link)");
+});
+
+test("Env Diff storage cleanup: removes every key the tool wrote (exact + prefixed, local + session), keeps the rest, never throws", async () => {
+  const { RETIRED_STORAGE_KEYS, RETIRED_STORAGE_PREFIXES, purgeRetiredKeys, cleanRetiredToolStorage } = await import("../lib/site/retired-storage.ts");
+  assert.deepEqual([...RETIRED_STORAGE_KEYS], ["env-diff-snapshot:v0"]);
+  assert.deepEqual([...RETIRED_STORAGE_PREFIXES], ["env-diff-snapshot:"], "HANDOFF-ENVDIFF.md §1");
+  const mock = (entries) => {
+    const m = new Map(Object.entries(entries));
+    return { get length() { return m.size; }, key: (i) => [...m.keys()][i] ?? null, getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), m };
+  };
+  const keep = { site_vid: "v", site_sid: "s", site_dogfood: "1", site_articles: "[]", em_iid: "i", "hobby-deploy-burn-digest:v0": "{}", "what-changed-card:v0": "{}", "agent-bundle-tag:v0": "{}", "llm-feature-cost-tag:v0": "{}", "agent-eval-go-no-go:v0": "{}" };
+  const secret = JSON.stringify({ snapshots: [{ id: "env-diff-1" }], lastBefore: "API_KEY=sk_live_123", lastAfter: "DB_URL=postgres://u:p@h/d" });
+  const local = mock({ ...keep, "env-diff-snapshot:v0": secret, "env-diff-snapshot:v1": "{}", "env-diff-snapshot:draft": "x" });
+  const removed = purgeRetiredKeys(local);
+  assert.deepEqual(removed.sort(), ["env-diff-snapshot:draft", "env-diff-snapshot:v0", "env-diff-snapshot:v1"]);
+  assert.deepEqual(Object.fromEntries(local.m), keep, "every other key untouched");
+  assert.ok(![...local.m.values()].some((v) => v.includes("sk_live_123")), "pasted secret text is gone");
+  // exact key removed even when key() enumeration throws
+  const blind = mock({ "env-diff-snapshot:v0": secret, site_vid: "v" });
+  Object.defineProperty(blind, "length", { get() { throw new Error("denied"); } });
+  purgeRetiredKeys(blind);
+  assert.equal(blind.m.has("env-diff-snapshot:v0"), false);
+  assert.equal(blind.m.get("site_vid"), "v");
+  // removeItem throwing / null storage → no throw
+  assert.doesNotThrow(() => purgeRetiredKeys({ length: 1, key: () => "env-diff-snapshot:v0", removeItem() { throw new Error("denied"); } }));
+  assert.deepEqual(purgeRetiredKeys(null), []);
+  // the page-load entry point cleans both areas and survives storage getters that throw
+  const saved = Object.getOwnPropertyDescriptor(globalThis, "window");
+  try {
+    const l = mock({ "env-diff-snapshot:v0": secret, site_vid: "v" });
+    const s = mock({ "env-diff-snapshot:v0": "1", site_sid: "s", site_dogfood: "1", site_articles: "[]" });
+    globalThis.window = { localStorage: l, sessionStorage: s };
+    cleanRetiredToolStorage();
+    assert.deepEqual(Object.fromEntries(l.m), { site_vid: "v" });
+    assert.deepEqual(Object.fromEntries(s.m), { site_sid: "s", site_dogfood: "1", site_articles: "[]" });
+    const writes = [];
+    l.setItem = (k) => writes.push(k);
+    cleanRetiredToolStorage();
+    assert.deepEqual(writes, [], "the cleanup never writes");
+    globalThis.window = { get localStorage() { throw new Error("SecurityError"); }, get sessionStorage() { throw new Error("SecurityError"); } };
+    assert.doesNotThrow(() => cleanRetiredToolStorage());
+  } finally {
+    if (saved) Object.defineProperty(globalThis, "window", saved);
+    else delete globalThis.window;
+  }
+});
+
+test("Env Diff storage cleanup runs on /env-diff, / and /apps; no Env Diff writer code is left", async () => {
+  const { readFileSync, existsSync, readdirSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const note = readFileSync("app/env-diff/page.tsx", "utf8");
+  assert.match(note, /import \{ RetiredToolNote, RETIRED_DELETED_LINE \} from "@\/components\/site\/RetiredToolNote";/);
+  assert.match(note, /<RetiredToolNote \/>/, "/env-diff wipes via its note component");
+  for (const f of ["app/page.tsx", "app/apps/page.tsx"]) {
+    const src = readFileSync(f, "utf8");
+    assert.match(src, /import \{ RetiredStorageCleanup \} from "@\/components\/site\/RetiredStorageCleanup";/, `${f} imports the cleanup`);
+    assert.match(src, /<RetiredStorageCleanup \/>/, `${f} renders the cleanup`);
+  }
+  assert.match(readFileSync("components/site/RetiredStorageCleanup.tsx", "utf8"), /useEffect\(\(\) => \{\n\s+cleanRetiredToolStorage\(\);\n\s+\}, \[\]\);/, "once per load");
+  for (const d of ["components/env-diff", "lib/env-diff"]) assert.ok(!existsSync(d), `${d} removed`);
+  const hits = [];
+  const walk = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (/\.(tsx?|mjs|js)$/.test(e.name) && /env-diff[^"']*["'`]/.test(readFileSync(p, "utf8")) && /setItem/.test(readFileSync(p, "utf8"))) hits.push(p);
+    }
+  };
+  for (const d of ["app", "components", "lib"]) walk(d);
+  assert.deepEqual(hits, [], "nothing writes an env-diff key");
+});
+
+test("Env Diff unlisted: not in apps.json, /apps, the feed, stories or the sitemap; story → 301 /env-diff; positions 1–10 contiguous", async () => {
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { readFileSync } = await import("node:fs");
+  const catalog = JSON.parse(readFileSync("public/apps.json", "utf8"));
+  assert.ok(!catalog.apps.some((a) => a.id === "env-diff-snapshot" || a.url === "/env-diff"), "apps.json");
+  assert.equal(catalog.apps.length, 10);
+  const { getApps, toolsOrder, TOOL_ART, TOOL_STORY } = await import("../lib/apps.ts");
+  const { TOOL_ABOUT } = await import("../lib/tool-about.ts");
+  for (const [name, m] of [["TOOL_ART", TOOL_ART], ["TOOL_STORY", TOOL_STORY], ["TOOL_ABOUT", TOOL_ABOUT]]) assert.ok(!("env-diff-snapshot" in m), `${name}`);
+  const { ToolsList } = await import("../components/appstore/ToolsList.tsx");
+  const { default: Home } = await import("../app/page.tsx");
+  const order = toolsOrder(getApps());
+  for (const [where, html] of [["/apps", renderToStaticMarkup(createElement(ToolsList, { apps: order }))], ["/", renderToStaticMarkup(createElement(Home))]]) {
+    assert.ok(!/env-diff|Env Diff/i.test(html), `${where}: no Env Diff`);
+  }
+  const apps = renderToStaticMarkup(createElement(ToolsList, { apps: order }));
+  const pos = [...apps.matchAll(/data-slug="([^"]+)" data-pos="(\d+)"/g)].map((m) => [m[1], +m[2]]);
+  assert.deepEqual(pos.map((p) => p[1]), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "positions contiguous");
+  assert.deepEqual(pos.slice(7), [["hobby-deploy-burn-digest", 8], ["llm-feature-cost-tag", 9], ["what-changed-card", 10]]);
+  for (const [slug, p] of pos) {
+    for (const m of apps.matchAll(new RegExp(`data-tool-slug="${slug}" data-tool-pos="(\\d+)"`, "g"))) assert.equal(+m[1], p, `${slug}: tracked position = row shown`);
+  }
+  const stories = (await import("../app/apps/[slug]/page.tsx")).generateStaticParams().map((s) => s.slug);
+  assert.ok(!stories.includes("env-diff-snapshot"), "no story page");
+  const urls = (await import("../app/sitemap.ts")).default().map((e) => e.url);
+  assert.ok(!urls.some((u) => /env-diff/.test(u)), "sitemap");
+  const redirects = await (await import("../next.config.ts")).default.redirects();
+  assert.deepEqual(redirects.find((r) => r.source === "/apps/env-diff-snapshot"), { source: "/apps/env-diff-snapshot", destination: "/env-diff", statusCode: 301 }, "old story → the retired route (UX Lead)");
+  assert.ok(!redirects.some((r) => r.source === "/env-diff"), "/env-diff itself stays reachable (retired page)");
+});
+
+test("Env Diff: validator unchanged (slug pattern, no allow-list), so historical env-diff tool_open events still validate and count", () => {
+  const r = validateSiteEvent({ v: 1, event: "tool_open", sid: SID, vid: VID, dogfood: false, props: { slug: "env-diff-snapshot", position: 8 } });
+  assert.equal(r.ok, true);
+  const T = Date.parse("2026-10-02T19:30:00Z");
+  const ev = (event, props) => ({ v: 1, event, sid: "s1", vid: "v1", dogfood: false, props, ts: T, day: "2026-10-02", host: "alignata.com", prod: true });
+  const s = summarize([ev("page_view", { path: "/apps" }), ev("apps_view", {}), ev("tool_open", { slug: "env-diff-snapshot", position: 8 }), ev("tool_open", { slug: "hobby-deploy-burn-digest", position: 9 })], {});
+  assert.deepEqual(s.window.toolOpenBySlug, { "env-diff-snapshot": 1, "hobby-deploy-burn-digest": 1 });
+});
+
+test("Env Diff 'has been deleted' line: client-only, rendered only after the synchronous wipe completed", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { wipeThenConfirm } = await import("../lib/site/retired-storage.ts");
+  const { RetiredToolNote, RETIRED_DELETED_LINE } = await import("../components/site/RetiredToolNote.tsx");
+  assert.equal(RETIRED_DELETED_LINE, "Anything it saved on this device has been deleted.");
+  assert.match(readFileSync("components/site/RetiredToolNote.tsx", "utf8"), /<p className="fx-story-dek" data-storage-deleted="">\s*\{RETIRED_DELETED_LINE\}/, "rendered as the story dek");
+  assert.equal(renderToStaticMarkup(createElement(RetiredToolNote)), "", "nothing on the server");
+  const log = [];
+  const store = new Map([["env-diff-snapshot:v0", "API_KEY=sk"]]);
+  wipeThenConfirm(() => { log.push("wipe"); store.delete("env-diff-snapshot:v0"); return true; }, (v) => log.push(`reveal:${v}:${store.size}`));
+  assert.deepEqual(log, ["wipe", "reveal:true:0"], "reveal after the wipe returns, with the key already gone");
+  const none = [];
+  wipeThenConfirm(() => false, (v) => none.push(v));
+  assert.deepEqual(none, [], "no 'deleted' line when the wipe couldn't be verified (storage blocked)");
+  const src = readFileSync("components/site/RetiredToolNote.tsx", "utf8");
+  assert.match(src, /^"use client";/);
+  assert.match(src, /useState\(false\)/, "starts hidden");
+  assert.match(src, /useLayoutEffect\(\(\) => \{\n\s+wipeThenConfirm\(cleanRetiredToolStorage, setDeleted\);\n\s+\}, \[\]\);/, "wipe then set state, in a layout effect");
+  // cleanRetiredToolStorage reports completion only when it can verify both areas are clean
+  const { cleanRetiredToolStorage } = await import("../lib/site/retired-storage.ts");
+  const mock = (entries) => { const m = new Map(Object.entries(entries)); return { get length() { return m.size; }, key: (i) => [...m.keys()][i] ?? null, getItem: (k) => (m.has(k) ? m.get(k) : null), removeItem: (k) => m.delete(k), m }; };
+  const saved = Object.getOwnPropertyDescriptor(globalThis, "window");
+  try {
+    globalThis.window = { localStorage: mock({ "env-diff-snapshot:v0": "x" }), sessionStorage: mock({}) };
+    assert.equal(cleanRetiredToolStorage(), true);
+    const stuck = mock({ "env-diff-snapshot:v0": "x" }); stuck.removeItem = () => { throw new Error("denied"); };
+    globalThis.window = { localStorage: stuck, sessionStorage: mock({}) };
+    assert.equal(cleanRetiredToolStorage(), false, "a key that wouldn't delete → no 'deleted' line");
+    globalThis.window = { get localStorage() { throw new Error("SecurityError"); }, sessionStorage: mock({}) };
+    assert.equal(cleanRetiredToolStorage(), false);
+  } finally {
+    if (saved) Object.defineProperty(globalThis, "window", saved); else delete globalThis.window;
+  }
+});
+
+test("Env Diff route: zero links to /env-diff on /, /apps, every tool story and every Digest page; not in the sitemap", async () => {
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { getApps, toolsOrder } = await import("../lib/apps.ts");
+  const { ToolsList } = await import("../components/appstore/ToolsList.tsx");
+  const { default: Home } = await import("../app/page.tsx");
+  const story = await import("../app/apps/[slug]/page.tsx");
+  const { default: Digest } = await import("../app/daily-digest/page.tsx");
+  const { default: Article } = await import("../app/daily-digest/[slug]/page.tsx");
+  const { posts } = await import("../content/posts.ts");
+  const pages = [["/", renderToStaticMarkup(createElement(Home))], ["/apps", renderToStaticMarkup(createElement(ToolsList, { apps: toolsOrder(getApps()) }))], ["/daily-digest", renderToStaticMarkup(createElement(Digest))]];
+  for (const { slug } of story.generateStaticParams()) pages.push([`/apps/${slug}`, renderToStaticMarkup(await story.default({ params: Promise.resolve({ slug }) }))]);
+  for (const p of posts) pages.push([`/daily-digest/${p.slug}`, renderToStaticMarkup(await Article({ params: Promise.resolve({ slug: p.slug }) }))]);
+  assert.equal(pages.length, 3 + 9 + 24);
+  for (const [path, html] of pages) {
+    assert.ok(!/href="[^"]*\/env-diff/.test(html), `${path}: no link to the Env Diff route`);
+    assert.ok(!/env-diff|Env Diff/i.test(html), `${path}: no Env Diff mention or art`);
+  }
+  const urls = (await import("../app/sitemap.ts")).default().map((e) => e.url);
+  assert.ok(!urls.some((u) => u.includes("env-diff")));
+});
+
+test("Env Diff head wipe: a blocking inline script first in <head> clears the keys on /env-diff only, before <body>", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { runInNewContext } = await import("node:vm");
+  const { RETIRED_WIPE_INLINE_SCRIPT } = await import("../lib/site/retired-storage.ts");
+  const layout = readFileSync("app/layout.tsx", "utf8");
+  assert.match(layout, /<head>\s*\{\/\*[^*]*\*\/\}\s*<script dangerouslySetInnerHTML=\{\{ __html: RETIRED_WIPE_INLINE_SCRIPT \}\} \/>\s*<\/head>\s*<body/, "inline, synchronous, in <head> before <body>");
+  assert.ok(!/src=|async|defer/.test(RETIRED_WIPE_INLINE_SCRIPT.slice(0, 40)));
+  const mock = (entries) => { const m = new Map(Object.entries(entries)); return { get length() { return m.size; }, key: (i) => [...m.keys()][i] ?? null, removeItem: (k) => m.delete(k), m }; };
+  const run = (pathname, local, session) => runInNewContext(RETIRED_WIPE_INLINE_SCRIPT, { location: { pathname }, window: { localStorage: local, sessionStorage: session } });
+  const keep = { site_vid: "v", em_iid: "i", "hobby-deploy-burn-digest:v0": "{}" };
+  for (const path of ["/env-diff", "/env-diff/"]) {
+    const l = mock({ ...keep, "env-diff-snapshot:v0": "API_KEY=sk", "env-diff-snapshot:v1": "x" });
+    const s = mock({ site_sid: "s", site_dogfood: "1", site_articles: "[]", "env-diff-snapshot:v0": "x" });
+    run(path, l, s);
+    assert.deepEqual(Object.fromEntries(l.m), keep, `${path}: local wiped, rest kept`);
+    assert.deepEqual(Object.fromEntries(s.m), { site_sid: "s", site_dogfood: "1", site_articles: "[]" }, `${path}: session wiped, site keys kept`);
+  }
+  const other = mock({ "env-diff-snapshot:v0": "x" });
+  run("/apps", other, mock({}));
+  assert.equal(other.m.size, 1, "the head script acts on /env-diff only (/ and /apps clean up after hydration)");
+  assert.doesNotThrow(() => runInNewContext(RETIRED_WIPE_INLINE_SCRIPT, { location: { pathname: "/env-diff" }, window: { get localStorage() { throw new Error("SecurityError"); }, sessionStorage: null } }));
 });
