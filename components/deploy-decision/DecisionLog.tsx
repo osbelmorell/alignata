@@ -29,7 +29,12 @@ export function DecisionLog({ log }: DecisionLogProps) {
         </p>
       </div>
 
-      <div className="overflow-x-auto">
+      <div
+        tabIndex={0}
+        role="region"
+        aria-label="Decision log"
+        className="overflow-x-auto focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[-3px] focus-visible:outline-[var(--cb-ink)]"
+      >
         <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-[var(--cb-line)] text-sm text-[var(--cb-ink-muted)]">
