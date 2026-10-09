@@ -392,7 +392,7 @@ Clock **T0** = server `ts` of the first `file_processed` that is real (non-dogfo
   - A `storage` listener on `em_price`: when an answer lands from another tab, an open card swaps to the thanks line (`"pay"`) or closes (`"no"`) by itself. It never sends an event.
   - Without Web Locks, two tabs firing in the same instant can each send once; Product's readback dedupe (view once per install per local day, first answer per install) is the backstop.
 - "I'd pay $29" → "Thanks, that helps. It's still free, so keep using it." (focus moves to it; it goes away when the next file is made). "No thanks" → the card just closes, nothing replaces it, focus moves to the count line.
-- **Done scroll:** after the download, Make merge file's top lands at the sticky "All tools" bar's height + 16px (390: 57 → 73; 1280: 65 → 81), with the downloaded line fully visible.
+- **Done scroll:** after the download, Make merge file's top lands at the sticky "All tools" bar's height + 16px (45px at every width, so it lands at 61 at 390 and 1280), with the downloaded line fully visible.
 
 Caveat: an install id is a browser, not a seller. Cleared storage or a second device over-counts sellers, and that's accepted for dogfood.
 
