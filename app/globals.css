@@ -17,9 +17,17 @@
   --margin: 20px;
   --gutter: 16px;
   --section: 72px;
+  /* Sticky "All tools" bar (components/HubChrome.tsx), rendered height at every width: 44px link + 1px border-bottom
+     (.fx-wrap zeroes its py-* utilities). Not the .fx-header, which scrolls away. */
+  --sticky-bar-h: 45px;
 }
 @media (min-width: 900px) {
   :root { --margin: 48px; --gutter: 24px; --section: 120px; }
+}
+
+/* Keyboard focus and #anchor scrolls land below the sticky bar, with 16px clear. */
+html {
+  scroll-padding-top: calc(var(--sticky-bar-h) + 16px);
 }
 
 :root {
