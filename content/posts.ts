@@ -778,6 +778,35 @@ export const posts: Post[] = [
       "5. Log each stall, and lift the constraint when progress resumes.",
     ],
   },
+  {
+    slug: "show-fixes-only-when-things-break",
+    title: "Show fixes only when things break",
+    dek: "Agents keep their hard-won lessons without tripping over them on healthy steps.",
+    cardDek: "Show an agent its past fixes only when a step actually goes wrong.",
+    hero: {
+      src: "/art/digest/show-fixes-only-when-things-break-sticker.webp",
+      alt: "A first-aid kit with a red cross inside a glass case that's cracked in one corner.",
+      pad: "#EFC3BB",
+    },
+    date: "2026-10-09",
+    paragraphs: [
+      "## The problem",
+      "Teams that let agents learn from mistakes usually keep a growing list of lessons: \"if search keeps returning nothing, broaden the query,\" \"don't buy until size is confirmed.\" The list goes into the prompt at the start of every task. That feels safe, but most of those lessons are about failures that aren't happening right now. The agent has to decide on every step whether each one applies, and it often decides wrong. In one example from the Sentry paper, an agent found the right product and then kept comparing alternatives because its recovery rules told it to, so it never bought anything.",
+      "## The technique",
+      "Earlier Digest pieces covered breaking stalled loops and telling a failed tool what to try next. This one is about timing: when an agent should see its lessons at all.",
+      "Keep the lesson list outside the agent's prompt. Run a small checker next to the agent that looks at its last few steps (the paper uses five) and asks one question: is something actually going wrong? It might be a malformed tool call, a loop, a stall, or a claim the observations don't support. If nothing is wrong, the agent sees no lessons at all. If something is wrong, label the failure, pull at most five lessons with the same label, and hand them over for the next step only. Then watch the next ten steps. Save a new lesson only if the agent really recovered. A fix that didn't work never goes into the list, so it can't misfire later.",
+      "## What we saw",
+      "From the Sentry paper (arXiv:2610.02994), not our measurements: across WebShop, AppWorld, SWE-bench Lite and Mind2Web Replay with Qwen3.5-9B, Sentry beat the strongest runtime-intervention baseline on every benchmark, by 37% on average. Putting the same frozen lesson list into the agent's standing prompt lowered WebShop reward from 0.364 to 0.296, even with the triggered lessons still available. Removing the \"is anything wrong?\" check dropped WebShop reward from 0.468 to 0.136. Token use was 1.54 times the plain agent's.",
+      "Our own test was a simulation, not a measurement. It used no live model: 400 scripted tasks across 5 seeds, with behavior rates we chose ourselves. In that simulation, showing lessons only on failure finished 36.7% of tasks, against 15.6% with no lessons. Keeping every lesson in context fell to 0.5% at our default misfire rate. That gap rests on the misfire rate we picked. With no misfires, always-on scored 34.7% and triggered 36.7%. At a 0.1% misfire chance per lesson per step, always-on already fell to 19.6%. Skipping the recovery check cut the triggered result to 27.2%.",
+      "## Limits",
+      "The paper tested two open models and used the same model as agent, checker and verifier. Its checker agreed with human reviewers 86% of the time, so it will sometimes fire when it shouldn't or miss real trouble. Lesson lists can fill up with duplicates and need pruning. Our simulation only shows how the idea behaves under rates we invented. It can't tell you how often your model trips over irrelevant advice. Measure that on your own traces before you rely on it.",
+      "## Try it",
+      "Take your agent's \"lessons learned\" block out of the system prompt. Add a step check for loops, stalls and invalid calls. When one fires, inject the two to five lessons tagged with that failure for one turn. Keep a lesson only if the next several steps show real progress.",
+      "## Sources",
+      "- [Sentry: Learning to Recover from LLM Agent Failures at Test Time (arXiv:2610.02994)](https://arxiv.org/abs/2610.02994)",
+      "- [Sentry code](https://github.com/nuglifeleoji/Sentry)",
+    ],
+  },
 ];
 
 export function getPost(slug: string): Post | undefined {
