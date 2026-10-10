@@ -21,13 +21,13 @@ import { RETIRED_WIPE_INLINE_SCRIPT } from "@/lib/site/retired-storage";
 const inter = localFont({
   src: [{ path: "./fonts/Inter-latin-wght.woff2", weight: "400 600", style: "normal" }],
   variable: "--font-inter",
-  display: "optional",
+  display: "swap",
   fallback: ["system-ui", "-apple-system", "Segoe UI", "Roboto", "Arial", "sans-serif"],
 });
 const interTight = localFont({
   src: [{ path: "./fonts/InterTight-latin-600.woff2", weight: "600", style: "normal" }],
   variable: "--font-inter-tight",
-  display: "optional",
+  display: "swap",
   fallback: ["system-ui", "-apple-system", "Segoe UI", "Roboto", "Arial", "sans-serif"],
 });
 

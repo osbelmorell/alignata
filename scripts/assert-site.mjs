@@ -1919,7 +1919,7 @@ test("baseline --fixture / --file: reads only the file; no fetch, no store clien
   assert.throws(() => execFileSync(process.execPath, ["--import", guard, "scripts/site-baseline.mjs"], { env, encoding: "utf8", stdio: "pipe" }), (e) => e.status === 9);
 });
 
-test("restyle C QA 679156c: one back link on every subpage, one primary per tool story, wrapping tool lines, even /apps rows, scorecard SSR data", async () => {
+test("restyle C QA 679156c: one back link on every subpage, one primary per tool story, wrapping tool lines, rows sized to content, scorecard SSR data", async () => {
   const { readFileSync } = await import("node:fs");
   const read = (f) => readFileSync(f, "utf8");
   for (const f of ["components/appstore/ToolsList.tsx", "app/daily-digest/page.tsx", "app/daily-digest/[slug]/page.tsx", "app/apps/[slug]/page.tsx", "app/about/page.tsx", "app/privacy/page.tsx", "app/guides/[slug]/page.tsx", "app/not-found.tsx"])
@@ -1931,7 +1931,8 @@ test("restyle C QA 679156c: one back link on every subpage, one primary per tool
   assert.match(read("components/site/BackLink.tsx"), /className="fx-wrap fx-back"/, "BackLink sits on the site container (same x everywhere)");
   const css = read("app/restyle-c.css");
   assert.ok(!/text-overflow:\s*ellipsis|white-space:\s*nowrap/.test(css), "no truncated tool lines");
-  assert.match(css, /\.fx-rows \{[^}]*grid-auto-rows: 1fr/, "even /apps rows from the grid track, not a fixed height");
+  assert.ok(!/grid-auto-rows/.test(css), "/apps rows size to their own content (QA abe0c50 F1)");
+  assert.match(css, /\.fx-arow \{[^}]*padding: 13px 16px/, "13px top and bottom on every row");
   assert.ok(!/\.fx-arow \{[^}]*[^-]height:/.test(css), "no fixed row height");
   assert.match(read("app/apps/[slug]/page.tsx"), /row="end" secondary/, "end row Open is soft");
   assert.match(read("app/scorecard/page.tsx"), /<Scorecard initial=\{initialScorecard\(\)\} \/>/, "scorecard data in the server HTML");
