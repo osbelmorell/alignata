@@ -18,11 +18,9 @@
 .fx-nav a[aria-current="page"] { text-decoration: none; color: var(--purple); background: var(--tint-essay); }
 html { scroll-padding-top: 80px; }
 /* Back link: one place on every subpage */
-.fx-back { margin: 20px 0 0; }
+.fx-back { padding-top: 20px; }
 .fx-back a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 15px; font-weight: 600; color: var(--purple); text-decoration: none; }
 .fx-back a:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; border-radius: 6px; }
-.fx-story > article > .fx-back { padding: 0 var(--margin); }
-@media (min-width: 900px) { .fx-story > article > .fx-back { padding: 0; } }
 /* Type: quieter, smaller display */
 .fx-display { font-weight: 600; letter-spacing: -0.03em; }
 @media (min-width: 900px) { .fx-display { font-size: 56px; line-height: 1.05; } .fx-tools-head .fx-display { font-size: 56px; } }
@@ -69,16 +67,16 @@ a.fx-open, a.fx-open:visited, a.fx-open:hover { background: #fff; color: var(--i
 .fx-prose a { color: var(--purple); }
 .fx-next { border-top: 0; }
 /* /apps rows: pastel cards, f517488 spacing (13px real padding, 70px floor, rows grow) */
-.fx-rows { border-top: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.fx-rows { border-top: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: 1fr; gap: 10px; }
 .fx-arow { background: var(--tint-tool); border-bottom: 0; border-radius: var(--r-card); padding: 13px 16px; min-height: 70px; gap: 14px; box-sizing: border-box; }
 .fx-arow .fx-icon, .fx-icon { border-radius: 14px; box-shadow: none; }
 @media (min-width: 900px) { .fx-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } .fx-arow { padding: 20px 22px; } }
 /* Under 900px: tool lists are compact rows (icon, title, one line, Open) on home too */
 @media (max-width: 899.98px) {
-  .fx-app-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
+  .fx-app-line { font-size: 14px; }
   .fx-feed .fx-scard[data-kind="tool"] .fx-scard-art, .fx-feed .fx-scard[data-kind="tool"] .fx-scard-text { display: none; }
   .fx-feed .fx-scard[data-kind="tool"] .fx-app-row { padding: 13px 16px; min-height: 70px; gap: 14px; }
   .fx-feed .fx-scard[data-kind="tool"] .fx-app-row .fx-icon { display: block; width: 48px; height: 48px; }
   .fx-feed { gap: 12px; }
 }
-.fx-header + nav[aria-label="Apps"] { top: 64px; }
+

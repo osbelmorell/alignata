@@ -697,7 +697,7 @@ export const posts: Post[] = [
     cardDek: "Treat tool replies as data, so hidden commands can't steer your agent.",
     hero: {
       src: "/art/digest/dont-follow-orders-in-tool-text-sticker.webp",
-      alt: "A robot holds up a paper note from an open box while a person beside it stays calm and turns away from it.",
+      alt: "A robot lifts a paper note out of an open box while a calm person stands facing it, with a yellow heart between them.",
       pad: "#FDFAF5",
     },
     date: "2026-10-01",

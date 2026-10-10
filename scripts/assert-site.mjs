@@ -317,7 +317,7 @@ const DIGEST_FINAL_ALT = new Map([
   ["google-ai-search-eating-its-own-traffic", "A puzzled person watches a long search bar curl around like a snake and swallow a ring of web page cards."],
   ["show-fixes-only-when-things-break", "A relaxed person sits on a cushion beside a closed toolbox while a pipe nearby springs a leak."],
   ["break-loops-when-progress-stalls", "A person pulls a lever to stop a robot running in a hamster wheel, while a second small robot walks off free."],
-  ["dont-follow-orders-in-tool-text", "A robot holds up a paper note from an open box while a person beside it stays calm and turns away from it."],
+  ["dont-follow-orders-in-tool-text", "A robot lifts a paper note out of an open box while a calm person stands facing it, with a yellow heart between them."],
   ["the-ai-safety-paradox", "A person balances on a seesaw, holding a shield in one hand and a glowing brain in the other."],
   ["ask-before-doing-what-wasnt-asked", "A robot with a question mark in a speech bubble pauses beside a box and checks with a person before going on."],
   ["test-search-before-saying-none", "A person shines a flashlight into an open filing cabinet drawer full of folders."],
@@ -499,7 +499,8 @@ test("tool story (v2 §4): 9 static stories (no Deploy Decision), hero + H1 + bl
     assert.ok(html.indexOf(`src="${t.art}"`) < html.indexOf('<h1 class="fx-story-title">'), `${slug}: hero above the H1`);
     assert.ok(html.includes(`<h1 class="fx-story-title">${TOOL_STORY[slug].title.replace(/'/g, "&#x27;")}</h1>`), `${slug}: H1 = card title`);
     const opens = [...html.matchAll(/<a class="fx-open fx-primary" href="([^"]+)" data-tool-slug="([^"]+)" data-tool-pos="(\d+)"/g)];
-    assert.equal(opens.length, 3, `${slug}: black Open in the first row, the end row and the sticky bar`);
+    assert.equal(opens.length, 2, `${slug}: primary Open in the first row and the sticky bar (one visible at a time); the end row is soft`);
+    assert.ok(html.includes(`<a class="fx-open" href="${app.url}" data-tool-slug="${slug}"`), `${slug}: soft Open in the end row`);
     for (const o of opens) assert.deepEqual([o[1], o[2], +o[3]], [app.url, slug, pos], `${slug}: Open → tool at its /apps position`);
     assert.ok(html.includes('data-row="first"') && html.includes('data-row="end"'));
     assert.ok(html.includes('data-sticky-open=""') && html.includes('aria-hidden="true"'), `${slug}: sticky bar starts hidden`);
@@ -1916,4 +1917,22 @@ test("baseline --fixture / --file: reads only the file; no fetch, no store clien
   }
   // control: without a file it does try the store (fetch) — so the guard really detects store access
   assert.throws(() => execFileSync(process.execPath, ["--import", guard, "scripts/site-baseline.mjs"], { env, encoding: "utf8", stdio: "pipe" }), (e) => e.status === 9);
+});
+
+test("restyle C QA 679156c: one back link on every subpage, one primary per tool story, wrapping tool lines, even /apps rows, scorecard SSR data", async () => {
+  const { readFileSync } = await import("node:fs");
+  const read = (f) => readFileSync(f, "utf8");
+  for (const f of ["components/appstore/ToolsList.tsx", "app/daily-digest/page.tsx", "app/daily-digest/[slug]/page.tsx", "app/apps/[slug]/page.tsx", "app/about/page.tsx", "app/privacy/page.tsx", "app/guides/[slug]/page.tsx", "app/not-found.tsx"])
+    assert.equal((read(f).match(/<BackLink /g) || []).length, 1, `${f}: exactly one BackLink`);
+  assert.match(read("app/not-found.tsx"), /<BackLink href="\/" label="Home" \/>/, "404 → Home");
+  const hub = read("components/HubChrome.tsx");
+  assert.ok(hub.includes('<BackLink href="/apps" label="Tools" />') && hub.includes("!toolPaths.includes(pathname)"), "tool routes get the shared BackLink, nothing else does");
+  assert.ok(!hub.includes("All tools"), "no old grey '← All tools' bar");
+  assert.match(read("components/site/BackLink.tsx"), /className="fx-wrap fx-back"/, "BackLink sits on the site container (same x everywhere)");
+  const css = read("app/restyle-c.css");
+  assert.ok(!/text-overflow:\s*ellipsis|white-space:\s*nowrap/.test(css), "no truncated tool lines");
+  assert.match(css, /\.fx-rows \{[^}]*grid-auto-rows: 1fr/, "even /apps rows from the grid track, not a fixed height");
+  assert.ok(!/\.fx-arow \{[^}]*[^-]height:/.test(css), "no fixed row height");
+  assert.match(read("app/apps/[slug]/page.tsx"), /row="end" secondary/, "end row Open is soft");
+  assert.match(read("app/scorecard/page.tsx"), /<Scorecard initial=\{initialScorecard\(\)\} \/>/, "scorecard data in the server HTML");
 });

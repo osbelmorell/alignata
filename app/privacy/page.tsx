@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { BackLink } from "@/components/site/BackLink";
 import type { Metadata } from "next";
 import { SiteFooter } from "@/components/fantasy/SiteFooter";
 import { PageFade } from "@/components/appstore/Motion";
@@ -19,6 +20,7 @@ export default function PrivacyPage() {
   return (
     <PageFade story>
       <div className="fx-page">
+        <BackLink href="/" label="Home" />
         <main className="fx-story fx-company" data-page="privacy">
           <article>
             <div className="fx-story-col">

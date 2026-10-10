@@ -1,48 +1,25 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { COMPANY_PATHS } from "@/content/company";
+import { BackLink } from "@/components/site/BackLink";
 
 /**
- * Persistent tool chrome: on tool routes, always offer a path back to `/apps`
- * (All apps). Hidden on brand home, /apps, the /apps/<slug> stories, /daily-digest and /guides/<slug> so Alignata nav
- * leads, on the company pages (/about, /privacy), and on retired tool routes (/env-diff), whose page already has its one link back to the tools.
- * Light nav — paper bg, ink link — on the one site container (.fx-wrap), so its left edge matches the header on every route.
+ * Tool-route back link (restyle C): on the 10 tool routes only, the shared "← Tools" BackLink, same place and x as on
+ * every other subpage. Pages that render their own BackLink (home, /apps, /apps/<slug>, /daily-digest, /guides/<slug>,
+ * company pages, 404) and the retired /env-diff (its page has its one link back to the tools) get nothing here.
  */
-export function HubChrome() {
-  const pathname = usePathname();
+export function HubChrome({ toolPaths }: { toolPaths: string[] }) {
+  const pathname = usePathname() || "/";
   const hide =
     pathname === "/" ||
-    pathname === "" ||
     pathname === "/apps" ||
     pathname.startsWith("/apps/") ||
     pathname.startsWith("/daily-digest") ||
     pathname.startsWith("/guides/") ||
     pathname === "/env-diff" ||
-    COMPANY_PATHS.includes(pathname);
-
-  if (hide) {
-    return null;
-  }
-
-  return (
-    <nav
-      aria-label="Apps"
-      className="sticky top-0 z-50 border-b border-[var(--cb-line)] bg-[var(--cb-bg)]/95 backdrop-blur-sm"
-    >
-      <div className="fx-wrap flex items-center gap-2 py-1.5 sm:gap-3 sm:py-2.5">
-        <Link
-          href="/apps"
-          className="inline-flex min-h-[44px] items-center gap-1 rounded-[var(--cb-radius-pill)] px-1.5 py-0.5 text-base font-medium text-[var(--cb-ink)] transition hover:bg-[var(--cb-surface)] sm:gap-1.5 sm:px-2 sm:py-1"
-        >
-          <span aria-hidden="true">←</span>
-          All tools
-        </Link>
-        <span className="hidden text-sm font-medium text-[var(--cb-ink-muted)] sm:inline">
-          Alignata
-        </span>
-      </div>
-    </nav>
-  );
+    COMPANY_PATHS.includes(pathname) ||
+    !toolPaths.includes(pathname);
+  if (hide) return null;
+  return <BackLink href="/apps" label="Tools" />;
 }

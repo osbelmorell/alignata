@@ -66,10 +66,10 @@ export default async function DailyDigestPostPage({
   return (
     <PageFade story>
       <DigestOpen slug={post.slug} date={post.date} updated={post.updated?.date} />
+      <BackLink href="/daily-digest" label="Daily Digest" />
       <main className="fx-story">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(articleJsonLd(post)) }} />
         <article>
-          <BackLink href="/daily-digest" label="Daily Digest" />
           <ArtFigure slug={post.slug} className="fx-story-hero" src={hero.src} alt={hero.alt} pad={hero.pad} hero />
           <div className="fx-story-col">
             <header className="fx-story-head">

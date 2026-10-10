@@ -21,15 +21,17 @@ const noSubscribe = () => () => {};
 /** ?edit=1 → edit mode. false on the server and during hydration (same as before). */
 const readEditParam = () => new URLSearchParams(window.location.search).get("edit") === "1";
 
-export function Scorecard() {
-  const [data, setData] = useState<ScorecardData>(DEFAULT_SCORECARD);
+/** `initial` = public/scorecard.json read at build time, so the first paint already shows the board's data and the
+ *  client fetch (which still runs, for a fresher file) changes nothing in layout: CLS 0 (QA 679156c). */
+export function Scorecard({ initial }: { initial?: ScorecardData } = {}) {
+  const [data, setData] = useState<ScorecardData>(initial ?? DEFAULT_SCORECARD);
   const [hydrated, setHydrated] = useState(false);
   const editMode = useSyncExternalStore(noSubscribe, readEditParam, () => false);
   const [jsonOpen, setJsonOpen] = useState(false);
   const [jsonText, setJsonText] = useState("");
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [loadSource, setLoadSource] = useState<"file" | "default">("default");
+  const [loadSource, setLoadSource] = useState<"file" | "default">(initial ? "file" : "default");
 
   useEffect(() => {
     let cancelled = false;
@@ -143,7 +145,9 @@ export function Scorecard() {
     flash("Reset to v0 defaults");
   };
 
-  const updatedLabel = hydrated
+  // formatScorecardDate is deterministic (fixed locale + ET), so with build-time data the dates render on the server too.
+  const showDates = hydrated || !!initial;
+  const updatedLabel = showDates
     ? formatScorecardDate(data.updatedAt, "full")
     : "…";
 
@@ -207,7 +211,7 @@ export function Scorecard() {
             {!editMode && (
               <p className="mt-1 text-base text-[var(--cb-ink-muted)]">
                 Updated{" "}
-                {hydrated
+                {showDates
                   ? formatScorecardDate(data.updatedAt)
                   : "…"}
                 {loadSource === "default" && hydrated

@@ -17,8 +17,8 @@ export function ToolsList({ apps }: { apps: HubApp[] }) {
   return (
     <PageFade>
       <div className="fx-page">
+        <BackLink href="/" label="Home" />
         <main className="fx-wrap">
-          <BackLink href="/" label="Home" />
           <section className="fx-page-head fx-tools-head fx-head-split">
             <div>
               <h1 className="fx-display">Tools</h1>

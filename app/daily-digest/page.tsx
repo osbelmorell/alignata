@@ -31,9 +31,9 @@ export default function DailyDigestIndexPage() {
   const posts = getPostsNewestFirst();
   return (
     <PageFade>
+      <BackLink href="/" label="Home" />
       <main className="fx-wrap">
         <NewMarkBoot posts={posts} />
-        <BackLink href="/" label="Home" />
         <section className="fx-page-head fx-head-split">
           <div>
             <h1 className="fx-display">Daily Digest</h1>
