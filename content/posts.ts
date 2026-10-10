@@ -28,6 +28,8 @@ export type PostHero = { src: string; alt: string; pad: string };
  */
 export type PostPullQuote = { text: string; cite?: string };
 
+export type PostUpdated = { date: string; note: string };
+
 export type Post = {
   slug: string;
   title: string;
@@ -42,6 +44,12 @@ export type Post = {
   /** One-line dek (≤70, COPY.md v2) for cards AND the story page under the H1, so they match. Omitted = `dek`. */
   cardDek?: string;
   pullQuote?: PostPullQuote;
+  /**
+   * Latest real update only (Release B). date: YYYY-MM-DD, strictly after `date`; note: ≤ 90 chars, ends with a period.
+   * Shows "Updated <Mon D>: <note>" under the byline, the Updated card mark for readers who opened it before that day,
+   * and refreshes the RSS item and sitemap lastmod. Never add one for a non-real change.
+   */
+  updated?: PostUpdated;
   sourceNote?: string;
   paragraphs: string[];
   sections?: { heading: string; body: string[] }[];

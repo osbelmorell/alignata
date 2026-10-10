@@ -11,6 +11,11 @@
 //   mark comes out). Strict rule (CEO + Product, Oct 10 2026): a New opener counts only with ≥ 1 counted digest_open
 //   (was_new true or false) on an ET day strictly later than the ET day of their first was_new:true digest_open.
 //   Page views and other events never count; earlier or same-day opens don't count.
+//   Release B: digest_open carries mark "new" | "updated" | "none" (old events: was_new:true reads as "new", anything
+//   else as "none"). New, Updated and none opens are reported separately. Kill bars (killBars, needs --new-since /
+//   --updated-since): New = distinct New openers who returned (strict rule above), counted over 14 days from
+//   --new-since (Product restarts it on merge day); < 3 → the mark comes out. Updated = distinct visitors with ≥ 1
+//   mark=updated open within 30 days from --updated-since (the first real update); < 2 → Updated comes out.
 //   Visitor = vid; day = the stored America/New_York `day` (the only day the store has; the browser's own local day
 //   is never sent).
 // Excluded: dogfood events and non-alignata.com hosts (owner device and automated browsers never send).
@@ -21,6 +26,7 @@
 //     or UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN. Only SCAN and LRANGE on site:ev:* are issued.
 //   node scripts/site-baseline.mjs --file events.jsonl [...]   (one JSON event per line, no store needed)
 //   node scripts/site-baseline.mjs --fixture scripts/fixtures/digest-open-events.sample.jsonl   (same; offline QA)
+//   [--new-since ISO] [--updated-since ISO]   kill-bar windows (14 days / 30 days from these), printed as "Kill bars"
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -47,6 +53,12 @@ export function weekOf(day) {
   return d.toISOString().slice(0, 10);
 }
 
+/** digest_open mark, with the backward read of Release A events (was_new:true → "new"). */
+export function openMark(p = {}) {
+  if (p.mark === "new" || p.mark === "updated" || p.mark === "none") return p.mark;
+  return p.was_new === true ? "new" : "none";
+}
+
 const ratio = (a, b) => (b ? a / b : null);
 
 function bucket(events) {
@@ -67,6 +79,8 @@ function bucket(events) {
   const homeByTarget = {};
   let digestOpens = 0;
   let digestOpensNew = 0;
+  let digestOpensUpdated = 0;
+  const updatedOpeners = new Set();
   const newOpeners = new Set();
   const lastOpenDayByVid = new Map();
   const firstNewDayByVid = new Map();
@@ -95,7 +109,12 @@ function bucket(events) {
     } else if (e.event === "digest_open") {
       digestOpens++;
       if (!(lastOpenDayByVid.get(e.vid) >= e.day)) lastOpenDayByVid.set(e.vid, e.day);
-      if (p.was_new === true) {
+      const mark = openMark(p);
+      if (mark === "updated") {
+        digestOpensUpdated++;
+        updatedOpeners.add(e.vid);
+      }
+      if (mark === "new") {
         digestOpensNew++;
         newOpeners.add(e.vid);
         if (!(firstNewDayByVid.get(e.vid) <= e.day)) firstNewDayByVid.set(e.vid, e.day);
@@ -133,6 +152,9 @@ function bucket(events) {
     digestOpens,
     digestOpensNew,
     digestOpensNotNew: digestOpens - digestOpensNew,
+    digestOpensUpdated,
+    digestOpensNone: digestOpens - digestOpensNew - digestOpensUpdated,
+    digestUpdatedOpeners: updatedOpeners.size,
     digestNewOpeners: newOpeners.size,
     // strict: a counted digest_open on an ET day later than the vid's first was_new:true open (YYYY-MM-DD compares as text)
     digestNewOpenersReturned: [...newOpeners].filter((v) => lastOpenDayByVid.get(v) > firstNewDayByVid.get(v)).length,
@@ -141,8 +163,34 @@ function bucket(events) {
   };
 }
 
+export const NEW_KILL_DAYS = 14;
+export const NEW_KILL_MIN = 3;
+export const UPDATED_KILL_DAYS = 30;
+export const UPDATED_KILL_MIN = 2;
+const DAY_MS = 86400000;
+
+/**
+ * Kill bars over counted events (dogfood / non-prod host already dropped). newSince / updatedSince: ms, or undefined
+ * (bar not computed). New bar: the strict returned rule, on events in [newSince, newSince + 14 d).
+ * Updated bar: distinct vids with a mark=updated open in [updatedSince, updatedSince + 30 d).
+ */
+export function killBars(real, { newSince, updatedSince } = {}) {
+  const out = {};
+  if (Number.isFinite(newSince)) {
+    const until = newSince + NEW_KILL_DAYS * DAY_MS;
+    const b = bucket(real.filter((e) => e.ts >= newSince && e.ts < until));
+    out.new = { since: new Date(newSince).toISOString(), until: new Date(until).toISOString(), openers: b.digestNewOpeners, returned: b.digestNewOpenersReturned, min: NEW_KILL_MIN, kill: b.digestNewOpenersReturned < NEW_KILL_MIN };
+  }
+  if (Number.isFinite(updatedSince)) {
+    const until = updatedSince + UPDATED_KILL_DAYS * DAY_MS;
+    const v = new Set(real.filter((e) => e.event === "digest_open" && e.ts >= updatedSince && e.ts < until && openMark(e.props) === "updated").map((e) => e.vid));
+    out.updated = { since: new Date(updatedSince).toISOString(), until: new Date(until).toISOString(), openers: v.size, min: UPDATED_KILL_MIN, kill: v.size < UPDATED_KILL_MIN };
+  }
+  return out;
+}
+
 /** Pure summary over raw events (tests use this). since/until: ms timestamps (inclusive / exclusive). */
-export function summarize(all, { since = -Infinity, until = Infinity } = {}) {
+export function summarize(all, { since = -Infinity, until = Infinity, newSince, updatedSince } = {}) {
   const excluded = { dogfood: 0, nonProdHost: 0, outsideWindow: 0 };
   const real = [];
   for (const e of all) {
@@ -161,6 +209,7 @@ export function summarize(all, { since = -Infinity, until = Infinity } = {}) {
     realEvents: real.length,
     excluded,
     window: bucket(real),
+    killBars: killBars(all.filter((e) => !e.dogfood && e.prod === true), { newSince, updatedSince }),
     days: group((e) => e.day),
     weeks: group((e) => weekOf(e.day)),
   };
@@ -220,7 +269,8 @@ function printBucket(label, b) {
   console.log(`  Homepage: ${b.homeClicks} home_click from ${b.homeClickSessions} sessions, ${b.homeClickVisitors} visitors`);
   console.log(`    / sessions with ≥1 tap: ${pct(b.homeClickRate)} (${b.homeSessionsWithClick}/${b.homeSessions} sessions)`);
   for (const [t, n] of Object.entries(b.homeClickByTarget)) console.log(`    ${String(n).padStart(6)}  ${t}`);
-  console.log(`  Digest New mark: ${b.digestOpens} digest_open (was_new true ${b.digestOpensNew}, false ${b.digestOpensNotNew})`);
+  console.log(`  Digest marks: ${b.digestOpens} digest_open (New ${b.digestOpensNew}, Updated ${b.digestOpensUpdated}, none ${b.digestOpensNone})`);
+  console.log(`    distinct Updated openers: ${b.digestUpdatedOpeners}`);
   console.log(`    distinct New openers: ${b.digestNewOpeners}; came back and opened a post on a later day after a New open: ${b.digestNewOpenersReturned} (kill bar: < 3 in 14 days)`);
 }
 
@@ -235,8 +285,14 @@ async function main() {
   const events = file ? parseLog(readFileSync(file, "utf8")) : await readStore();
   const since = opt("--since") ? Date.parse(opt("--since")) : -Infinity;
   const until = opt("--until") ? Date.parse(opt("--until")) : Infinity;
-  if (Number.isNaN(since) || Number.isNaN(until)) throw new Error("--since/--until must be ISO timestamps");
-  const s = summarize(events, { since, until });
+  for (const f of ["--new-since", "--updated-since"]) {
+    const v = opt(f);
+    if (v && !/(Z|[+-]\d{2}:?\d{2})$/.test(v)) throw new Error(`${f} needs a time zone offset, e.g. 2026-10-12T00:00:00-04:00 (got "${v}")`);
+  }
+  const newSince = opt("--new-since") ? Date.parse(opt("--new-since")) : undefined;
+  const updatedSince = opt("--updated-since") ? Date.parse(opt("--updated-since")) : undefined;
+  if ([since, until, newSince, updatedSince].some((x) => Number.isNaN(x))) throw new Error("--since/--until/--new-since/--updated-since must be ISO timestamps");
+  const s = summarize(events, { since, until, newSince, updatedSince });
   if (args.includes("--json")) {
     console.log(JSON.stringify(s, null, 2));
     return;
@@ -247,6 +303,10 @@ async function main() {
       `non-prod host ${s.excluded.nonProdHost}, outside window ${s.excluded.outsideWindow}`,
   );
   printBucket("Whole window", s.window);
+  const k = s.killBars;
+  if (k.new || k.updated) console.log("\nKill bars");
+  if (k.new) console.log(`  New (${k.new.since} → ${k.new.until}): ${k.new.returned} of ${k.new.openers} New openers came back (min ${k.new.min}) → ${k.new.kill ? "KILL" : "keep"}`);
+  if (k.updated) console.log(`  Updated (${k.updated.since} → ${k.updated.until}): ${k.updated.openers} distinct Updated openers (min ${k.updated.min}) → ${k.updated.kill ? "KILL" : "keep"}`);
   for (const [w, b] of Object.entries(s.weeks)) console.log(`\nWeek of ${w} (Mon–Sun ET): ${b.digestReaders} distinct Daily Digest readers`);
   for (const [d, b] of Object.entries(s.days)) printBucket(`Day ${d} (ET)`, b);
 }

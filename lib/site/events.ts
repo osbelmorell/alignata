@@ -10,7 +10,7 @@ export const SITE_EVENT_PROPS = {
   tool_open: ["slug", "position"],
   article_view: ["slug", "n"],
   home_click: ["target"],
-  digest_open: ["slug", "was_new"],
+  digest_open: ["slug", "mark"],
 } as const;
 
 /**
@@ -27,7 +27,10 @@ export const TOOL_OPEN_SOURCES = ["feed", "apps", "story", "sticky", "guide"] as
 export type ToolOpenSource = (typeof TOOL_OPEN_SOURCES)[number];
 
 export type SiteEventName = keyof typeof SITE_EVENT_PROPS;
-export type SiteEventProps = { path?: string; slug?: string; position?: number; n?: number; target?: string; source?: ToolOpenSource; was_new?: boolean };
+export type SiteEventProps = { path?: string; slug?: string; position?: number; n?: number; target?: string; source?: ToolOpenSource; mark?: DigestMark };
+/** digest_open.mark (Release B, replaces was_new): which Daily Digest mark the card showed. */
+export const DIGEST_MARKS = ["new", "updated", "none"] as const;
+export type DigestMark = (typeof DIGEST_MARKS)[number];
 
 export interface SiteEventEnvelope {
   v: 1;
@@ -100,9 +103,9 @@ export function validateSiteEvent(raw: unknown): SiteValidated {
     if (typeof props.target !== "string" || !HOME_TARGET_RE.test(props.target)) return { ok: false, reason: "bad_target" };
     out.target = props.target;
   }
-  if ("was_new" in props) {
-    if (typeof props.was_new !== "boolean") return { ok: false, reason: "bad_was_new" };
-    out.was_new = props.was_new;
+  if ("mark" in props) {
+    if (typeof props.mark !== "string" || !(DIGEST_MARKS as readonly string[]).includes(props.mark)) return { ok: false, reason: "bad_mark" };
+    out.mark = props.mark as DigestMark;
   }
   if ("source" in props) {
     if (typeof props.source !== "string" || !(TOOL_OPEN_SOURCES as readonly string[]).includes(props.source)) {

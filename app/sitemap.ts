@@ -22,5 +22,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     .map((a) => storyHref(a.id))
     .filter((h): h is string => !!h);
   const paths = ["/", "/apps", ...tools, ...stories, "/daily-digest", ...posts.map((p) => `/daily-digest/${p.slug}`), ...COMPANY_PATHS];
-  return [...[...new Set(paths)].map((p) => ({ url: p === "/" ? SITE : `${SITE}${p}` })), ...guideSitemapEntries()];
+  const updated = new Map(posts.filter((p) => p.updated).map((p) => [`/daily-digest/${p.slug}`, p.updated!.date]));
+  return [
+    ...[...new Set(paths)].map((p) => {
+      const lastModified = updated.get(p);
+      return { url: p === "/" ? SITE : `${SITE}${p}`, ...(lastModified ? { lastModified } : {}) };
+    }),
+    ...guideSitemapEntries(),
+  ];
 }

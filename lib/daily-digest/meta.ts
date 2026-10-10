@@ -91,3 +91,21 @@ export function nextPost(slug: string): Post | undefined {
   if (i < 0 || list.length < 2) return undefined;
   return list[(i + 1) % list.length];
 }
+
+export const UPDATE_NOTE_MAX = 90;
+/** posts.ts `updated` rules (Release B; checked for every post by assert-site). [] = valid or no update. */
+export function checkUpdated(post: Pick<Post, "date"> & { updated?: { date?: unknown; note?: unknown } }): string[] {
+  const u = post.updated;
+  if (!u) return [];
+  const errs: string[] = [];
+  const date = typeof u.date === "string" ? u.date : "";
+  const note = typeof u.note === "string" ? u.note : "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) errs.push("date not YYYY-MM-DD");
+  if (!(/^\d{4}-\d{2}-\d{2}$/.test(date) && date > post.date)) errs.push("date not after publish date");
+  if (!note.trim()) errs.push("note missing");
+  else {
+    if (note.length > UPDATE_NOTE_MAX) errs.push("note over 90 chars");
+    if (!note.endsWith(".")) errs.push("note must end with a period");
+  }
+  return errs;
+}

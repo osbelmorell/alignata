@@ -40,6 +40,7 @@ export async function generateMetadata({
       url: `/daily-digest/${post.slug}`,
       siteName: "Alignata",
       publishedTime: post.date,
+      ...(post.updated ? { modifiedTime: post.updated.date } : {}),
     },
   };
 }
@@ -63,7 +64,7 @@ export default async function DailyDigestPostPage({
 
   return (
     <PageFade story>
-      <DigestOpen slug={post.slug} date={post.date} />
+      <DigestOpen slug={post.slug} date={post.date} updated={post.updated?.date} />
       <main className="fx-story">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(articleJsonLd(post)) }} />
         <article>
@@ -81,6 +82,13 @@ export default async function DailyDigestPostPage({
                   {postTag(post)} · <time dateTime={post.date}>{shortDate(post.date)}</time> · {readMinutes(post)} min read
                 </span>
               </p>
+              {post.updated ? (
+                <p className="fx-meta fx-story-updated" data-updated>
+                  <span>
+                    Updated <time dateTime={post.updated.date}>{shortDate(post.updated.date)}</time>: {post.updated.note}
+                  </span>
+                </p>
+              ) : null}
             </header>
             <ArticleBody paragraphs={post.paragraphs} sections={post.sections} pullQuote={post.pullQuote} />
             {post.sourceNote ? <p className="fx-prose fx-note">{post.sourceNote}</p> : null}

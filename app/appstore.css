@@ -94,6 +94,8 @@ a.fx-text-link:focus-visible { outline: 3px solid var(--ink); outline-offset: 2p
   overflow-wrap: break-word; }
 .fx-story-dek { margin-top: 12px; font-size: 19px; line-height: 1.45; color: var(--ink-2); max-width: 680px; }
 .fx-story-meta { margin-top: 16px; }
+/* Release B: "Updated Oct 12: <note>" under the byline meta line (real update only). */
+.fx-story-updated { margin-top: 8px; }
 /* Article byline (no photo), under the title + dek, before the meta line. */
 .fx-author { margin-top: 12px; max-width: 680px; font-size: 15px; line-height: 1.4; }
 .fx-author-name { font-weight: 600; color: var(--ink); }

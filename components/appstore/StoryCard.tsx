@@ -46,7 +46,7 @@ export function ArticleStoryCard({
   newMark = false,
 }: {
   post: Post;
-  /** Home and /daily-digest cards only (never the article page's next card): the client-only "New" mark. */
+  /** Home and /daily-digest cards only (never the article page's next card): the client-only "New" / "Updated" mark. */
   newMark?: boolean;
   /** Default: the tag ("Technique" / "Deep dive" / "Essay"), as on /daily-digest. The feed passes "Daily Digest · <tag>". */
   eyebrow?: string;
@@ -69,7 +69,7 @@ export function ArticleStoryCard({
               href={`/daily-digest/${post.slug}`}
               {...(homeTarget ? { "data-home-target": `article:${post.slug}` } : {})}
             >
-              {newMark ? <NewMarkSr slug={post.slug} date={post.date} /> : null}
+              {newMark ? <NewMarkSr slug={post.slug} date={post.date} updated={post.updated?.date} /> : null}
               {post.title}
             </Link>
           </H>

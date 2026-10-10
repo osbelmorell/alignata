@@ -31,12 +31,14 @@ export function GET() {
         `      <guid isPermaLink="true">${url}</guid>`,
         `      <pubDate>${rfc822(post.date)}</pubDate>`,
         `      <description>${esc(toPlainText(post.dek))}</description>`,
+        ...(post.updated ? [`      <atom:updated>${post.updated.date}T12:00:00Z</atom:updated>`] : []),
         "    </item>",
       ].join("\n");
     })
     .join("\n");
 
-  const lastBuild = posts[0] ? rfc822(posts[0].date) : new Date(0).toUTCString();
+  const latest = posts.map((p) => (p.updated && p.updated.date > p.date ? p.updated.date : p.date)).sort().pop();
+  const lastBuild = latest ? rfc822(latest) : new Date(0).toUTCString();
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">

@@ -92,7 +92,7 @@ export const PRIVACY = {
       // "I'd pay"."), then the guide-ref line (FINAL 8:45 AM ET; CEO 9:13 AM ET: in, as the droppable ref commit).
       h2: "What we count",
       paras: [
-        "We keep our own small log of how the site is used: which pages you visit, which tool you open and where on the site you tapped it, which articles you read, and which links you tap on the homepage. When you open a Daily Digest article, we also note whether it was marked New. On Engrave Merge, we also count when the page opens, when you download or print a result, and whether you saw the price question and how you answered it. If one of our guides sent you, we also note which one, as part of those counts.",
+        "We keep our own small log of how the site is used: which pages you visit, which tool you open and where on the site you tapped it, which articles you read, and which links you tap on the homepage. When you open a Daily Digest article, we also note whether it was marked New or Updated. On Engrave Merge, we also count when the page opens, when you download or print a result, and whether you saw the price question and how you answered it. If one of our guides sent you, we also note which one, as part of those counts.",
         // Session ID fix, FINAL (Brand Creator PASS + Voice Gate pre-approved exact text, 9:32 AM ET Oct 3).
         "Each entry has a random ID. A visitor ID stays in your browser until you clear this site's data, and a session ID usually lasts only as long as the tab. Engrave Merge keeps its own random ID in your browser, like the visitor ID.",
         "Our log doesn't hold your name, email address, IP address, browser details, file names or file contents.",
@@ -113,7 +113,7 @@ export const PRIVACY = {
         // COPY.md §5 ship-together line (REPLACEMENT, FINAL 8:52 AM ET): ships with the Engrave Merge price card.
         "Engrave Merge also keeps a small note on this device: how many files you've dropped into it, which days it showed you the price question, and your answer if you gave one. That way it doesn't keep asking.",
         // Daily Digest Release A, COPY.md FINAL (Brand Creator + Voice Gate PASS, 7:56 AM ET Oct 10): the "New" mark.
-        "To mark Daily Digest articles you haven't opened yet, your browser keeps the date of your first visit and a list of the articles you've opened. It forgets each opened article after 30 days. The date and the list stay on this device.",
+        "To mark Daily Digest articles as New or Updated, your browser keeps the date it starts marking from and a list of the articles you've opened, with the day you opened each one. It forgets each opened article after 90 days. The date and the list stay on this device.",
       ],
     },
     {
