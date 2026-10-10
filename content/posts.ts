@@ -763,6 +763,7 @@ export const posts: Post[] = [
       pad: "#96E4B7",
     },
     date: "2026-10-02",
+    updated: { date: "2026-10-10", note: "Added a second test result and changed the step for agents that retry on their own errors." },
     paragraphs: [
       "## The problem",
       "A long-running agent keeps calling tools, but the job isn't getting any closer to done. It checks the same places, reruns the same log queries, or wanders into side tasks while the real gap, the missing fact or the unfinished step, stays open. The run looks busy while the budget runs out and the ticket stays open. More history or better summaries won't fix it. Nothing in the loop tells the agent it has stopped making progress.",
