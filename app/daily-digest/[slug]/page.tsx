@@ -9,6 +9,7 @@ import { toPlainText } from "@/lib/daily-digest/blocks";
 import { heroImage, nextPost, postCardDek, postTag, readMinutes, shortDate } from "@/lib/daily-digest/meta";
 import { Morph, PageFade } from "@/components/appstore/Motion";
 import { Byline } from "@/components/daily-digest/Byline";
+import { BackLink } from "@/components/site/BackLink";
 import { DigestOpen } from "@/components/daily-digest/DigestOpen";
 import { articleJsonLd, jsonLdScript } from "@/lib/daily-digest/jsonld";
 
@@ -65,6 +66,7 @@ export default async function DailyDigestPostPage({
   return (
     <PageFade story>
       <DigestOpen slug={post.slug} date={post.date} updated={post.updated?.date} />
+      <BackLink href="/daily-digest" label="Daily Digest" />
       <main className="fx-story">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(articleJsonLd(post)) }} />
         <article>

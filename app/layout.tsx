@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HubChrome } from "@/components/HubChrome";
+import { getApps } from "@/lib/apps";
 import { SiteTracker } from "@/components/site/SiteTracker";
 import localFont from "next/font/local";
 import { SiteHeader } from "@/components/fantasy/SiteHeader";
@@ -7,6 +8,7 @@ import "./globals.css";
 import "./fantasy.css";
 import "./appstore.css";
 import "./motion.css";
+import "./restyle-c.css";
 import { MOTION_ON } from "@/lib/motion";
 import { RETIRED_WIPE_INLINE_SCRIPT } from "@/lib/site/retired-storage";
 
@@ -57,7 +59,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen antialiased">
         <SiteHeader />
-        <HubChrome />
+        <HubChrome toolPaths={getApps().map((a) => a.url).filter((u) => u.startsWith("/"))} />
         {children}
         <SiteTracker />
       </body>

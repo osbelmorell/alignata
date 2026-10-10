@@ -40,9 +40,9 @@ export const ABOUT = {
   dek: MISSION,
   hero: {
     src: "/art/about-sticker.webp",
-    // FINAL alt (Brand Creator PASS 9:34 AM ET Oct 3). Same file as mockups/art/about-toolbox-sticker.webp (webp only).
-    alt: "A handsaw with a red handle resting on a pale wooden plank.",
-    pad: "#C5C6FB",
+    // Restyle C art (Oct 10 2026): a maker at a workbench hands a tool card to a busy person.
+    alt: "A maker at a workbench hands a tool card to a busy person with a laptop and a coffee.",
+    pad: "#FDFAF5",
   },
   sections: [
     {

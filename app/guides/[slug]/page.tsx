@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BackLink } from "@/components/site/BackLink";
 import { notFound } from "next/navigation";
 import { getApps, toolsOrder } from "@/lib/apps";
 import { getGuide, getGuides, guideJsonLd, guideMetadata, guideToolHref, GUIDE_AUTHOR } from "@/lib/guides/guides";
@@ -35,6 +36,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
   return (
     <PageFade story>
       <div className="fx-page">
+        <BackLink href="/apps" label="Tools" />
         <main className="fx-story fx-guide" data-guide={g.slug} {...(g.draft ? { "data-draft": "" } : {})}>
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(guideJsonLd(g)) }} />
           <article>

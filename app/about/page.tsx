@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackLink } from "@/components/site/BackLink";
 import { Fragment } from "react";
 import type { Metadata } from "next";
 import { ART_H, ART_W } from "@/lib/daily-digest/meta";
@@ -37,6 +38,7 @@ export default function AboutPage() {
   return (
     <PageFade story>
       <div className="fx-page">
+        <BackLink href="/" label="Home" />
         <main className="fx-story fx-company" data-page="about">
           <article>
             <figure className="fx-story-hero" style={{ "--art-pad": ABOUT.hero.pad } as React.CSSProperties} data-art="about">

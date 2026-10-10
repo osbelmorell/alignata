@@ -8,6 +8,7 @@ import { NewMarkBoot } from "@/components/daily-digest/NewMarkBoot";
 import { PageFade } from "@/components/appstore/Motion";
 import { RetiredStorageCleanup } from "@/components/site/RetiredStorageCleanup";
 import { MISSION } from "@/content/company";
+import { PageHero } from "@/components/site/PageHero";
 
 /**
  * Homepage as the Today feed (SPEC v2 §2; mock mockups-art/home.html). Top unchanged from v1.5 §5a: the locked line, the
@@ -28,6 +29,7 @@ export default function HomePage() {
       <div className="fx-page">
         <main className="fx-wrap">
           <NewMarkBoot posts={[a1, a2, a3].filter((p) => !!p)} />
+          <div className="fx-home-top">
           <section className="fx-home-head" aria-label="Start">
             <h1 className="fx-display">Small tools for busy people, and AI techniques in plain English.</h1>
             {/* Company pages SPEC §1: the board's mission as the dek (COPY.md §1), story-dek type step. Nothing else added. */}
@@ -41,6 +43,8 @@ export default function HomePage() {
               </Link>
             </div>
           </section>
+          <PageHero src="/art/home-hero-sticker.webp" eager />
+          </div>
           <section className="fx-feed" aria-label="Today">
             {cleaver ? <ToolStoryCard app={cleaver} pos={pos(cleaver.id)} lead homeTarget /> : null}
             {a1 ? <ArticleStoryCard post={a1} newMark eyebrow={eyebrow(a1)} eager homeTarget /> : null}

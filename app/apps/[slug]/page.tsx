@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackLink } from "@/components/site/BackLink";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getApps, TOOL_STORY, toolAbout, toolArt, toolsOrder } from "@/lib/apps";
@@ -56,6 +57,7 @@ export default async function ToolStoryPage({ params }: { params: Promise<{ slug
   return (
     <PageFade story>
       <div className="fx-page">
+        <BackLink href="/apps" label="Tools" />
         <main className="fx-story">
           <article>
             <ArtFigure slug={app.id} className="fx-story-hero" src={art.art} alt={art.alt} pad={art.pad} hero />
@@ -86,7 +88,7 @@ export default async function ToolStoryPage({ params }: { params: Promise<{ slug
               {/* Published guides for this tool (Engrave Merge today); renders nothing while none is published. */}
               <GuidesLinks tool={app.id} guides={getGuides()} />
               <div className="fx-story-end">
-                <AppRow app={app} pos={pos} variant="story" row="end" />
+                <AppRow app={app} pos={pos} variant="story" row="end" secondary />
                 <Link className="fx-text-link" href="/apps">
                   All tools
                 </Link>

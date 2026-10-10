@@ -63,8 +63,8 @@ export const posts: Post[] = [
     cardDek: "Reuse one request ID on retries so payments and deploys run once.",
     hero: {
       src: "/art/digest/reuse-the-same-key-when-a-tool-retries-sticker.webp",
-      alt: "A brass key on a ring, with a white outline of the same key behind it.",
-      pad: "#C5C6FB",
+      alt: "A person hands a robot the same key twice, and the second time it glows.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-16",
     paragraphs: [
@@ -81,8 +81,8 @@ export const posts: Post[] = [
     cardDek: "Only ship a setup tweak if it also helps on cases it wasn't tuned on.",
     hero: {
       src: "/art/digest/require-held-out-lift-before-shipping-harness-edits-sticker.webp",
-      alt: "A striped hot-air balloon tugging upward, tied down to a sandbag.",
-      pad: "#F0CD5F",
+      alt: "A thoughtful person compares a small bar chart with a bigger chart revealed behind a curtain.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-16",
     paragraphs: [
@@ -99,8 +99,8 @@ export const posts: Post[] = [
     cardDek: "Give the agent only the tools this turn needs, so prompts stay small.",
     hero: {
       src: "/art/digest/load-only-the-tools-this-turn-needs-sticker.webp",
-      alt: "A tool belt with empty pockets and a single wrench.",
-      pad: "#EE83C3",
+      alt: "A person picks one wrench from a pegboard full of tools and puts it in a tote bag.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-16",
     paragraphs: [
@@ -117,8 +117,8 @@ export const posts: Post[] = [
     cardDek: "Catch answers that claim results the tools never returned.",
     hero: {
       src: "/art/digest/refuse-answers-that-dont-match-tool-results-sticker.webp",
-      alt: "Two jigsaw pieces, one white and one yellow, that don't fit together.",
-      pad: "#EE83C3",
+      alt: "A person raises a hand to stop beside two jigsaw pieces that don't fit together.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-23",
     paragraphs: [
@@ -135,8 +135,8 @@ export const posts: Post[] = [
     cardDek: "Tie every claim to a real source, or leave it out.",
     hero: {
       src: "/art/digest/bind-every-claim-to-a-real-citation-sticker.webp",
-      alt: "An open book with a red binder clip holding a note to its page.",
-      pad: "#EFC3BB",
+      alt: "A person pins note cards to matching books on a bookshelf.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-23",
     paragraphs: [
@@ -153,8 +153,8 @@ export const posts: Post[] = [
     cardDek: "Test every model on the same setup, so the score reflects the model.",
     hero: {
       src: "/art/digest/compare-models-only-under-a-locked-setup-sticker.webp",
-      alt: "Two identical stopwatches side by side on a steel tray, their hands at the same spot.",
-      pad: "#96E4B7",
+      alt: "Two robots race side by side on matching lanes while a person with a padlocked clipboard watches.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-23",
     paragraphs: [
@@ -171,8 +171,8 @@ export const posts: Post[] = [
     cardDek: "Don't call it done if code changed after the last test run.",
     hero: {
       src: "/art/digest/block-done-if-code-changed-after-tests-sticker.webp",
-      alt: "A test tube of green liquid in a clamp stand, with a drop falling in.",
-      pad: "#C5C6FB",
+      alt: "A runner with a passing test screen is stopped at a finish ribbon by a raised hand.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-24",
     paragraphs: [
@@ -189,8 +189,8 @@ export const posts: Post[] = [
     cardDek: "Cut long logs from both ends so the error lines survive.",
     hero: {
       src: "/art/digest/trim-long-logs-from-both-ends-sticker.webp",
-      alt: "The two end pieces of a log, with the middle sawn out.",
-      pad: "#F0CD5F",
+      alt: "A person cuts the middle out of a long paper scroll with scissors, keeping both ends.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-24",
     paragraphs: [
@@ -207,8 +207,8 @@ export const posts: Post[] = [
     cardDek: "Get fresh proof before a send, delete, or overwrite you can't undo.",
     hero: {
       src: "/art/digest/prove-it-before-irreversible-actions-sticker.webp",
-      alt: "A wax seal stamp pressing into red wax on an envelope.",
-      pad: "#96E4B7",
+      alt: "A person checks a clipboard of charts before pressing a big red button.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-25",
     paragraphs: [
@@ -225,8 +225,8 @@ export const posts: Post[] = [
     cardDek: "Turn vague errors into a short list of safe next steps.",
     hero: {
       src: "/art/digest/tell-failed-tools-what-to-try-next-sticker.webp",
-      alt: "A folded paper map with a red dotted route across it.",
-      pad: "#C5C6FB",
+      alt: "A person points a puzzled robot toward a signpost with three arrows.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-25",
     paragraphs: [
@@ -243,8 +243,8 @@ export const posts: Post[] = [
     cardDek: "Check before retrying so a timeout doesn't send or charge twice.",
     hero: {
       src: "/art/digest/dont-blind-retry-sends-or-charges-sticker.webp",
-      alt: "A paper airplane held by its tail in a pink clothespin.",
-      pad: "#F0CD5F",
+      alt: "A person holds an envelope and a payment card, ready to send just one.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-25",
     paragraphs: [
@@ -261,8 +261,8 @@ export const posts: Post[] = [
     cardDek: "What Laya is, how to run it, and when it beats a chat model.",
     hero: {
       src: "/art/digest/laya-ai-deep-dive-sticker.webp",
-      alt: "An old brass and steel diving helmet with an air hose trailing behind it.",
-      pad: "#EE83C3",
+      alt: "A person in glasses unpacks labelled blocks from a box, with a telescope standing beside it.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-25",
     tag: "Deep dive",
@@ -343,8 +343,8 @@ export const posts: Post[] = [
     cardDek: "How TypeSafe's decision model works and when it beats a chat model.",
     hero: {
       src: "/art/digest/system-one-and-jev-deep-dive-sticker.webp",
-      alt: "An open pocket compass with a green face and a chain.",
-      pad: "#EFC3BB",
+      alt: "Two people watch a server rack sort coloured shapes from a cloud onto a conveyor belt.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-25",
     tag: "Deep dive",
@@ -424,8 +424,8 @@ export const posts: Post[] = [
     cardDek: "A tool for running AI agent teams: setup, risks, and how it compares.",
     hero: {
       src: "/art/digest/paperclip-deep-dive-sticker.webp",
-      alt: "A giant paperclip holding a small stack of cards, the top one yellow.",
-      pad: "#96E4B7",
+      alt: "A person at a control desk runs a small office of robot workers at their desks, under a giant paperclip.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-25",
     tag: "Deep dive",
@@ -538,8 +538,8 @@ export const posts: Post[] = [
     cardDek: "Repeat the must-follow rules every turn so long chats keep them.",
     hero: {
       src: "/art/digest/keep-hard-rules-sticky-sticker.webp",
-      alt: "A yellow sticky note pinned flat with a pushpin.",
-      pad: "#C5C6FB",
+      alt: "A person presses sticky notes firmly onto a wall while other loose notes blow away in the wind.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-28",
     sourceNote: "based on hub digest 2026-09-24 technique test",
@@ -560,8 +560,8 @@ export const posts: Post[] = [
     cardDek: "Don't ship an answer unless its sources actually back it.",
     hero: {
       src: "/art/digest/refuse-answers-sources-do-not-support-sticker.webp",
-      alt: "A stool with a red seat and one leg snapped off, tipping over.",
-      pad: "#F0CD5F",
+      alt: "A person holds up a card with a red cross and raises a hand to stop, next to a stack of books.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-28",
     paragraphs: [
@@ -578,8 +578,8 @@ export const posts: Post[] = [
     cardDek: "Don't let an agent switch tools mid-task without proof it needs to.",
     hero: {
       src: "/art/digest/do-not-swap-tools-on-a-hunch-sticker.webp",
-      alt: "A gold coin flipping in the air above a closed toolbox.",
-      pad: "#EE83C3",
+      alt: "A smiling person holds on to one wrench while other tools float nearby.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-28",
     paragraphs: [
@@ -596,8 +596,8 @@ export const posts: Post[] = [
     cardDek: "Check each step's result so one bad step doesn't spoil the run.",
     hero: {
       src: "/art/digest/check-each-tool-step-before-next-sticker.webp",
-      alt: "A level with a green bubble, resting on a single step.",
-      pad: "#EFC3BB",
+      alt: "A hiker climbs a row of stepping stones, each with a check mark on it.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-28",
     paragraphs: [
@@ -614,8 +614,8 @@ export const posts: Post[] = [
     cardDek: "Make agents ask before adding extras you didn't request.",
     hero: {
       src: "/art/digest/ask-before-doing-what-wasnt-asked-sticker.webp",
-      alt: "A brass desk bell on a small steel block.",
-      pad: "#EE83C3",
+      alt: "A robot with a question mark in a speech bubble pauses beside a box and checks with a person before going on.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-29",
     paragraphs: [
@@ -639,8 +639,8 @@ export const posts: Post[] = [
     cardDek: "Run one search you know should hit before you trust an empty result.",
     hero: {
       src: "/art/digest/test-search-before-saying-none-sticker.webp",
-      alt: "A flashlight shining a yellow beam into an open cardboard box.",
-      pad: "#EFC3BB",
+      alt: "A person shines a flashlight into an open filing cabinet drawer full of folders.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-29",
     paragraphs: [
@@ -672,8 +672,8 @@ export const posts: Post[] = [
     cardDek: "Give the sorting step a fixed list so tickets land in the right queue.",
     hero: {
       src: "/art/digest/make-routers-pick-from-a-fixed-list-sticker.webp",
-      alt: "A mail sorter with a grid of pigeonholes and one pink envelope sliding into a slot.",
-      pad: "#96E4B7",
+      alt: "A person pulls a rail switch so three mine carts, each marked with a star, a heart or a cross, roll onto their own tracks.",
+      pad: "#FDFAF5",
     },
     date: "2026-09-29",
     paragraphs: [
@@ -697,8 +697,8 @@ export const posts: Post[] = [
     cardDek: "Treat tool replies as data, so hidden commands can't steer your agent.",
     hero: {
       src: "/art/digest/dont-follow-orders-in-tool-text-sticker.webp",
-      alt: "A fishing hook on a line from a yellow float, caught on a paper slip.",
-      pad: "#C5C6FB",
+      alt: "A robot lifts a paper note out of an open box while a calm person stands facing it, with a yellow heart between them.",
+      pad: "#FDFAF5",
     },
     date: "2026-10-01",
     paragraphs: [
@@ -731,8 +731,8 @@ export const posts: Post[] = [
     kind: "essay",
     hero: {
       src: "/art/digest/the-ai-safety-paradox-sticker.webp",
-      alt: "A red firework rocket with a fire extinguisher strapped to its side.",
-      pad: "#F0CD5F",
+      alt: "A person balances on a seesaw, holding a shield in one hand and a glowing brain in the other.",
+      pad: "#FDFAF5",
     },
     pullQuote: { text: "It's like asking the inmates to design the locks.", cite: "— Osbel Morell" },
     paragraphs: [
@@ -759,8 +759,8 @@ export const posts: Post[] = [
     cardDek: "Check progress every few steps and change course when an agent stalls.",
     hero: {
       src: "/art/digest/break-loops-when-progress-stalls-sticker.webp",
-      alt: "A looped toy train track with a switch lever that sends the train off onto a straight exit.",
-      pad: "#96E4B7",
+      alt: "A person pulls a lever to stop a robot running in a hamster wheel, while a second small robot walks off free.",
+      pad: "#FDFAF5",
     },
     date: "2026-10-02",
     paragraphs: [
@@ -793,8 +793,8 @@ export const posts: Post[] = [
     cardDek: "Show an agent its past fixes only when a step actually goes wrong.",
     hero: {
       src: "/art/digest/show-fixes-only-when-things-break-sticker.webp",
-      alt: "A first-aid kit with a red cross inside a glass case that's cracked in one corner.",
-      pad: "#EFC3BB",
+      alt: "A relaxed person sits on a cushion beside a closed toolbox while a pipe nearby springs a leak.",
+      pad: "#FDFAF5",
     },
     date: "2026-10-09",
     paragraphs: [
@@ -825,8 +825,8 @@ export const posts: Post[] = [
     kind: "essay",
     hero: {
       src: "/art/digest/google-ai-search-eating-its-own-traffic-sticker.webp",
-      alt: "A white search bar with jagged steel jaws at one end, biting down on a gold chain link.",
-      pad: "#EE83C3",
+      alt: "A puzzled person watches a long search bar curl around like a snake and swallow a ring of web page cards.",
+      pad: "#FDFAF5",
     },
     paragraphs: [
       "Google's own AI features are doing the damage, not ChatGPT. A [randomized study posted in August 2026](https://arxiv.org/abs/2608.18352) found that when users were put into Google's AI Mode, clicks to outside websites dropped nearly 19 percentage points. Removing AI Overviews actually increased those clicks, by an estimated 8.8 points. The researchers are from the University of Pennsylvania and Northeastern, and they tracked 1,100 US Google users for a week.",

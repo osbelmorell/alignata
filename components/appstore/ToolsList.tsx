@@ -5,6 +5,8 @@ import { OpenPill } from "@/components/appstore/AppRow";
 import { SiteFooter } from "@/components/fantasy/SiteFooter";
 import { PageFade } from "@/components/appstore/Motion";
 import { Img } from "@/components/appstore/Img";
+import { BackLink } from "@/components/site/BackLink";
+import { PageHero } from "@/components/site/PageHero";
 
 /**
  * /apps (SPEC v2 §5): title, the locked subline, then all 10 listed tools as 88px app rows in /apps order (positions
@@ -15,10 +17,14 @@ export function ToolsList({ apps }: { apps: HubApp[] }) {
   return (
     <PageFade>
       <div className="fx-page">
+        <BackLink href="/" label="Home" />
         <main className="fx-wrap">
-          <section className="fx-page-head fx-tools-head">
-            <h1 className="fx-display">Tools</h1>
-            <p className="fx-intro">Small tools that each do one job. Tap one to start.</p>
+          <section className="fx-page-head fx-tools-head fx-head-split">
+            <div>
+              <h1 className="fx-display">Tools</h1>
+              <p className="fx-intro">Small tools that each do one job. Tap one to start.</p>
+            </div>
+            <PageHero src="/art/tool-hero-sticker.webp" eager />
           </section>
           <ol className="fx-rows" aria-label="All tools">
             {apps.map((app, i) => {

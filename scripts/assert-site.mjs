@@ -314,45 +314,45 @@ const SLUG_RE_OK = (s) => validateSiteEvent({ v: 1, event: "tool_open", sid: SID
 /* ---------- Art (SPEC v2 sticker batch v3.1): final alt text, copied verbatim from ART-ALT-DRAFT.md ---------- */
 /** "Digest: FINAL alt text" (Product Copy, Oct 2 11:15 PM ET), all 24 lines, + Oct 9 show-fixes (25), + Oct 10 google-ai-search essay (26, Product Copy FINAL Oct 10). */
 const DIGEST_FINAL_ALT = new Map([
-  ["google-ai-search-eating-its-own-traffic", "A white search bar with jagged steel jaws at one end, biting down on a gold chain link."],
-  ["show-fixes-only-when-things-break", "A first-aid kit with a red cross inside a glass case that's cracked in one corner."],
-  ["break-loops-when-progress-stalls", "A looped toy train track with a switch lever that sends the train off onto a straight exit."],
-  ["dont-follow-orders-in-tool-text", "A fishing hook on a line from a yellow float, caught on a paper slip."],
-  ["the-ai-safety-paradox", "A red firework rocket with a fire extinguisher strapped to its side."],
-  ["ask-before-doing-what-wasnt-asked", "A brass desk bell on a small steel block."],
-  ["test-search-before-saying-none", "A flashlight shining a yellow beam into an open cardboard box."],
-  ["make-routers-pick-from-a-fixed-list", "A mail sorter with a grid of pigeonholes and one pink envelope sliding into a slot."],
-  ["keep-hard-rules-sticky", "A yellow sticky note pinned flat with a pushpin."],
-  ["refuse-answers-sources-do-not-support", "A stool with a red seat and one leg snapped off, tipping over."],
-  ["do-not-swap-tools-on-a-hunch", "A gold coin flipping in the air above a closed toolbox."],
-  ["check-each-tool-step-before-next", "A level with a green bubble, resting on a single step."],
-  ["prove-it-before-irreversible-actions", "A wax seal stamp pressing into red wax on an envelope."],
-  ["tell-failed-tools-what-to-try-next", "A folded paper map with a red dotted route across it."],
-  ["dont-blind-retry-sends-or-charges", "A paper airplane held by its tail in a pink clothespin."],
-  ["laya-ai-deep-dive", "An old brass and steel diving helmet with an air hose trailing behind it."],
-  ["system-one-and-jev-deep-dive", "An open pocket compass with a green face and a chain."],
-  ["paperclip-deep-dive", "A giant paperclip holding a small stack of cards, the top one yellow."],
-  ["block-done-if-code-changed-after-tests", "A test tube of green liquid in a clamp stand, with a drop falling in."],
-  ["trim-long-logs-from-both-ends", "The two end pieces of a log, with the middle sawn out."],
-  ["refuse-answers-that-dont-match-tool-results", "Two jigsaw pieces, one white and one yellow, that don't fit together."],
-  ["bind-every-claim-to-a-real-citation", "An open book with a red binder clip holding a note to its page."],
-  ["compare-models-only-under-a-locked-setup", "Two identical stopwatches side by side on a steel tray, their hands at the same spot."],
-  ["reuse-the-same-key-when-a-tool-retries", "A brass key on a ring, with a white outline of the same key behind it."],
-  ["require-held-out-lift-before-shipping-harness-edits", "A striped hot-air balloon tugging upward, tied down to a sandbag."],
-  ["load-only-the-tools-this-turn-needs", "A tool belt with empty pockets and a single wrench."],
+  ["google-ai-search-eating-its-own-traffic", "A puzzled person watches a long search bar curl around like a snake and swallow a ring of web page cards."],
+  ["show-fixes-only-when-things-break", "A relaxed person sits on a cushion beside a closed toolbox while a pipe nearby springs a leak."],
+  ["break-loops-when-progress-stalls", "A person pulls a lever to stop a robot running in a hamster wheel, while a second small robot walks off free."],
+  ["dont-follow-orders-in-tool-text", "A robot lifts a paper note out of an open box while a calm person stands facing it, with a yellow heart between them."],
+  ["the-ai-safety-paradox", "A person balances on a seesaw, holding a shield in one hand and a glowing brain in the other."],
+  ["ask-before-doing-what-wasnt-asked", "A robot with a question mark in a speech bubble pauses beside a box and checks with a person before going on."],
+  ["test-search-before-saying-none", "A person shines a flashlight into an open filing cabinet drawer full of folders."],
+  ["make-routers-pick-from-a-fixed-list", "A person pulls a rail switch so three mine carts, each marked with a star, a heart or a cross, roll onto their own tracks."],
+  ["keep-hard-rules-sticky", "A person presses sticky notes firmly onto a wall while other loose notes blow away in the wind."],
+  ["refuse-answers-sources-do-not-support", "A person holds up a card with a red cross and raises a hand to stop, next to a stack of books."],
+  ["do-not-swap-tools-on-a-hunch", "A smiling person holds on to one wrench while other tools float nearby."],
+  ["check-each-tool-step-before-next", "A hiker climbs a row of stepping stones, each with a check mark on it."],
+  ["prove-it-before-irreversible-actions", "A person checks a clipboard of charts before pressing a big red button."],
+  ["tell-failed-tools-what-to-try-next", "A person points a puzzled robot toward a signpost with three arrows."],
+  ["dont-blind-retry-sends-or-charges", "A person holds an envelope and a payment card, ready to send just one."],
+  ["laya-ai-deep-dive", "A person in glasses unpacks labelled blocks from a box, with a telescope standing beside it."],
+  ["system-one-and-jev-deep-dive", "Two people watch a server rack sort coloured shapes from a cloud onto a conveyor belt."],
+  ["paperclip-deep-dive", "A person at a control desk runs a small office of robot workers at their desks, under a giant paperclip."],
+  ["block-done-if-code-changed-after-tests", "A runner with a passing test screen is stopped at a finish ribbon by a raised hand."],
+  ["trim-long-logs-from-both-ends", "A person cuts the middle out of a long paper scroll with scissors, keeping both ends."],
+  ["refuse-answers-that-dont-match-tool-results", "A person raises a hand to stop beside two jigsaw pieces that don't fit together."],
+  ["bind-every-claim-to-a-real-citation", "A person pins note cards to matching books on a bookshelf."],
+  ["compare-models-only-under-a-locked-setup", "Two robots race side by side on matching lanes while a person with a padlocked clipboard watches."],
+  ["reuse-the-same-key-when-a-tool-retries", "A person hands a robot the same key twice, and the second time it glows."],
+  ["require-held-out-lift-before-shipping-harness-edits", "A thoughtful person compares a small bar chart with a bigger chart revealed behind a curtain."],
+  ["load-only-the-tools-this-turn-needs", "A person picks one wrench from a pegboard full of tools and puts it in a tote bag."],
 ]);
 /** "Tools: FINAL alt text" (Brand Creator, Oct 2 10:47 PM ET): [slug, hero alt (null = icon only), icon alt]. */
 const TOOL_FINAL_ALT = [
-  ["stripe-cleaver", "A big cleaver slices a paper receipt into torn strips, with the fee strip in yellow.", "A cartoon cleaver with a steel blade and a black handle."],
-  ["license-gate", "A padlock with a brass shackle clamped shut on a rolled paper scroll.", "A padlock with a brass shackle."],
-  ["agent-bundle-tag", "A pink luggage tag tied with string to a wrapped paper parcel.", "A pink luggage tag."],
-  ["agent-eval-go-no-go", "A black and white checkered flag waving on a pole.", "A checkered flag."],
-  ["deploy-decision-card", null, "A balance scale with two brass pans."],
-  ["engrave-merge", "A laser engraver on a rail burning a line onto a paper tag.", "A laser engraver burning a line onto a tag."],
-  ["enterprise-scorecard", "A round pressure gauge with green, yellow and red bands and one needle.", "A pressure gauge."],
-  ["hobby-deploy-burn-digest", "A lit match, half burnt down, with a yellow flame.", "A lit match."],
-  ["llm-feature-cost-tag", "A pink price tag hanging from a steel cog.", "A steel cog with a pink price tag."],
-  ["what-changed-card", "A rubber stamp lifting off a paper sheet, leaving a round mark.", "A rubber stamp."],
+  ["stripe-cleaver", "A person tears a strip off a long payout receipt and files it as tidy rows in an open ledger.", "A person holding a strip of receipt over an open ledger."],
+  ["license-gate", "A person carrying papers and a shield walks through a garden gate past a mailbox.", "A person walking through a garden gate."],
+  ["agent-bundle-tag", "A smiling person ties a heart tag onto a stack of wrapped boxes.", "A person tying a tag onto wrapped boxes."],
+  ["agent-eval-go-no-go", "A person gives a thumbs up with a checklist next to a waving robot on a stand.", "A person with a checklist and a robot."],
+  ["deploy-decision-card", null, "A person holding a card with a red and a green light, next to a rocket."],
+  ["engrave-merge", "A small figure kneels to carve a heart into a rock where two winding paths meet.", "A figure carving a heart into a rock."],
+  ["enterprise-scorecard", "A cheerful person holds up a scorecard of checked bars surrounded by gauges.", "A person holding a scorecard of checked bars."],
+  ["hobby-deploy-burn-digest", "A calm person reads a report next to a fuel gauge and a small flame.", "A person reading a report next to a gauge."],
+  ["llm-feature-cost-tag", "A person studies a price tag with a dollar sign next to chat bubbles.", "A person holding a dollar price tag."],
+  ["what-changed-card", "A person with a magnifying glass compares two nearly identical picture cards.", "A person comparing two cards with a magnifying glass."],
 ];
 /** Clay files replaced by the sticker batch (alignata-art/clay-replacement-list.md): none may come back. */
 const CLAY_FILES = [
@@ -499,7 +499,8 @@ test("tool story (v2 §4): 9 static stories (no Deploy Decision), hero + H1 + bl
     assert.ok(html.indexOf(`src="${t.art}"`) < html.indexOf('<h1 class="fx-story-title">'), `${slug}: hero above the H1`);
     assert.ok(html.includes(`<h1 class="fx-story-title">${TOOL_STORY[slug].title.replace(/'/g, "&#x27;")}</h1>`), `${slug}: H1 = card title`);
     const opens = [...html.matchAll(/<a class="fx-open fx-primary" href="([^"]+)" data-tool-slug="([^"]+)" data-tool-pos="(\d+)"/g)];
-    assert.equal(opens.length, 3, `${slug}: black Open in the first row, the end row and the sticky bar`);
+    assert.equal(opens.length, 2, `${slug}: primary Open in the first row and the sticky bar (one visible at a time); the end row is soft`);
+    assert.ok(html.includes(`<a class="fx-open" href="${app.url}" data-tool-slug="${slug}"`), `${slug}: soft Open in the end row`);
     for (const o of opens) assert.deepEqual([o[1], o[2], +o[3]], [app.url, slug, pos], `${slug}: Open → tool at its /apps position`);
     assert.ok(html.includes('data-row="first"') && html.includes('data-row="end"'));
     assert.ok(html.includes('data-sticky-open=""') && html.includes('aria-hidden="true"'), `${slug}: sticky bar starts hidden`);
@@ -587,7 +588,7 @@ test("art: tool stickers + icons with FINAL alt, every file a real WebP of the r
   }
   const files = readdirSync("public/art", { recursive: true }).map(String).filter((f) => /\.[a-z]+$/.test(f));
   for (const f of files) assert.match(f, /^(digest\/)?[a-z0-9-]+-sticker(-icon)?\.webp$/, `public/art/${f} is sticker art (no clay, no fallback tile)`);
-  assert.equal(files.length, 26 + 9 + 10 + 1, "26 Digest heroes + 9 tool heroes + 10 icons + the About hero");
+  assert.equal(files.length, 26 + 9 + 10 + 1 + 3, "26 Digest heroes + 9 tool heroes + 10 icons + the About hero + 3 page heroes (restyle C)");
   assert.ok(files.includes("about-sticker.webp"), "About hero (company pages, Oct 3)");
   assert.deepEqual(await webpSize("public/art/about-sticker.webp"), [1920, 1080], "About hero: one 16:9 file");
   for (const f of CLAY_FILES) assert.ok(!existsSync(f), `${f} is gone`);
@@ -1361,20 +1362,20 @@ test("alt text: every listed tool hero + icon and all 26 Digest heroes carry the
     else assert.equal(a.id, "deploy-decision-card", "only Deploy Decision is icon-only");
   }
   assert.deepEqual([heroes, icons], [9, 10]);
-  assert.equal(toolArt("agent-eval-go-no-go").alt, "A black and white checkered flag waving on a pole.", "Agent Eval: 'checkered'");
+  assert.equal(toolArt("agent-eval-go-no-go").alt, "A person gives a thumbs up with a checklist next to a waving robot on a stand.", "Agent Eval: 'checkered'");
   assert.equal(posts.length, 26);
   for (const p of posts) assert.ok(p.hero.alt.trim(), `${p.slug}: hero alt`);
 });
 
-test("Digest heroes #3, #4, #8, #21: the current sticker files (not .v2), 1920×1080, pad = palette.json colour", async () => {
+test("Digest heroes #3, #4, #8, #21: the restyle C sticker files (not .v2), 1920×1080, pad = art off-white", async () => {
   const { createHash } = await import("node:crypto");
   const { readFileSync, existsSync } = await import("node:fs");
   const { getPost } = await import("../content/posts.ts");
   const want = {
-    "the-ai-safety-paradox": ["56f842e310dd4c9f26e07f6f3ac4a3bca7da239ce075f908193ca555a3f88749", "#F0CD5F"],
-    "ask-before-doing-what-wasnt-asked": ["0e9310cfb6c542870776529de3df358c62f8edd45118da70f840e4b467b26a23", "#EE83C3"],
-    "refuse-answers-sources-do-not-support": ["8e881972b6b1b488d6f903fc530f9be94b553bfac985ebc322bc8e2ae2ccc74c", "#F0CD5F"],
-    "compare-models-only-under-a-locked-setup": ["ca591e9604e83c65aaf648c601f77fdd1fafd111c8bd35230d070b7894a04074", "#96E4B7"],
+    "the-ai-safety-paradox": ["3de0936f85bddd9bd2a2d0a5503ae0659776b138f017ec0c94d9fda31e727951", "#FDFAF5"],
+    "ask-before-doing-what-wasnt-asked": ["7032deba351a9e358478b14ffa14523234262a174e72946163037f45a58e0951", "#FDFAF5"],
+    "refuse-answers-sources-do-not-support": ["63bbd3d8c2350a421d798ced5dee443ad1061ce8ac349694f977c67b06e4b3ab", "#FDFAF5"],
+    "compare-models-only-under-a-locked-setup": ["bd9a7d40b864f23e61625fb1efdaba7bd1cf8eb5dba09fe5b6f9f903ec669c24", "#FDFAF5"],
   };
   for (const [slug, [sha, pad]] of Object.entries(want)) {
     const f = `public/art/digest/${slug}-sticker.webp`;
@@ -1433,7 +1434,7 @@ test("guide page: Digest story template (680 column, no hero), byline 'Alignata 
     assert.equal((html.match(/class="fx-app-row/g) || []).length, 1, "ONE app row");
     assert.equal((html.match(/fx-primary/g) || []).length, 1, "one black pill");
     assert.ok(html.includes(`<p class="fx-app-name">Engrave Merge</p><p class="fx-app-line">${em.blurb}</p>`));
-    assert.ok(html.includes('src="/art/engrave-merge-sticker-icon.webp" alt="A laser engraver burning a line onto a tag."'), "Engrave Merge icon + FINAL alt");
+    assert.ok(html.includes('src="/art/engrave-merge-sticker-icon.webp" alt="A figure carving a heart into a rock."'), "Engrave Merge icon + FINAL alt");
     assert.match(html, new RegExp(`<a class="fx-open fx-primary" href="/engrave-merge\\?ref=${ref}" data-tool-slug="engrave-merge" data-tool-pos="6" data-tool-src="guide" aria-label="Open Engrave Merge">Open</a>`));
     assert.ok(html.includes('<a href="/fixtures/engrave-merge/sample.csv" download="">Download a sample Order Items file</a>'), "sample: plain download, no ref");
     assert.equal((html.match(/\?ref=/g) || []).length, 1, "ref only on the Open");
@@ -1545,7 +1546,9 @@ const footerOf = (html) => html.slice(html.indexOf('<footer class="fx-footer">')
 
 test("homepage mission: the dek sits directly under the locked display line and above the two pills; nothing else added", async () => {
   const html = await companyHtml("/");
-  const head = html.slice(html.indexOf('<section class="fx-home-head"'), html.indexOf('<section class="fx-feed"'));
+  // Restyle C: the page illustration sits beside the head (outside it), so the head ends at its own </section>.
+  const hs = html.indexOf('<section class="fx-home-head"');
+  const head = html.slice(hs, html.indexOf("</section>", hs) + "</section>".length);
   assert.equal(
     head,
     '<section class="fx-home-head" aria-label="Start"><h1 class="fx-display">Small tools for busy people, and AI techniques in plain English.</h1>' +
@@ -1600,7 +1603,7 @@ test("/about (COPY.md §3): story template, one sticker hero with alt, H1, missi
   const mod = await import("../app/about/page.tsx");
   assert.equal(mod.metadata.title, "About");
   assert.equal(mod.metadata.alternates.canonical, "/about");
-  assert.ok(html.includes('<main class="fx-story fx-company" data-page="about"><article><figure class="fx-story-hero" style="--art-pad:#C5C6FB" data-art="about"><img src="/art/about-sticker.webp" alt="A handsaw with a red handle resting on a pale wooden plank." width="1920" height="1080"'));
+  assert.ok(html.includes('<main class="fx-story fx-company" data-page="about"><article><figure class="fx-story-hero" style="--art-pad:#FDFAF5" data-art="about"><img src="/art/about-sticker.webp" alt="A maker at a workbench hands a tool card to a busy person with a laptop and a coffee." width="1920" height="1080"'));
   const order = [
     '<h1 class="fx-story-title">About Alignata</h1>',
     `<p class="fx-story-dek">${MISSION_TXT}</p>`,
@@ -1750,7 +1753,7 @@ test("Daily Digest marks (Release B): 7-day New window for everyone, Updated rul
   assert.equal(m.markFor("p", "2026-10-09", "2026-10-10", null, T), "none");
   // css: at most one mark per card
   const css = m.newMarkCss({ a: "new", b: "updated", c: "none" });
-  assert.equal(css, '.fx-scard[data-post-card ="a"] .fx-eyebrow::before{content:"New" / ""}.fx-scard[data-post-card ="b"] .fx-eyebrow::before{content:"Updated" / ""}');
+  assert.equal(css, '.fx-scard[data-post-card ="a"] .fx-eyebrow::before{content:"New" / ""}.fx-scard[data-post-card ="b"] .fx-eyebrow::before{content:"Updated" / "";background:#DCD8FA;color:#3F35A8}');
   assert.equal(m.localDay(new Date(2026, 9, 10, 23, 50)), T);
   assert.equal(m.daysBetween("2026-02-27", "2026-03-01"), 2);
 });
@@ -1914,4 +1917,23 @@ test("baseline --fixture / --file: reads only the file; no fetch, no store clien
   }
   // control: without a file it does try the store (fetch) — so the guard really detects store access
   assert.throws(() => execFileSync(process.execPath, ["--import", guard, "scripts/site-baseline.mjs"], { env, encoding: "utf8", stdio: "pipe" }), (e) => e.status === 9);
+});
+
+test("restyle C QA 679156c: one back link on every subpage, one primary per tool story, wrapping tool lines, rows sized to content, scorecard SSR data", async () => {
+  const { readFileSync } = await import("node:fs");
+  const read = (f) => readFileSync(f, "utf8");
+  for (const f of ["components/appstore/ToolsList.tsx", "app/daily-digest/page.tsx", "app/daily-digest/[slug]/page.tsx", "app/apps/[slug]/page.tsx", "app/about/page.tsx", "app/privacy/page.tsx", "app/guides/[slug]/page.tsx", "app/not-found.tsx"])
+    assert.equal((read(f).match(/<BackLink /g) || []).length, 1, `${f}: exactly one BackLink`);
+  assert.match(read("app/not-found.tsx"), /<BackLink href="\/" label="Home" \/>/, "404 → Home");
+  const hub = read("components/HubChrome.tsx");
+  assert.ok(hub.includes('<BackLink href="/apps" label="Tools" />') && hub.includes("!toolPaths.includes(pathname)"), "tool routes get the shared BackLink, nothing else does");
+  assert.ok(!hub.includes("All tools"), "no old grey '← All tools' bar");
+  assert.match(read("components/site/BackLink.tsx"), /className="fx-wrap fx-back"/, "BackLink sits on the site container (same x everywhere)");
+  const css = read("app/restyle-c.css");
+  assert.ok(!/text-overflow:\s*ellipsis|white-space:\s*nowrap/.test(css), "no truncated tool lines");
+  assert.ok(!/grid-auto-rows/.test(css), "/apps rows size to their own content (QA abe0c50 F1)");
+  assert.match(css, /\.fx-arow \{[^}]*padding: 13px 16px/, "13px top and bottom on every row");
+  assert.ok(!/\.fx-arow \{[^}]*[^-]height:/.test(css), "no fixed row height");
+  assert.match(read("app/apps/[slug]/page.tsx"), /row="end" secondary/, "end row Open is soft");
+  assert.match(read("app/scorecard/page.tsx"), /<Scorecard initial=\{initialScorecard\(\)\} \/>/, "scorecard data in the server HTML");
 });

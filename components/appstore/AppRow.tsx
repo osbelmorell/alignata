@@ -16,9 +16,12 @@ export function AppRow({
   variant = "card",
   row,
   homeTarget = false,
+  secondary = false,
 }: {
   app: HubApp;
   pos: number;
+  /** Story end row: same row, soft Open, so the page keeps one primary (QA 679156c). */
+  secondary?: boolean;
   variant?: "card" | "story";
   /** Story page: "first" (under the dek) or "end" (after the body). */
   row?: "first" | "end";
@@ -33,7 +36,7 @@ export function AppRow({
         <p className="fx-app-name">{app.name}</p>
         <p className="fx-app-line">{app.blurb}</p>
       </div>
-      <OpenPill app={app} pos={pos} primary={variant === "story"} homeTarget={homeTarget} src={variant === "story" ? "story" : "feed"} />
+      <OpenPill app={app} pos={pos} primary={variant === "story" && !secondary} homeTarget={homeTarget} src={variant === "story" ? "story" : "feed"} />
     </div>
   );
 }

@@ -3,6 +3,8 @@ import { getPostsNewestFirst } from "@/content/posts";
 import { ArticleStoryCard } from "@/components/appstore/StoryCard";
 import { NewMarkBoot } from "@/components/daily-digest/NewMarkBoot";
 import { PageFade } from "@/components/appstore/Motion";
+import { BackLink } from "@/components/site/BackLink";
+import { PageHero } from "@/components/site/PageHero";
 
 export const metadata: Metadata = {
   title: "Daily Digest",
@@ -29,13 +31,17 @@ export default function DailyDigestIndexPage() {
   const posts = getPostsNewestFirst();
   return (
     <PageFade>
+      <BackLink href="/" label="Home" />
       <main className="fx-wrap">
         <NewMarkBoot posts={posts} />
-        <section className="fx-page-head">
-          <h1 className="fx-display">Daily Digest</h1>
-          <p className="fx-intro">
-            Proven AI techniques, deep dives, and the occasional essay, tested and written in plain English.
-          </p>
+        <section className="fx-page-head fx-head-split">
+          <div>
+            <h1 className="fx-display">Daily Digest</h1>
+            <p className="fx-intro">
+              Proven AI techniques, deep dives, and the occasional essay, tested and written in plain English.
+            </p>
+          </div>
+          <PageHero src="/art/digest-hero-sticker.webp" />
         </section>
         <section className="fx-feed" aria-label="All articles">
           {posts.map((post, i) => (
