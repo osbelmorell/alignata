@@ -42,16 +42,16 @@ const art = (id: string, pad: string, alt: string | null, iconAlt: string): Tool
 });
 
 export const TOOL_ART: Record<string, ToolArt> = {
-  "stripe-cleaver": art("stripe-cleaver", "#FDFAF5", "A big cleaver slices a paper receipt into torn strips, with the fee strip in yellow.", "A cartoon cleaver with a steel blade and a black handle."),
-  "license-gate": art("license-gate", "#FDFAF5", "A padlock with a brass shackle clamped shut on a rolled paper scroll.", "A padlock with a brass shackle."),
-  "agent-bundle-tag": art("agent-bundle-tag", "#FDFAF5", "A pink luggage tag tied with string to a wrapped paper parcel.", "A pink luggage tag."),
-  "agent-eval-go-no-go": art("agent-eval-go-no-go", "#FDFAF5", "A black and white checkered flag waving on a pole.", "A checkered flag."),
-  "deploy-decision-card": art("deploy-decision-card", "#FDFAF5", null, "A balance scale with two brass pans."),
-  "engrave-merge": art("engrave-merge", "#FDFAF5", "A laser engraver on a rail burning a line onto a paper tag.", "A laser engraver burning a line onto a tag."),
-  "enterprise-scorecard": art("enterprise-scorecard", "#FDFAF5", "A round pressure gauge with green, yellow and red bands and one needle.", "A pressure gauge."),
-  "hobby-deploy-burn-digest": art("hobby-deploy-burn-digest", "#FDFAF5", "A lit match, half burnt down, with a yellow flame.", "A lit match."),
-  "llm-feature-cost-tag": art("llm-feature-cost-tag", "#FDFAF5", "A pink price tag hanging from a steel cog.", "A steel cog with a pink price tag."),
-  "what-changed-card": art("what-changed-card", "#FDFAF5", "A rubber stamp lifting off a paper sheet, leaving a round mark.", "A rubber stamp."),
+  "stripe-cleaver": art("stripe-cleaver", "#FDFAF5", "A person tears a strip off a long payout receipt and files it as tidy rows in an open ledger.", "A person holding a strip of receipt over an open ledger."),
+  "license-gate": art("license-gate", "#FDFAF5", "A person carrying papers and a shield walks through a garden gate past a mailbox.", "A person walking through a garden gate."),
+  "agent-bundle-tag": art("agent-bundle-tag", "#FDFAF5", "A smiling person ties a heart tag onto a stack of wrapped boxes.", "A person tying a tag onto wrapped boxes."),
+  "agent-eval-go-no-go": art("agent-eval-go-no-go", "#FDFAF5", "A person gives a thumbs up with a checklist next to a waving robot on a stand.", "A person with a checklist and a robot."),
+  "deploy-decision-card": art("deploy-decision-card", "#FDFAF5", null, "A person holding a card with a red and a green light, next to a rocket."),
+  "engrave-merge": art("engrave-merge", "#FDFAF5", "A small figure kneels to carve a heart into a rock where two winding paths meet.", "A figure carving a heart into a rock."),
+  "enterprise-scorecard": art("enterprise-scorecard", "#FDFAF5", "A cheerful person holds up a scorecard of checked bars surrounded by gauges.", "A person holding a scorecard of checked bars."),
+  "hobby-deploy-burn-digest": art("hobby-deploy-burn-digest", "#FDFAF5", "A calm person reads a report next to a fuel gauge and a small flame.", "A person reading a report next to a gauge."),
+  "llm-feature-cost-tag": art("llm-feature-cost-tag", "#FDFAF5", "A person studies a price tag with a dollar sign next to chat bubbles.", "A person holding a dollar price tag."),
+  "what-changed-card": art("what-changed-card", "#FDFAF5", "A person with a magnifying glass compares two nearly identical picture cards.", "A person comparing two cards with a magnifying glass."),
 };
 
 export function toolsOrder(apps: HubApp[]): HubApp[] {
