@@ -312,8 +312,9 @@ test("/apps (v2 §5): 10 app rows in /apps order (Env Diff retired); row body �
 const SLUG_RE_OK = (s) => validateSiteEvent({ v: 1, event: "tool_open", sid: SID, vid: VID, dogfood: false, props: { slug: s, position: 1 } }).ok;
 
 /* ---------- Art (SPEC v2 sticker batch v3.1): final alt text, copied verbatim from ART-ALT-DRAFT.md ---------- */
-/** "Digest: FINAL alt text" (Product Copy, Oct 2 11:15 PM ET), all 24 lines, + Oct 9 show-fixes (25), + Oct 10 google-ai-search essay (26, Product Copy FINAL Oct 10). */
+/** "Digest: FINAL alt text" (Product Copy, Oct 2 11:15 PM ET), all 24 lines, + Oct 9 show-fixes (25), + Oct 10 google-ai-search essay (26, Product Copy FINAL Oct 10), + Oct 11 ai-agents-reverse-engineering essay (27, Product Copy FINAL Oct 10). */
 const DIGEST_FINAL_ALT = new Map([
+  ["ai-agents-reverse-engineering-games-software", "A curious person with a magnifying glass and a friendly robot take apart a retro game cartridge into puzzle pieces on a workbench."],
   ["google-ai-search-eating-its-own-traffic", "A puzzled person watches a long search bar curl around like a snake and swallow a ring of web page cards."],
   ["show-fixes-only-when-things-break", "A relaxed person sits on a cushion beside a closed toolbox while a pipe nearby springs a leak."],
   ["break-loops-when-progress-stalls", "A person pulls a lever to stop a robot running in a hamster wheel, while a second small robot walks off free."],
@@ -356,7 +357,7 @@ const TOOL_FINAL_ALT = [
 ];
 /** Clay files replaced by the sticker batch (alignata-art/clay-replacement-list.md): none may come back. */
 const CLAY_FILES = [
-  ...[...DIGEST_FINAL_ALT.keys()].filter((s) => s !== "the-ai-safety-paradox" && s !== "show-fixes-only-when-things-break" && s !== "google-ai-search-eating-its-own-traffic").flatMap((s) => [`public/art/digest/${s}.webp`, `public/art/digest/${s}-card.webp`]),
+  ...[...DIGEST_FINAL_ALT.keys()].filter((s) => s !== "the-ai-safety-paradox" && s !== "show-fixes-only-when-things-break" && s !== "google-ai-search-eating-its-own-traffic" && s !== "ai-agents-reverse-engineering-games-software").flatMap((s) => [`public/art/digest/${s}.webp`, `public/art/digest/${s}-card.webp`]),
   ...["fallback-tile", "license-gate", "stripe-cleaver", "the-ai-safety-paradox"].flatMap((b) => [`public/art/${b}-640.webp`, `public/art/${b}-1280.webp`]),
 ];
 /** Width × height of a WebP file (VP8, VP8L or VP8X), read from its header. */
@@ -377,12 +378,12 @@ test("Daily Digest: tags, real read time, sticker hero art + FINAL alt, verbatim
   const { posts, getPostsNewestFirst } = await import("../content/posts.ts");
   const meta = await import("../lib/daily-digest/meta.ts");
   const { toPlainText } = await import("../lib/daily-digest/blocks.ts");
-  assert.equal(posts.length, 26);
+  assert.equal(posts.length, 27);
   assert.equal(new Set(posts.map((p) => p.slug)).size, posts.length, "unique slugs");
   const byTag = (t) => posts.filter((p) => meta.postTag(p) === t).map((p) => p.slug).sort();
-  assert.deepEqual(byTag("Essay"), ["google-ai-search-eating-its-own-traffic", "the-ai-safety-paradox"]);
+  assert.deepEqual(byTag("Essay"), ["ai-agents-reverse-engineering-games-software", "google-ai-search-eating-its-own-traffic", "the-ai-safety-paradox"]);
   assert.deepEqual(byTag("Deep dive"), ["laya-ai-deep-dive", "paperclip-deep-dive", "system-one-and-jev-deep-dive"]);
-  assert.equal(byTag("Technique").length, posts.length - 5);
+  assert.equal(byTag("Technique").length, posts.length - 6);
   for (const p of posts) {
     const w = meta.wordCount(p);
     assert.ok(w > 0, p.slug);
@@ -426,8 +427,8 @@ test("Daily Digest pages render: story cards (eyebrow = tag, title is the link, 
   const { default: Index } = await import("../app/daily-digest/page.tsx");
   const list = getPostsNewestFirst();
   const cards = renderToStaticMarkup(createElement(Index));
-  assert.equal((cards.match(/data-post-card=/g) || []).length, 26);
-  assert.equal((cards.match(/fx-scard fx-lead/g) || []).length, 6, "a lead row every 5 cards (26 cards → 6) (§3 desktop layout repeated)");
+  assert.equal((cards.match(/data-post-card=/g) || []).length, 27);
+  assert.equal((cards.match(/fx-scard fx-lead/g) || []).length, 6, "a lead row every 5 cards (27 cards → 6) (§3 desktop layout repeated)");
   assert.ok(!/>Open</.test(cards), "no Open pill on the digest");
   const esc = (t) => t.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
   for (const p of list) {
@@ -464,18 +465,18 @@ test("homepage (v2 §2): feed order, one black pill, Open → tool with home_cli
   const { default: Home } = await import("../app/page.tsx");
   const html = renderToStaticMarkup(createElement(Home));
   const feed = [...html.matchAll(/<article class="fx-scard[^"]*" data-kind="(tool|article)" data-(?:slug|post-card)="([^"]+)"/g)].map((m) => `${m[1]}:${m[2]}`);
-  assert.deepEqual(feed, ["tool:stripe-cleaver", "article:google-ai-search-eating-its-own-traffic", "tool:license-gate", "article:show-fixes-only-when-things-break", "article:break-loops-when-progress-stalls"]);
+  assert.deepEqual(feed, ["tool:stripe-cleaver", "article:ai-agents-reverse-engineering-games-software", "tool:license-gate", "article:google-ai-search-eating-its-own-traffic", "article:show-fixes-only-when-things-break"]);
   assert.ok(html.includes('class="fx-scard fx-lead" data-kind="tool" data-slug="stripe-cleaver"'), "Cleaver is the lead card");
   for (const [slug, pos] of [["stripe-cleaver", 1], ["license-gate", 2]]) {
     assert.ok(html.includes(`<a class="fx-stretch" href="/apps/${slug}">`), `${slug}: card title → story`);
     assert.match(html, new RegExp(`<a class="fx-open" href="/${slug}" data-tool-slug="${slug}" data-tool-pos="${pos}" data-tool-src="feed" data-home-target="tool:${slug}" aria-label="Open [^"]+">Open</a>`), `${slug}: soft Open → tool, source feed`);
   }
-  for (const t of ["tools-pill", "digest-pill", "all-tools", "all-articles", "article:google-ai-search-eating-its-own-traffic", "article:show-fixes-only-when-things-break", "article:break-loops-when-progress-stalls"]) {
+  for (const t of ["tools-pill", "digest-pill", "all-tools", "all-articles", "article:ai-agents-reverse-engineering-games-software", "article:google-ai-search-eating-its-own-traffic", "article:show-fixes-only-when-things-break"]) {
     assert.ok(html.includes(`data-home-target="${t}"`), `home_click target ${t}`);
     assert.ok(validateSiteEvent(env("home_click", { target: t })).ok, `${t} validates`);
   }
   assert.ok(html.includes('<p class="fx-eyebrow">Daily Digest · Technique</p>'));
-  assert.ok(html.includes('<p class="fx-eyebrow">Daily Digest · Essay</p>'), "the Oct 10 essay (google-ai-search) is on home");
+  assert.ok(html.includes('<p class="fx-eyebrow">Daily Digest · Essay</p>'), "the Oct 11 + Oct 10 essays are on home");
   assert.equal((html.match(/class="fx-pill"/g) || []).length, 1, "one black pill (Tools)");
   assert.ok(!html.includes("fx-primary"), "feed Opens are soft");
   assert.ok(!html.includes("deploy-decision"), "Deploy Decision never in the feed");
@@ -588,7 +589,7 @@ test("art: tool stickers + icons with FINAL alt, every file a real WebP of the r
   }
   const files = readdirSync("public/art", { recursive: true }).map(String).filter((f) => /\.[a-z]+$/.test(f));
   for (const f of files) assert.match(f, /^(digest\/)?[a-z0-9-]+-sticker(-icon)?\.webp$/, `public/art/${f} is sticker art (no clay, no fallback tile)`);
-  assert.equal(files.length, 26 + 9 + 10 + 1 + 3, "26 Digest heroes + 9 tool heroes + 10 icons + the About hero + 3 page heroes (restyle C)");
+  assert.equal(files.length, 27 + 9 + 10 + 1 + 3, "27 Digest heroes + 9 tool heroes + 10 icons + the About hero + 3 page heroes (restyle C)");
   assert.ok(files.includes("about-sticker.webp"), "About hero (company pages, Oct 3)");
   assert.deepEqual(await webpSize("public/art/about-sticker.webp"), [1920, 1080], "About hero: one 16:9 file");
   for (const f of CLAY_FILES) assert.ok(!existsSync(f), `${f} is gone`);
@@ -804,7 +805,7 @@ test("sitemap: adds exactly the tool stories (no Deploy Decision story); everyth
   assert.deepEqual(urls.filter((u) => !stories.includes(u) && !guides.includes(u) && !company.includes(u)), before, "the 37 existing URLs, same order");
   assert.deepEqual(urls.filter((u) => company.includes(u)), company, "company pages (About, Privacy) after the Digest, before the guides");
   assert.ok(!urls.includes(`${S}/terms`), "Terms is held: not in the sitemap");
-  assert.equal(urls.length, 52);
+  assert.equal(urls.length, 53);
   assert.equal(new Set(urls).size, urls.length);
   const robots = (await import("../app/robots.ts")).default();
   assert.deepEqual(robots, { rules: { userAgent: "*", allow: "/" }, sitemap: "https://alignata.com/sitemap.xml" }, "robots unchanged");
@@ -1281,7 +1282,7 @@ test("Env Diff route: zero links to /env-diff on /, /apps, every tool story and 
   const pages = [["/", renderToStaticMarkup(createElement(Home))], ["/apps", renderToStaticMarkup(createElement(ToolsList, { apps: toolsOrder(getApps()) }))], ["/daily-digest", renderToStaticMarkup(createElement(Digest))]];
   for (const { slug } of story.generateStaticParams()) pages.push([`/apps/${slug}`, renderToStaticMarkup(await story.default({ params: Promise.resolve({ slug }) }))]);
   for (const p of posts) pages.push([`/daily-digest/${p.slug}`, renderToStaticMarkup(await Article({ params: Promise.resolve({ slug: p.slug }) }))]);
-  assert.equal(pages.length, 3 + 9 + 26);
+  assert.equal(pages.length, 3 + 9 + 27);
   for (const [path, html] of pages) {
     assert.ok(!/href="[^"]*\/env-diff/.test(html), `${path}: no link to the Env Diff route`);
     assert.ok(!/env-diff|Env Diff/i.test(html), `${path}: no Env Diff mention or art`);
@@ -1350,7 +1351,7 @@ test("alt text: no <img> anywhere on the site has an empty or missing alt (every
   assert.deepEqual(imgsWithoutAlt('<img src="a.webp">'), ['<img src="a.webp">'], "self-check: missing alt is caught");
 });
 
-test("alt text: every listed tool hero + icon and all 26 Digest heroes carry their FINAL (non-empty) alt", async () => {
+test("alt text: every listed tool hero + icon and all 27 Digest heroes carry their FINAL (non-empty) alt", async () => {
   const { getApps, toolsOrder, toolArt } = await import("../lib/apps.ts");
   const { posts } = await import("../content/posts.ts");
   let heroes = 0, icons = 0;
@@ -1363,11 +1364,11 @@ test("alt text: every listed tool hero + icon and all 26 Digest heroes carry the
   }
   assert.deepEqual([heroes, icons], [9, 10]);
   assert.equal(toolArt("agent-eval-go-no-go").alt, "A person gives a thumbs up with a checklist next to a waving robot on a stand.", "Agent Eval: 'checkered'");
-  assert.equal(posts.length, 26);
+  assert.equal(posts.length, 27);
   for (const p of posts) assert.ok(p.hero.alt.trim(), `${p.slug}: hero alt`);
 });
 
-test("Digest heroes #3, #4, #8, #21: the restyle C sticker files (not .v2), 1920×1080, pad = art off-white", async () => {
+test("Digest heroes #3, #4, #8, #21 + the Oct 11 essay: the restyle C sticker files (not .v2), 1920×1080, pad = art off-white", async () => {
   const { createHash } = await import("node:crypto");
   const { readFileSync, existsSync } = await import("node:fs");
   const { getPost } = await import("../content/posts.ts");
@@ -1376,6 +1377,7 @@ test("Digest heroes #3, #4, #8, #21: the restyle C sticker files (not .v2), 1920
     "ask-before-doing-what-wasnt-asked": ["7032deba351a9e358478b14ffa14523234262a174e72946163037f45a58e0951", "#FDFAF5"],
     "refuse-answers-sources-do-not-support": ["63bbd3d8c2350a421d798ced5dee443ad1061ce8ac349694f977c67b06e4b3ab", "#FDFAF5"],
     "compare-models-only-under-a-locked-setup": ["bd9a7d40b864f23e61625fb1efdaba7bd1cf8eb5dba09fe5b6f9f903ec669c24", "#FDFAF5"],
+    "ai-agents-reverse-engineering-games-software": ["48b2c1c30c50b6a0f917b33c4a9cc2bdd36075a3e4f34308501b8837f6f81e05", "#FDFAF5"],
   };
   for (const [slug, [sha, pad]] of Object.entries(want)) {
     const f = `public/art/digest/${slug}-sticker.webp`;
@@ -1777,20 +1779,21 @@ test("posts.ts updated field: validator catches missing/long/unpunctuated note a
 test("Release B outputs for an updated post (temp fixture post, never in posts.ts): article line, RSS atom:updated, sitemap lastModified", async () => {
   const mod = await import("../content/posts.ts");
   const p = mod.posts.find((x) => !x.updated);
+  // fixture update dated after the newest post (Oct 11 essay), so it drives lastBuildDate
   const orig = p.updated;
-  p.updated = { date: "2026-10-10", note: "Added a second test result." };
+  p.updated = { date: "2026-10-12", note: "Added a second test result." };
   try {
     const xml = await (await import("../app/daily-digest/rss.xml/route.ts")).GET().text();
     const item = xml.split("<item>").find((i) => i.includes(`/daily-digest/${p.slug}<`));
-    assert.ok(item.includes("<atom:updated>2026-10-10T12:00:00Z</atom:updated>"), "RSS item updated");
-    assert.ok(xml.includes("<lastBuildDate>Sat, 10 Oct 2026 12:00:00 GMT</lastBuildDate>"), "channel lastBuildDate follows the update");
+    assert.ok(item.includes("<atom:updated>2026-10-12T12:00:00Z</atom:updated>"), "RSS item updated");
+    assert.ok(xml.includes("<lastBuildDate>Mon, 12 Oct 2026 12:00:00 GMT</lastBuildDate>"), "channel lastBuildDate follows the update");
     const sm = (await import("../app/sitemap.ts")).default();
-    assert.equal(sm.find((e) => e.url.endsWith(`/daily-digest/${p.slug}`)).lastModified, "2026-10-10");
+    assert.equal(sm.find((e) => e.url.endsWith(`/daily-digest/${p.slug}`)).lastModified, "2026-10-12");
     assert.equal(sm.filter((e) => e.url.includes("/daily-digest/") && e.lastModified).length, mod.posts.filter((x) => x.updated).length, "only updated posts");
     const { renderToStaticMarkup } = await import("react-dom/server");
     const { default: Page } = await import("../app/daily-digest/[slug]/page.tsx");
     const html = renderToStaticMarkup(await Page({ params: Promise.resolve({ slug: p.slug }) }));
-    assert.ok(html.includes('<p class="fx-meta fx-story-updated" data-updated="true"><span>Updated <time dateTime="2026-10-10">Oct 10</time>: Added a second test result.</span></p>'), "article update line");
+    assert.ok(html.includes('<p class="fx-meta fx-story-updated" data-updated="true"><span>Updated <time dateTime="2026-10-12">Oct 12</time>: Added a second test result.</span></p>'), "article update line");
     assert.ok(html.indexOf("fx-story-updated") > html.indexOf("fx-story-meta"), "under the byline meta line");
     assert.ok(html.includes(`<time dateTime="${p.date}">`), "publish date kept");
   } finally {
