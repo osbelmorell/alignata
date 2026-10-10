@@ -113,7 +113,7 @@ export const PRIVACY = {
         // COPY.md §5 ship-together line (REPLACEMENT, FINAL 8:52 AM ET): ships with the Engrave Merge price card.
         "Engrave Merge also keeps a small note on this device: how many files you've dropped into it, which days it showed you the price question, and your answer if you gave one. That way it doesn't keep asking.",
         // Daily Digest Release A, COPY.md FINAL (Brand Creator + Voice Gate PASS, 7:56 AM ET Oct 10): the "New" mark.
-        "To mark Daily Digest articles as New or Updated, your browser keeps the date it starts marking from and a list of the articles you've opened, with the day you opened each one. It forgets each opened article after 90 days. The date and the list stay on this device.",
+        "To mark Daily Digest articles as New or Updated, your browser keeps the date it began marking articles and a list of the articles you've opened, with the day you opened each one. It forgets each opened article after 90 days. The date and the list stay on this device.",
       ],
     },
     {
