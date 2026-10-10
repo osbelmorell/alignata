@@ -33,7 +33,8 @@ test("no placeholder marker anywhere that renders (app, components, content, lib
 /* ---------- Copy placeholders (company pages SPEC §7: QA greps the build; zero "[…]" placeholders reach production) ---------- */
 // A copy placeholder is an ALL-CAPS word or phrase in square brackets, exactly as Product Copy writes them:
 // [LEGAL ENTITY NAME], [CONTACT EMAIL], [DATE], [GOVERNING STATE], ...
-export const PLACEHOLDER_RE = /\[[A-Z][A-Z0-9 ]*[A-Z0-9]\]/g;
+// An all-caps label used as a Markdown link ("[REA](https://…)") is a real link, not a copy placeholder: skip it, but only when the target is an absolute http(s) URL (Oct 11 essay; QA).
+export const PLACEHOLDER_RE = /\[[A-Z][A-Z0-9 ]*[A-Z0-9]\](?!\(https?:\/\/[^\s()]+\))/g;
 const stripComments = (src) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`\\])\/\/.*$/gm, "$1");
 
 function placeholderHits() {
@@ -60,6 +61,11 @@ test("self-check: the placeholder pattern catches copy placeholders and nothing 
   const m = (s) => s.match(PLACEHOLDER_RE) || [];
   assert.deepEqual(m("© 2026 [LEGAL ENTITY NAME] · Email [CONTACT EMAIL]. Last updated [DATE]. Laws of [GOVERNING STATE]."), ["[LEGAL ENTITY NAME]", "[CONTACT EMAIL]", "[DATE]", "[GOVERNING STATE]"]);
   assert.deepEqual(m('const a: string[] = []; /[A-Z]/.test(x); x[0]; [Link](/apps); ["a", "b"]'), []);
+  assert.deepEqual(m("[REA](https://github.com/morluto/rea) and [IDA](https://x.example) are links"), [], "all-caps Markdown link labels are not placeholders");
+  for (const bad of ["[TODO](#)", "[TODO]()", "[DATE](/x)", "[TBD](javascript:alert(1))", "[TODO](mailto:x@y.z)", "[TODO](https://)"]) assert.equal(m(bad).length, 1, `still a placeholder: ${bad}`);
+  assert.deepEqual(m("[REA](https://github.com/morluto/rea)"), [], "[REA](https://github.com/…) is a real link");
+  assert.deepEqual(m("[IDA](http://example.com/x)"), [], "http:// target is a real link too");
+  assert.deepEqual(m("Email [CONTACT EMAIL] (soon) or [DATE]"), ["[CONTACT EMAIL]", "[DATE]"], "a placeholder followed by a space + paren still counts");
   assert.equal(stripComments("// [COPY] note\nconst x = 1; /* [DATE] */ const u = \"https://a\";").includes("["), false);
 });
 
