@@ -6,6 +6,7 @@ import { cardImage, postCardDek, postTag, shortDate } from "@/lib/daily-digest/m
 import { AppRow } from "@/components/appstore/AppRow";
 import { ArtFigure } from "@/components/appstore/ArtFigure";
 import { Morph } from "@/components/appstore/Motion";
+import { NewMarkSr } from "@/components/daily-digest/NewMark";
 
 /**
  * Story card (SPEC v2 §3): one rounded white card. Art full-bleed on top (4:3 phone, 16:9 desktop, never cropped),
@@ -42,8 +43,11 @@ export function ArticleStoryCard({
   lead = false,
   eager = false,
   homeTarget = false,
+  newMark = false,
 }: {
   post: Post;
+  /** Home and /daily-digest cards only (never the article page's next card): the client-only "New" mark. */
+  newMark?: boolean;
   /** Default: the tag ("Technique" / "Deep dive" / "Essay"), as on /daily-digest. The feed passes "Daily Digest · <tag>". */
   eyebrow?: string;
   heading?: "h2" | "h3";
@@ -65,6 +69,7 @@ export function ArticleStoryCard({
               href={`/daily-digest/${post.slug}`}
               {...(homeTarget ? { "data-home-target": `article:${post.slug}` } : {})}
             >
+              {newMark ? <NewMarkSr slug={post.slug} date={post.date} /> : null}
               {post.title}
             </Link>
           </H>

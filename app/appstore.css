@@ -175,3 +175,14 @@ a.fx-text-link:focus-visible { outline: 3px solid var(--ink); outline-offset: 2p
 }
 /* Homepage mission dek (SPEC §1): directly under the locked display line, above the two pills, story-dek type step. */
 .fx-home-head .fx-home-dek { max-width: 680px; }
+
+/* Daily Digest "New" mark (Release A, Oct 10 2026; HANDOFF-DIGEST-NEW.md). Plain ink text on a light mustard tint:
+   Mustard #F0CD5F (ART-PALETTE.md) at 35% over white = #FAEEC7, ink #111110 on it 16.30:1. Site pill radius; type is the
+   eyebrow's (14px/600/uppercase); horizontal padding = the Open pill's 14px; no vertical padding, so the eyebrow line box
+   (and the card) keeps its height to the pixel. Not interactive: it sits under the stretched title link. Off (content: none) unless
+   <style id="dd-new-style"> turns it on for a slug (components/daily-digest/NewMark.tsx). */
+.fx-scard[data-kind="article"] .fx-eyebrow::before { content: none; display: inline-block; margin-right: 8px; padding: 0 14px; border-radius: var(--r-pill); background: #FAEEC7; color: var(--ink); }
+.fx-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
+/* /daily-digest: a plain "RSS feed" text link after the feed. */
+.fx-rss { margin-top: 48px; }
+@media (min-width: 900px) { .fx-rss { margin-top: 72px; } }

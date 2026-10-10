@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getPostsNewestFirst } from "@/content/posts";
 import { ArticleStoryCard } from "@/components/appstore/StoryCard";
+import { NewMarkBoot } from "@/components/daily-digest/NewMarkBoot";
 import { PageFade } from "@/components/appstore/Motion";
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ export default function DailyDigestIndexPage() {
   return (
     <PageFade>
       <main className="fx-wrap">
+        <NewMarkBoot posts={posts} />
         <section className="fx-page-head">
           <h1 className="fx-display">Daily Digest</h1>
           <p className="fx-intro">
@@ -37,9 +39,14 @@ export default function DailyDigestIndexPage() {
         </section>
         <section className="fx-feed" aria-label="All articles">
           {posts.map((post, i) => (
-            <ArticleStoryCard key={post.slug} post={post} lead={i % 5 === 0} eager={i === 0} />
+            <ArticleStoryCard key={post.slug} post={post} lead={i % 5 === 0} eager={i === 0} newMark />
           ))}
         </section>
+        <p className="fx-rss">
+          <a className="fx-text-link" href="/daily-digest/rss.xml">
+            RSS feed
+          </a>
+        </p>
       </main>
     </PageFade>
   );

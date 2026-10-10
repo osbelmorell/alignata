@@ -33,8 +33,8 @@ const mem = (init = {}) => {
   return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), m };
 };
 
-test("validator: the five allow-listed events with exactly their props", () => {
-  assert.deepEqual(Object.keys(SITE_EVENT_PROPS), ["page_view", "apps_view", "tool_open", "article_view", "home_click"]);
+test("validator: the six allow-listed events with exactly their props (digest_open added by Release A, Oct 10)", () => {
+  assert.deepEqual(Object.keys(SITE_EVENT_PROPS), ["page_view", "apps_view", "tool_open", "article_view", "home_click", "digest_open"]);
   for (const [ev, props] of [
     ["page_view", { path: "/" }],
     ["page_view", { path: "/daily-digest/break-loops-when-progress-stalls" }],
@@ -48,6 +48,8 @@ test("validator: the five allow-listed events with exactly their props", () => {
     ["home_click", { target: "tool:engrave-merge" }],
     ["home_click", { target: "article:break-loops-when-progress-stalls" }],
     ["home_click", { target: "nav:daily-digest" }],
+    ["digest_open", { slug: "break-loops-when-progress-stalls", was_new: true }],
+    ["digest_open", { slug: "break-loops-when-progress-stalls", was_new: false }],
   ]) {
     const v = validateSiteEvent(env(ev, props));
     assert.equal(v.ok, true, `${ev} ${JSON.stringify(props)}`);
@@ -83,6 +85,13 @@ test("validator: rejects unknown keys, missing/extra props, bad ids and bad valu
     [env("article_view", { slug: "x", n: 10001 }), "bad_n"],
     [env("article_view", { slug: "x" }), "missing_prop:n"],
     [env("article_view", { slug: "x", n: 1, title: "t" }), "unknown_prop:title"],
+    [env("digest_open", { slug: "x" }), "missing_prop:was_new"],
+    [env("digest_open", { was_new: true }), "missing_prop:slug"],
+    [env("digest_open", { slug: "x", was_new: "true" }), "bad_was_new"],
+    [env("digest_open", { slug: "x", was_new: 1 }), "bad_was_new"],
+    [env("digest_open", { slug: "Not A Slug", was_new: true }), "bad_slug"],
+    [env("digest_open", { slug: "x", was_new: true, title: "t" }), "unknown_prop:title"],
+    [env("article_view", { slug: "x", n: 1, was_new: true }), "unknown_prop:was_new"],
     [[1, 2], "not_object"],
     [{ ...env("apps_view", {}), props: [] }, "bad_props"],
   ];
@@ -1629,8 +1638,8 @@ test("/privacy (COPY.md §5 v4 FINAL): no art, H1, dek, 'Last updated' + SHIP_DA
     "<h2>Services we use</h2><p>Vercel hosts the site, and Upstash stores our usage log. We don&#x27;t store your IP address. Vercel processes it briefly to serve and protect the site, and keeps its request logs for about a day. Our fonts are hosted on our own site.</p>",
     "<p>Entries are deleted automatically after about 180 days (about 120 days for Engrave Merge).</p>",
     "<p>Each entry has a random ID. A visitor ID stays in your browser until you clear this site&#x27;s data, and a session ID usually lasts only as long as the tab. Engrave Merge keeps its own random ID in your browser, like the visitor ID.</p>",
-    "<h2>What we count</h2><p>We keep our own small log of how the site is used: which pages you visit, which tool you open and where on the site you tapped it, which articles you read, and which links you tap on the homepage. On Engrave Merge, we also count when the page opens, when you download or print a result, and whether you saw the price question and how you answered it. If one of our guides sent you, we also note which one, as part of those counts.</p>",
-    "<p>Engrave Merge also keeps a small note on this device: how many files you&#x27;ve dropped into it, which days it showed you the price question, and your answer if you gave one. That way it doesn&#x27;t keep asking.</p><h2>Services we use</h2>",
+    "<h2>What we count</h2><p>We keep our own small log of how the site is used: which pages you visit, which tool you open and where on the site you tapped it, which articles you read, and which links you tap on the homepage. When you open a Daily Digest article, we also note whether it was marked New. On Engrave Merge, we also count when the page opens, when you download or print a result, and whether you saw the price question and how you answered it. If one of our guides sent you, we also note which one, as part of those counts.</p>",
+    "<p>Engrave Merge also keeps a small note on this device: how many files you&#x27;ve dropped into it, which days it showed you the price question, and your answer if you gave one. That way it doesn&#x27;t keep asking.</p><p>To mark Daily Digest articles you haven&#x27;t opened yet, your browser keeps the date of your first visit and a list of the articles you&#x27;ve opened. It forgets each opened article after 30 days. The date and the list stay on this device.</p><h2>Services we use</h2>",
     "<h2>Changes</h2><p>If we change what we collect, for example when paid plans arrive, we&#x27;ll update this page first and change the date at the top.</p>",
   ]) assert.ok(html.includes(f), `privacy has: ${f.slice(0, 80)}`);
   assert.ok(!/LEGAL ENTITY NAME|Alignata is run by/.test(html), "Questions' entity line is cut (split release)");
@@ -1679,4 +1688,93 @@ test("[DATE] = SHIP_DATE: one constant in content/company.ts, rendered as the re
   for (const bad of ["Oct 3", "2026-13-01", "2026-10-00", ""]) assert.throws(() => shipDateLabel(bad), /YYYY-MM-DD/, bad);
   assert.equal((readFileSync("content/company.ts", "utf8").match(/SHIP_DATE = "/g) || []).length, 1, "defined once");
   assert.ok((await companyHtml("/privacy")).includes("Last updated <time dateTime=\"2026-10-03\">October 3, 2026</time>"));
+});
+
+test("Daily Digest New mark (Release A): dd_since/dd_read rules, 29 vs 30 local days, first visit, opens, trim, blocked storage", async () => {
+  const m = await import("../lib/daily-digest/new-mark.ts");
+  const kv = (init = {}) => { const x = mem(init); return x; };
+  // first visit: dd_since written, nothing New
+  const a = kv();
+  const st0 = m.loadState(a, "2026-10-10", true);
+  assert.equal(st0.first, true);
+  assert.equal(a.getItem("dd_since"), "2026-10-10");
+  assert.equal(m.isNewPost("p", "2026-10-10", st0, "2026-10-10"), false, "first visit: 0 marks");
+  // render-time read never writes
+  const b = kv();
+  assert.equal(m.loadState(b, "2026-10-10"), null);
+  assert.equal(b.getItem("dd_since"), null);
+  // later visit
+  const st = m.loadState(kv({ dd_since: "2026-09-01" }), "2026-10-10");
+  assert.equal(m.isNewPost("p", "2026-10-09", st, "2026-10-10"), true);
+  assert.equal(m.isNewPost("p", "2026-09-11", st, "2026-10-10"), true, "29 days old: New");
+  assert.equal(m.isNewPost("p", "2026-09-10", st, "2026-10-10"), false, "30 days old: never New");
+  assert.equal(m.isNewPost("p", "2026-09-01", st, "2026-10-10"), false, "not after dd_since");
+  assert.equal(m.isNewPost("p", "2026-10-11", st, "2026-10-10"), false, "future-dated: not New");
+  // open clears
+  const c = kv({ dd_since: "2026-09-01" });
+  assert.equal(m.markOpened(c, "p", "2026-10-10"), true);
+  assert.equal(m.isNewPost("p", "2026-10-09", m.loadState(c, "2026-10-10"), "2026-10-10"), false);
+  assert.equal(m.isNewPost("q", "2026-10-09", m.loadState(c, "2026-10-10"), "2026-10-10"), true);
+  // trim after 30 days
+  assert.deepEqual(m.parseRead(JSON.stringify({ a: "2026-09-11", b: "2026-09-10", "Bad Slug": "2026-10-01", c: "nope" }), "2026-10-10"), { a: "2026-09-11" });
+  const d = kv({ dd_since: "2026-09-01", dd_read: JSON.stringify({ old: "2026-08-01", p: "2026-10-01" }) });
+  m.loadState(d, "2026-10-10", true);
+  assert.deepEqual(JSON.parse(d.getItem("dd_read")), { p: "2026-10-01" }, "trimmed on load");
+  assert.deepEqual(m.parseRead("not json", "2026-10-10"), {});
+  // blocked storage: null state, 0 marks, never throws
+  const boom = { getItem() { throw new Error("SecurityError"); }, setItem() { throw new Error("SecurityError"); } };
+  assert.equal(m.loadState(boom, "2026-10-10", true), null);
+  assert.equal(m.loadState(null, "2026-10-10", true), null);
+  assert.equal(m.markOpened(boom, "p", "2026-10-10"), false);
+  assert.equal(m.isNewPost("p", "2026-10-09", null, "2026-10-10"), false);
+  // local dates: a Date at 23:50 local is still that local day
+  assert.equal(m.localDay(new Date(2026, 9, 10, 23, 50)), "2026-10-10");
+  assert.equal(m.daysBetween("2026-02-27", "2026-03-01"), 2);
+});
+
+test("Release A wiring: mark on home + /daily-digest cards only, never the article page; server renders no mark; RSS link; digest_open from the article only", async () => {
+  const { readFileSync } = await import("node:fs");
+  const home = readFileSync("app/page.tsx", "utf8");
+  const index = readFileSync("app/daily-digest/page.tsx", "utf8");
+  const article = readFileSync("app/daily-digest/[slug]/page.tsx", "utf8");
+  assert.equal((home.match(/<ArticleStoryCard [^>]*newMark/g) || []).length, 3, "home: all three Digest cards");
+  assert.ok(/<ArticleStoryCard [^>]*newMark/.test(index), "/daily-digest cards");
+  assert.ok(!/newMark|NewMark/.test(article), "no mark on the article page (incl. its next card)");
+  assert.ok(article.includes("<DigestOpen slug={post.slug} date={post.date} />"));
+  assert.ok(index.includes('href="/daily-digest/rss.xml"') && />\s*RSS feed\s*</.test(index), "RSS feed link");
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { default: Index } = await import("../app/daily-digest/page.tsx");
+  const html = renderToStaticMarkup(createElement(Index));
+  assert.ok(!html.includes("dd-new-style{") && !html.includes("fx-sr") && !html.includes('content:"New"'.replace(/"/g, "&quot;")), "server/hydration render: no mark (client-only)");
+  assert.equal((html.match(/<script>\(function\(m\)/g) || []).length, 1, "one boot script, before the feed");
+  assert.ok(html.indexOf("<script>(function(m)") < html.indexOf('<section class="fx-feed"'), "boot script runs before the cards are parsed");
+  assert.ok(html.includes('<p class="fx-rss"><a class="fx-text-link" href="/daily-digest/rss.xml">RSS feed</a></p>'));
+  const dd = readFileSync("components/daily-digest/DigestOpen.tsx", "utf8");
+  assert.ok(dd.includes("shouldSkip(") && dd.includes("dogfoodSession(") && dd.includes("SID_KEY") && dd.includes("VID_KEY"), "existing skip rule, dogfood flag and ids");
+  assert.ok(!/randomId|localStorage\.setItem\("(?!dd_)/.test(dd), "no new ids");
+});
+
+test("New mark boot script = isNewPost (inline ES5 parity, random states incl. corrupt/blocked storage)", async () => {
+  const m = await import("../lib/daily-digest/new-mark.ts");
+  const vm = await import("node:vm");
+  const posts = { a: "2026-10-09", b: "2026-10-02", c: "2026-09-11", d: "2026-09-10", e: "2026-09-01", f: "2026-10-11" };
+  const days = ["2026-08-01", "2026-09-01", "2026-09-10", "2026-09-11", "2026-10-01", "2026-10-02", "2026-10-09", "2026-10-10", "2026-10-11", "bad", null];
+  let seed = 7; const rnd = (n) => (seed = (seed * 1103515245 + 12345) % 2147483648) % n;
+  for (let i = 0; i < 400; i++) {
+    const since = days[rnd(days.length)];
+    const read = {}; for (const k of Object.keys(posts)) if (rnd(3) === 0) read[k] = days[rnd(days.length)] ?? "x";
+    const store = { dd_since: since, dd_read: rnd(10) === 0 ? "{oops" : JSON.stringify(read) };
+    const kv = { getItem: (k) => (store[k] ?? null), setItem() {} };
+    const today = "2026-10-10";
+    const want = m.newSlugs(kv, posts, today);
+    let css = "";
+    const head = { appendChild: (el) => el };
+    const ctx = { window: { localStorage: kv }, document: { head, getElementById: () => null, createElement: () => ({ set textContent(v) { css = v; } }) }, Date: class extends Date { constructor() { super(2026, 9, 10, 23, 50); } }, JSON, Object, Array };
+    vm.runInNewContext(m.bootScript(posts), ctx);
+    assert.equal(css, m.newMarkCss(want), JSON.stringify(store));
+  }
+  const blocked = { window: { get localStorage() { throw new Error("SecurityError"); } }, document: {}, Date, JSON, Object, Array };
+  assert.doesNotThrow(() => vm.runInNewContext(m.bootScript(posts), blocked));
+  assert.ok(!m.bootScript({ "x</script>": "2026-10-01" }).includes("</script>"), "map is escaped");
 });

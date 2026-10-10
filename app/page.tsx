@@ -4,6 +4,7 @@ import { getApps, toolsOrder } from "@/lib/apps";
 import { postTag } from "@/lib/daily-digest/meta";
 import { SiteFooter } from "@/components/fantasy/SiteFooter";
 import { ArticleStoryCard, ToolStoryCard } from "@/components/appstore/StoryCard";
+import { NewMarkBoot } from "@/components/daily-digest/NewMarkBoot";
 import { PageFade } from "@/components/appstore/Motion";
 import { RetiredStorageCleanup } from "@/components/site/RetiredStorageCleanup";
 import { MISSION } from "@/content/company";
@@ -26,6 +27,7 @@ export default function HomePage() {
     <PageFade>
       <div className="fx-page">
         <main className="fx-wrap">
+          <NewMarkBoot posts={[a1, a2, a3].filter((p) => !!p)} />
           <section className="fx-home-head" aria-label="Start">
             <h1 className="fx-display">Small tools for busy people, and AI techniques in plain English.</h1>
             {/* Company pages SPEC §1: the board's mission as the dek (COPY.md §1), story-dek type step. Nothing else added. */}
@@ -41,10 +43,10 @@ export default function HomePage() {
           </section>
           <section className="fx-feed" aria-label="Today">
             {cleaver ? <ToolStoryCard app={cleaver} pos={pos(cleaver.id)} lead homeTarget /> : null}
-            {a1 ? <ArticleStoryCard post={a1} eyebrow={eyebrow(a1)} eager homeTarget /> : null}
+            {a1 ? <ArticleStoryCard post={a1} newMark eyebrow={eyebrow(a1)} eager homeTarget /> : null}
             {gate ? <ToolStoryCard app={gate} pos={pos(gate.id)} homeTarget /> : null}
-            {a2 ? <ArticleStoryCard post={a2} eyebrow={eyebrow(a2)} homeTarget /> : null}
-            {a3 ? <ArticleStoryCard post={a3} eyebrow={eyebrow(a3)} homeTarget /> : null}
+            {a2 ? <ArticleStoryCard post={a2} newMark eyebrow={eyebrow(a2)} homeTarget /> : null}
+            {a3 ? <ArticleStoryCard post={a3} newMark eyebrow={eyebrow(a3)} homeTarget /> : null}
           </section>
           <nav className="fx-feed-links" aria-label="More">
             <Link className="fx-text-link" href="/apps" data-home-target="all-tools">
