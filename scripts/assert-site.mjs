@@ -1779,23 +1779,45 @@ test("New mark boot script = isNewPost (inline ES5 parity, random states incl. c
   assert.ok(!m.bootScript({ "x</script>": "2026-10-01" }).includes("</script>"), "map is escaped");
 });
 
-test("baseline digest_open (Release A): was_new split, distinct New openers, came back on another day; dogfood + Vercel host dropped (Product fixture)", async () => {
+test("baseline digest_open (Release A): was_new split, distinct New openers, strict 'came back and opened a post on a later day' (later digest_open only); dogfood + Vercel host dropped (Product fixture)", async () => {
   const { readFileSync } = await import("node:fs");
   const { parseLog } = await import("./site-baseline.mjs");
-  const s = summarize(parseLog(readFileSync("scripts/fixtures/digest-open-events.sample.jsonl", "utf8")));
+  const log = () => parseLog(readFileSync("scripts/fixtures/digest-open-events.sample.jsonl", "utf8"));
+  const s = summarize(log());
   assert.deepEqual(s.excluded, { dogfood: 1, nonProdHost: 1, outsideWindow: 0 }, "same filters as every other event");
-  assert.equal(s.window.digestOpens, 4);
-  assert.equal(s.window.digestOpensNew, 2);
-  assert.equal(s.window.digestOpensNotNew, 2);
-  assert.equal(s.window.digestNewOpeners, 2, "Product: 2 distinct New openers (the Vercel-host visitor is not one)");
-  assert.equal(s.window.digestNewOpenersReturned, 1, "Product: 1 came back (B's second open is the same day at 23:50; B's later open is dogfood)");
+  assert.equal(s.window.digestOpens, 8);
+  assert.equal(s.window.digestOpensNew, 5);
+  assert.equal(s.window.digestOpensNotNew, 3);
+  assert.equal(s.window.digestNewOpeners, 5, "A, B, D, E, F (the Vercel-host visitor C is not one)");
+  assert.equal(s.window.digestNewOpenersReturned, 2, "A and F (later-day digest_open). Not B: other open same day (23:50), later open is dogfood. Not D: seen only the day BEFORE. Not E: later day is a page_view only");
+  const vids = (p) => new Set(log().filter((e) => e.vid.startsWith(p) && !e.dogfood && e.prod).map((e) => e.event + "@" + e.day));
+  assert.deepEqual([...vids("eeeeeeee")].sort(), ["digest_open@2026-10-10", "page_view@2026-10-11"], "fixture (a): E's only later-day activity is a page view → 0");
+  assert.deepEqual([...vids("ffffffff")].sort(), ["digest_open@2026-10-10", "digest_open@2026-10-12"], "fixture (b): F has a later-day digest_open → 1");
+  // the old any-other-day rule would have counted D (seen Oct 9, New open Oct 10): the strict rule must not
+  const dDays = new Set(log().filter((e) => e.vid.startsWith("dddddddd") && !e.dogfood && e.prod).map((e) => e.day));
+  assert.equal(dDays.size, 2, "fixture: D is on two days (old rule → counted)");
   assert.equal(s.days["2026-10-10"].digestNewOpenersReturned, 0, "within one day nobody has come back");
+  assert.equal(s.days["2026-10-09"].digestNewOpeners, 0, "D's earlier day has no New open");
   assert.equal(s.days["2026-10-11"].digestOpens, 1);
-  assert.equal(s.days["2026-10-12"], undefined, "the dogfood-only day is not counted");
+  assert.equal(s.days["2026-10-12"].digestOpens, 1, "F only; B's dogfood open on the same day is dropped");
+  
   // without the exclusions the numbers would differ (proves the fixture exercises them)
-  const raw = parseLog(readFileSync("scripts/fixtures/digest-open-events.sample.jsonl", "utf8")).map((e) => ({ ...e, dogfood: false, prod: true }));
-  assert.equal(summarize(raw).window.digestNewOpeners, 3);
-  assert.equal(summarize(raw).window.digestNewOpenersReturned, 2);
+  const raw = log().map((e) => ({ ...e, dogfood: false, prod: true }));
+  assert.equal(summarize(raw).window.digestNewOpeners, 6);
+  assert.equal(summarize(raw).window.digestNewOpenersReturned, 3, "A, F, plus B via the (now counted) later dogfood open");
+  // strict-rule edge cases
+  const T = Date.parse("2026-10-10T16:00:00Z");
+  const e = (vid, day, event = "page_view", props = { path: "/" }) => ({ v: 1, event, sid: "s" + vid + day, vid, dogfood: false, props, ts: T, day, host: "alignata.com", prod: true });
+  const open = (vid, day, was_new) => e(vid, day, "digest_open", { slug: "p", was_new });
+  const ret = (evs) => summarize(evs).window.digestNewOpenersReturned;
+  assert.equal(ret([open("x", "2026-10-10", true), open("x", "2026-10-11", false)]), 1, "later-day digest_open (was_new false): counts");
+  assert.equal(ret([open("x", "2026-10-10", true), e("x", "2026-10-11")]), 0, "later-day page_view only: doesn't");
+  assert.equal(ret([open("x", "2026-10-10", true), e("x", "2026-10-11", "home_click", { target: "nav:home" })]), 0, "later-day other event: doesn't");
+  assert.equal(ret([open("x", "2026-10-10", true), open("x", "2026-10-10", false)]), 0, "same-day open: doesn't");
+  assert.equal(ret([e("x", "2026-10-09"), open("x", "2026-10-10", true)]), 0, "earlier day only: doesn't");
+  assert.equal(ret([open("x", "2026-10-09", false), open("x", "2026-10-10", true)]), 0, "earlier non-New open: doesn't");
+  assert.equal(ret([open("x", "2026-10-12", true), open("x", "2026-10-10", true)]), 1, "measured from the FIRST New open (input order doesn't matter)");
+  assert.equal(ret([open("x", "2026-10-10", true), open("x", "2026-10-11", true)]), 1, "a later New open is a later counted event");
   assert.equal(summarize([]).window.digestNewOpeners, 0);
 });
 
@@ -1806,8 +1828,8 @@ test("baseline --fixture / --file: reads only the file; no fetch, no store clien
   for (const flag of ["--fixture", "--file"]) {
     const out = execFileSync(process.execPath, ["--import", guard, "scripts/site-baseline.mjs", flag, "scripts/fixtures/digest-open-events.sample.jsonl", "--json"], { env, encoding: "utf8" });
     const j = JSON.parse(out);
-    assert.equal(j.window.digestNewOpeners, 2, flag);
-    assert.equal(j.window.digestNewOpenersReturned, 1, flag);
+    assert.equal(j.window.digestNewOpeners, 5, flag);
+    assert.equal(j.window.digestNewOpenersReturned, 2, flag);
   }
   // control: without a file it does try the store (fetch) — so the guard really detects store access
   assert.throws(() => execFileSync(process.execPath, ["--import", guard, "scripts/site-baseline.mjs"], { env, encoding: "utf8", stdio: "pipe" }), (e) => e.status === 9);

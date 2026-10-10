@@ -7,9 +7,12 @@
 //   (sessions whose article n reached ≥ 2 / sessions with ≥ 1 article_view),
 //   homepage home_click per target, sessions/visitors, and / sessions with ≥ 1 tap,
 //   Daily Digest "New" mark (Release A): digest_open split by was_new, distinct New openers (vid with ≥ 1
-//   was_new:true open) and how many of them came back on a different day than their first visit (kill bar: < 3 in
-//   14 days → the mark comes out). Visitor = vid; day = the stored America/New_York `day` (the only day the store
-//   has; the browser's own local day is never sent); first visit = the vid's earliest counted day in the window.
+//   was_new:true open) and how many of them came back to open a post on a later day (kill bar: < 3 in 14 days → the
+//   mark comes out). Strict rule (CEO + Product, Oct 10 2026): a New opener counts only with ≥ 1 counted digest_open
+//   (was_new true or false) on an ET day strictly later than the ET day of their first was_new:true digest_open.
+//   Page views and other events never count; earlier or same-day opens don't count.
+//   Visitor = vid; day = the stored America/New_York `day` (the only day the store has; the browser's own local day
+//   is never sent).
 // Excluded: dogfood events and non-alignata.com hosts (owner device and automated browsers never send).
 //
 // Usage:
@@ -65,10 +68,9 @@ function bucket(events) {
   let digestOpens = 0;
   let digestOpensNew = 0;
   const newOpeners = new Set();
-  const daysByVid = new Map();
+  const lastOpenDayByVid = new Map();
+  const firstNewDayByVid = new Map();
   for (const e of events) {
-    if (!daysByVid.has(e.vid)) daysByVid.set(e.vid, new Set());
-    daysByVid.get(e.vid).add(e.day);
     const p = e.props || {};
     if (e.event === "page_view") {
       views[p.path] = (views[p.path] || 0) + 1;
@@ -92,9 +94,11 @@ function bucket(events) {
       homeByTarget[p.target] = (homeByTarget[p.target] || 0) + 1;
     } else if (e.event === "digest_open") {
       digestOpens++;
+      if (!(lastOpenDayByVid.get(e.vid) >= e.day)) lastOpenDayByVid.set(e.vid, e.day);
       if (p.was_new === true) {
         digestOpensNew++;
         newOpeners.add(e.vid);
+        if (!(firstNewDayByVid.get(e.vid) <= e.day)) firstNewDayByVid.set(e.vid, e.day);
       }
     }
   }
@@ -130,8 +134,8 @@ function bucket(events) {
     digestOpensNew,
     digestOpensNotNew: digestOpens - digestOpensNew,
     digestNewOpeners: newOpeners.size,
-    // first visit = earliest counted day for the vid; "came back" = any counted event on another day
-    digestNewOpenersReturned: [...newOpeners].filter((v) => daysByVid.get(v).size >= 2).length,
+    // strict: a counted digest_open on an ET day later than the vid's first was_new:true open (YYYY-MM-DD compares as text)
+    digestNewOpenersReturned: [...newOpeners].filter((v) => lastOpenDayByVid.get(v) > firstNewDayByVid.get(v)).length,
     visitors: new Set(events.map((e) => e.vid)).size,
     sessions: new Set(events.map((e) => e.sid)).size,
   };
@@ -217,7 +221,7 @@ function printBucket(label, b) {
   console.log(`    / sessions with ≥1 tap: ${pct(b.homeClickRate)} (${b.homeSessionsWithClick}/${b.homeSessions} sessions)`);
   for (const [t, n] of Object.entries(b.homeClickByTarget)) console.log(`    ${String(n).padStart(6)}  ${t}`);
   console.log(`  Digest New mark: ${b.digestOpens} digest_open (was_new true ${b.digestOpensNew}, false ${b.digestOpensNotNew})`);
-  console.log(`    distinct New openers: ${b.digestNewOpeners}; came back on a different day: ${b.digestNewOpenersReturned} (kill bar: < 3 in 14 days)`);
+  console.log(`    distinct New openers: ${b.digestNewOpeners}; came back and opened a post on a later day after a New open: ${b.digestNewOpenersReturned} (kill bar: < 3 in 14 days)`);
 }
 
 async function main() {
