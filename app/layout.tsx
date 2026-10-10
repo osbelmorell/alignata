@@ -7,6 +7,7 @@ import "./globals.css";
 import "./fantasy.css";
 import "./appstore.css";
 import "./motion.css";
+import "./restyle-c.css";
 import { MOTION_ON } from "@/lib/motion";
 import { RETIRED_WIPE_INLINE_SCRIPT } from "@/lib/site/retired-storage";
 

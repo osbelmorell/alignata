@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackLink } from "@/components/site/BackLink";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getApps, TOOL_STORY, toolAbout, toolArt, toolsOrder } from "@/lib/apps";
@@ -58,6 +59,7 @@ export default async function ToolStoryPage({ params }: { params: Promise<{ slug
       <div className="fx-page">
         <main className="fx-story">
           <article>
+            <BackLink href="/apps" label="Tools" />
             <ArtFigure slug={app.id} className="fx-story-hero" src={art.art} alt={art.alt} pad={art.pad} hero />
             <div className="fx-story-col">
               <header className="fx-story-head">

@@ -64,7 +64,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/reuse-the-same-key-when-a-tool-retries-sticker.webp",
       alt: "A brass key on a ring, with a white outline of the same key behind it.",
-      pad: "#C5C6FB",
+      pad: "#FDFAF5",
     },
     date: "2026-09-16",
     paragraphs: [
@@ -82,7 +82,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/require-held-out-lift-before-shipping-harness-edits-sticker.webp",
       alt: "A striped hot-air balloon tugging upward, tied down to a sandbag.",
-      pad: "#F0CD5F",
+      pad: "#FDFAF5",
     },
     date: "2026-09-16",
     paragraphs: [
@@ -100,7 +100,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/load-only-the-tools-this-turn-needs-sticker.webp",
       alt: "A tool belt with empty pockets and a single wrench.",
-      pad: "#EE83C3",
+      pad: "#FDFAF5",
     },
     date: "2026-09-16",
     paragraphs: [
@@ -118,7 +118,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/refuse-answers-that-dont-match-tool-results-sticker.webp",
       alt: "Two jigsaw pieces, one white and one yellow, that don't fit together.",
-      pad: "#EE83C3",
+      pad: "#FDFAF5",
     },
     date: "2026-09-23",
     paragraphs: [
@@ -136,7 +136,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/bind-every-claim-to-a-real-citation-sticker.webp",
       alt: "An open book with a red binder clip holding a note to its page.",
-      pad: "#EFC3BB",
+      pad: "#FDFAF5",
     },
     date: "2026-09-23",
     paragraphs: [
@@ -154,7 +154,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/compare-models-only-under-a-locked-setup-sticker.webp",
       alt: "Two identical stopwatches side by side on a steel tray, their hands at the same spot.",
-      pad: "#96E4B7",
+      pad: "#FDFAF5",
     },
     date: "2026-09-23",
     paragraphs: [
@@ -172,7 +172,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/block-done-if-code-changed-after-tests-sticker.webp",
       alt: "A test tube of green liquid in a clamp stand, with a drop falling in.",
-      pad: "#C5C6FB",
+      pad: "#FDFAF5",
     },
     date: "2026-09-24",
     paragraphs: [
@@ -190,7 +190,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/trim-long-logs-from-both-ends-sticker.webp",
       alt: "The two end pieces of a log, with the middle sawn out.",
-      pad: "#F0CD5F",
+      pad: "#FDFAF5",
     },
     date: "2026-09-24",
     paragraphs: [
@@ -208,7 +208,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/prove-it-before-irreversible-actions-sticker.webp",
       alt: "A wax seal stamp pressing into red wax on an envelope.",
-      pad: "#96E4B7",
+      pad: "#FDFAF5",
     },
     date: "2026-09-25",
     paragraphs: [
@@ -226,7 +226,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/tell-failed-tools-what-to-try-next-sticker.webp",
       alt: "A folded paper map with a red dotted route across it.",
-      pad: "#C5C6FB",
+      pad: "#FDFAF5",
     },
     date: "2026-09-25",
     paragraphs: [
@@ -244,7 +244,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/dont-blind-retry-sends-or-charges-sticker.webp",
       alt: "A paper airplane held by its tail in a pink clothespin.",
-      pad: "#F0CD5F",
+      pad: "#FDFAF5",
     },
     date: "2026-09-25",
     paragraphs: [
@@ -262,7 +262,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/laya-ai-deep-dive-sticker.webp",
       alt: "An old brass and steel diving helmet with an air hose trailing behind it.",
-      pad: "#EE83C3",
+      pad: "#FDFAF5",
     },
     date: "2026-09-25",
     tag: "Deep dive",
@@ -344,7 +344,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/system-one-and-jev-deep-dive-sticker.webp",
       alt: "An open pocket compass with a green face and a chain.",
-      pad: "#EFC3BB",
+      pad: "#FDFAF5",
     },
     date: "2026-09-25",
     tag: "Deep dive",
@@ -425,7 +425,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/paperclip-deep-dive-sticker.webp",
       alt: "A giant paperclip holding a small stack of cards, the top one yellow.",
-      pad: "#96E4B7",
+      pad: "#FDFAF5",
     },
     date: "2026-09-25",
     tag: "Deep dive",
@@ -539,7 +539,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/keep-hard-rules-sticky-sticker.webp",
       alt: "A yellow sticky note pinned flat with a pushpin.",
-      pad: "#C5C6FB",
+      pad: "#FDFAF5",
     },
     date: "2026-09-28",
     sourceNote: "based on hub digest 2026-09-24 technique test",
@@ -561,7 +561,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/refuse-answers-sources-do-not-support-sticker.webp",
       alt: "A stool with a red seat and one leg snapped off, tipping over.",
-      pad: "#F0CD5F",
+      pad: "#FDFAF5",
     },
     date: "2026-09-28",
     paragraphs: [
@@ -579,7 +579,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/do-not-swap-tools-on-a-hunch-sticker.webp",
       alt: "A gold coin flipping in the air above a closed toolbox.",
-      pad: "#EE83C3",
+      pad: "#FDFAF5",
     },
     date: "2026-09-28",
     paragraphs: [
@@ -597,7 +597,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/check-each-tool-step-before-next-sticker.webp",
       alt: "A level with a green bubble, resting on a single step.",
-      pad: "#EFC3BB",
+      pad: "#FDFAF5",
     },
     date: "2026-09-28",
     paragraphs: [
@@ -615,7 +615,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/ask-before-doing-what-wasnt-asked-sticker.webp",
       alt: "A brass desk bell on a small steel block.",
-      pad: "#EE83C3",
+      pad: "#FDFAF5",
     },
     date: "2026-09-29",
     paragraphs: [
@@ -640,7 +640,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/test-search-before-saying-none-sticker.webp",
       alt: "A flashlight shining a yellow beam into an open cardboard box.",
-      pad: "#EFC3BB",
+      pad: "#FDFAF5",
     },
     date: "2026-09-29",
     paragraphs: [
@@ -673,7 +673,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/make-routers-pick-from-a-fixed-list-sticker.webp",
       alt: "A mail sorter with a grid of pigeonholes and one pink envelope sliding into a slot.",
-      pad: "#96E4B7",
+      pad: "#FDFAF5",
     },
     date: "2026-09-29",
     paragraphs: [
@@ -698,7 +698,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/dont-follow-orders-in-tool-text-sticker.webp",
       alt: "A fishing hook on a line from a yellow float, caught on a paper slip.",
-      pad: "#C5C6FB",
+      pad: "#FDFAF5",
     },
     date: "2026-10-01",
     paragraphs: [
@@ -732,7 +732,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/the-ai-safety-paradox-sticker.webp",
       alt: "A red firework rocket with a fire extinguisher strapped to its side.",
-      pad: "#F0CD5F",
+      pad: "#FDFAF5",
     },
     pullQuote: { text: "It's like asking the inmates to design the locks.", cite: "— Osbel Morell" },
     paragraphs: [
@@ -760,7 +760,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/break-loops-when-progress-stalls-sticker.webp",
       alt: "A looped toy train track with a switch lever that sends the train off onto a straight exit.",
-      pad: "#96E4B7",
+      pad: "#FDFAF5",
     },
     date: "2026-10-02",
     paragraphs: [
@@ -794,7 +794,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/show-fixes-only-when-things-break-sticker.webp",
       alt: "A first-aid kit with a red cross inside a glass case that's cracked in one corner.",
-      pad: "#EFC3BB",
+      pad: "#FDFAF5",
     },
     date: "2026-10-09",
     paragraphs: [
@@ -826,7 +826,7 @@ export const posts: Post[] = [
     hero: {
       src: "/art/digest/google-ai-search-eating-its-own-traffic-sticker.webp",
       alt: "A white search bar with jagged steel jaws at one end, biting down on a gold chain link.",
-      pad: "#EE83C3",
+      pad: "#FDFAF5",
     },
     paragraphs: [
       "Google's own AI features are doing the damage, not ChatGPT. A [randomized study posted in August 2026](https://arxiv.org/abs/2608.18352) found that when users were put into Google's AI Mode, clicks to outside websites dropped nearly 19 percentage points. Removing AI Overviews actually increased those clicks, by an estimated 8.8 points. The researchers are from the University of Pennsylvania and Northeastern, and they tracked 1,100 US Google users for a week.",

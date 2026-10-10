@@ -42,16 +42,16 @@ const art = (id: string, pad: string, alt: string | null, iconAlt: string): Tool
 });
 
 export const TOOL_ART: Record<string, ToolArt> = {
-  "stripe-cleaver": art("stripe-cleaver", "#8384B8", "A big cleaver slices a paper receipt into torn strips, with the fee strip in yellow.", "A cartoon cleaver with a steel blade and a black handle."),
-  "license-gate": art("license-gate", "#B94C4A", "A padlock with a brass shackle clamped shut on a rolled paper scroll.", "A padlock with a brass shackle."),
-  "agent-bundle-tag": art("agent-bundle-tag", "#96E4B7", "A pink luggage tag tied with string to a wrapped paper parcel.", "A pink luggage tag."),
-  "agent-eval-go-no-go": art("agent-eval-go-no-go", "#F0CD5F", "A black and white checkered flag waving on a pole.", "A checkered flag."),
-  "deploy-decision-card": art("deploy-decision-card", "#EE83C3", null, "A balance scale with two brass pans."),
-  "engrave-merge": art("engrave-merge", "#EFC3BB", "A laser engraver on a rail burning a line onto a paper tag.", "A laser engraver burning a line onto a tag."),
-  "enterprise-scorecard": art("enterprise-scorecard", "#C5C6FB", "A round pressure gauge with green, yellow and red bands and one needle.", "A pressure gauge."),
-  "hobby-deploy-burn-digest": art("hobby-deploy-burn-digest", "#B94C4A", "A lit match, half burnt down, with a yellow flame.", "A lit match."),
-  "llm-feature-cost-tag": art("llm-feature-cost-tag", "#F0CD5F", "A pink price tag hanging from a steel cog.", "A steel cog with a pink price tag."),
-  "what-changed-card": art("what-changed-card", "#EE83C3", "A rubber stamp lifting off a paper sheet, leaving a round mark.", "A rubber stamp."),
+  "stripe-cleaver": art("stripe-cleaver", "#FDFAF5", "A big cleaver slices a paper receipt into torn strips, with the fee strip in yellow.", "A cartoon cleaver with a steel blade and a black handle."),
+  "license-gate": art("license-gate", "#FDFAF5", "A padlock with a brass shackle clamped shut on a rolled paper scroll.", "A padlock with a brass shackle."),
+  "agent-bundle-tag": art("agent-bundle-tag", "#FDFAF5", "A pink luggage tag tied with string to a wrapped paper parcel.", "A pink luggage tag."),
+  "agent-eval-go-no-go": art("agent-eval-go-no-go", "#FDFAF5", "A black and white checkered flag waving on a pole.", "A checkered flag."),
+  "deploy-decision-card": art("deploy-decision-card", "#FDFAF5", null, "A balance scale with two brass pans."),
+  "engrave-merge": art("engrave-merge", "#FDFAF5", "A laser engraver on a rail burning a line onto a paper tag.", "A laser engraver burning a line onto a tag."),
+  "enterprise-scorecard": art("enterprise-scorecard", "#FDFAF5", "A round pressure gauge with green, yellow and red bands and one needle.", "A pressure gauge."),
+  "hobby-deploy-burn-digest": art("hobby-deploy-burn-digest", "#FDFAF5", "A lit match, half burnt down, with a yellow flame.", "A lit match."),
+  "llm-feature-cost-tag": art("llm-feature-cost-tag", "#FDFAF5", "A pink price tag hanging from a steel cog.", "A steel cog with a pink price tag."),
+  "what-changed-card": art("what-changed-card", "#FDFAF5", "A rubber stamp lifting off a paper sheet, leaving a round mark.", "A rubber stamp."),
 };
 
 export function toolsOrder(apps: HubApp[]): HubApp[] {

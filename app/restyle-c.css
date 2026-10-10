@@ -1,0 +1,84 @@
+/*
+ * Restyle C (Oct 10 2026, approved mockups in alignata-restyle/README.md). Loaded last; re-skins the fx- system:
+ * palette, pastel cards with a thin accent underline, purple primary, filled soft New/Updated pill, back link,
+ * and compact tool rows under 900px. Spacing intent of f517488 (13px real row padding, 70px floor, rows grow) is kept.
+ */
+:root {
+  --paper: #F6F7FB; --surface: #FFFFFF; --ink: #23233F; --ink-2: #6E6F88; --line: #ECEDF3;
+  --purple: #5B4FCF; --coral: #F2735A; --yellow: #FFC857;
+  --tint-tool: #FFEFEA; --tint-essay: #EEECFB; --tint-tech: #EAF1FB; --tint-deep: #E8F6F0;
+  --r-card: 20px; --r-art: 16px;
+}
+/* Header: same white sticky bar on every page */
+.fx-header { position: sticky; top: 0; z-index: 60; background: #fff; border-bottom: 1px solid var(--line); }
+.fx-header .fx-wrap { height: 64px; }
+.fx-wordmark::after { content: ""; display: inline-block; width: 12px; height: 3px; margin-left: 4px; border-radius: 2px; background: var(--coral); }
+.fx-nav { gap: 6px; }
+.fx-nav a { font-size: 15px; font-weight: 600; color: var(--ink-2); padding: 0 12px; border-radius: 12px; min-height: 40px; align-self: center; }
+.fx-nav a[aria-current="page"] { text-decoration: none; color: var(--purple); background: var(--tint-essay); }
+html { scroll-padding-top: 80px; }
+/* Back link: one place on every subpage */
+.fx-back { margin: 20px 0 0; }
+.fx-back a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 15px; font-weight: 600; color: var(--purple); text-decoration: none; }
+.fx-back a:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; border-radius: 6px; }
+.fx-story > article > .fx-back { padding: 0 var(--margin); }
+@media (min-width: 900px) { .fx-story > article > .fx-back { padding: 0; } }
+/* Type: quieter, smaller display */
+.fx-display { font-weight: 600; letter-spacing: -0.03em; }
+@media (min-width: 900px) { .fx-display { font-size: 56px; line-height: 1.05; } .fx-tools-head .fx-display { font-size: 56px; } }
+.fx-page-head { padding-top: 8px; }
+@media (min-width: 900px) { .fx-page-head { padding-top: 16px; } }
+.fx-head-split { display: grid; gap: 20px; align-items: center; }
+@media (min-width: 900px) { .fx-head-split { grid-template-columns: 1fr 1fr; gap: 40px; } }
+.fx-page-hero { margin: 24px 0 0; border-radius: var(--r-card); overflow: hidden; background: #FDFAF5; }
+.fx-head-split .fx-page-hero { margin-top: 0; }
+.fx-page-hero img { display: block; width: 100%; height: auto; }
+@media (min-width: 900px) {
+  .fx-home-top { display: grid; grid-template-columns: 1.1fr 0.9fr; column-gap: 40px; align-items: center; padding-top: 32px; }
+  .fx-home-top .fx-home-head { padding-top: 0; }
+  .fx-home-top .fx-page-hero { margin: 0; }
+  .fx-home-head .fx-display { font-size: 52px; line-height: 1.05; }
+}
+/* Primary = purple; secondary = text-style outline */
+a.fx-pill, a.fx-pill:visited, a.fx-pill:hover, a.fx-open.fx-primary, a.fx-open.fx-primary:visited, a.fx-open.fx-primary:hover, a.cb-open-pill {
+  background: var(--purple); color: #fff; border-radius: 14px; box-shadow: 0 8px 20px rgb(91 79 207 / 0.25); }
+a.fx-pill.fx-pill-outline, a.fx-pill.fx-pill-outline:visited, a.fx-pill.fx-pill-outline:hover { background: transparent; color: var(--purple); box-shadow: none; border: 0; }
+a.fx-open, a.fx-open:visited, a.fx-open:hover { background: #fff; color: var(--ink); font-size: 15px; }
+/* Cards: pastel tint by type, no border, thin accent underline under the label */
+.fx-scard { background: #fff; --accent: var(--purple); }
+.fx-scard::before { border: 0; }
+.fx-scard[data-kind="tool"] { background: var(--tint-tool); --accent: var(--coral); }
+.fx-scard[data-tag="Essay"] { background: var(--tint-essay); --accent: var(--purple); }
+.fx-scard[data-tag="Technique"] { background: var(--tint-tech); --accent: #4C7FD6; }
+.fx-scard[data-tag="Deep dive"] { background: var(--tint-deep); --accent: #2FA37A; }
+.fx-scard-art { margin: 12px 12px 0; border-radius: var(--r-art); overflow: hidden; }
+.fx-scard .fx-eyebrow { font-size: 13px; letter-spacing: 0.02em; text-transform: none; font-weight: 600; color: var(--ink); padding-bottom: 12px;
+  background: linear-gradient(var(--accent), var(--accent)) 0 100% / 38% 3px no-repeat, linear-gradient(rgb(35 35 63 / 0.08), rgb(35 35 63 / 0.08)) 0 100% / 100% 3px no-repeat; }
+.fx-scard-title { font-size: 22px; }
+@media (min-width: 900px) { .fx-scard-title { font-size: 24px; } }
+.fx-scard-dek { font-size: 15px; }
+.fx-app-row { border-top: 0; }
+.fx-scard-date { font-weight: 600; }
+/* New / Updated: filled soft pastel pill (Updated colours come from new-mark.ts). Off until dd-new-style turns it on. */
+.fx-scard[data-kind="article"] .fx-eyebrow::before { padding: 0 10px; margin-right: 8px; border-radius: 999px; box-shadow: none;
+  background: #FFD3C7; color: #A8361F; font-size: 12px; font-weight: 700; line-height: 22px; text-transform: none; letter-spacing: 0.01em; }
+/* Story pages */
+.fx-story-hero { background: #FDFAF5; }
+@media (max-width: 899.98px) { .fx-story-hero { margin: 12px var(--margin) 0; width: auto; border-radius: var(--r-card); aspect-ratio: 16 / 9; } }
+.fx-story .fx-eyebrow { color: var(--purple); text-transform: none; font-size: 14px; }
+.fx-prose a { color: var(--purple); }
+.fx-next { border-top: 0; }
+/* /apps rows: pastel cards, f517488 spacing (13px real padding, 70px floor, rows grow) */
+.fx-rows { border-top: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.fx-arow { background: var(--tint-tool); border-bottom: 0; border-radius: var(--r-card); padding: 13px 16px; min-height: 70px; gap: 14px; box-sizing: border-box; }
+.fx-arow .fx-icon, .fx-icon { border-radius: 14px; box-shadow: none; }
+@media (min-width: 900px) { .fx-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } .fx-arow { padding: 20px 22px; } }
+/* Under 900px: tool lists are compact rows (icon, title, one line, Open) on home too */
+@media (max-width: 899.98px) {
+  .fx-app-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
+  .fx-feed .fx-scard[data-kind="tool"] .fx-scard-art, .fx-feed .fx-scard[data-kind="tool"] .fx-scard-text { display: none; }
+  .fx-feed .fx-scard[data-kind="tool"] .fx-app-row { padding: 13px 16px; min-height: 70px; gap: 14px; }
+  .fx-feed .fx-scard[data-kind="tool"] .fx-app-row .fx-icon { display: block; width: 48px; height: 48px; }
+  .fx-feed { gap: 12px; }
+}
+.fx-header + nav[aria-label="Apps"] { top: 64px; }

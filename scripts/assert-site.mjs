@@ -587,7 +587,7 @@ test("art: tool stickers + icons with FINAL alt, every file a real WebP of the r
   }
   const files = readdirSync("public/art", { recursive: true }).map(String).filter((f) => /\.[a-z]+$/.test(f));
   for (const f of files) assert.match(f, /^(digest\/)?[a-z0-9-]+-sticker(-icon)?\.webp$/, `public/art/${f} is sticker art (no clay, no fallback tile)`);
-  assert.equal(files.length, 26 + 9 + 10 + 1, "26 Digest heroes + 9 tool heroes + 10 icons + the About hero");
+  assert.equal(files.length, 26 + 9 + 10 + 1 + 3, "26 Digest heroes + 9 tool heroes + 10 icons + the About hero + 3 page heroes (restyle C)");
   assert.ok(files.includes("about-sticker.webp"), "About hero (company pages, Oct 3)");
   assert.deepEqual(await webpSize("public/art/about-sticker.webp"), [1920, 1080], "About hero: one 16:9 file");
   for (const f of CLAY_FILES) assert.ok(!existsSync(f), `${f} is gone`);
@@ -1366,15 +1366,15 @@ test("alt text: every listed tool hero + icon and all 26 Digest heroes carry the
   for (const p of posts) assert.ok(p.hero.alt.trim(), `${p.slug}: hero alt`);
 });
 
-test("Digest heroes #3, #4, #8, #21: the current sticker files (not .v2), 1920×1080, pad = palette.json colour", async () => {
+test("Digest heroes #3, #4, #8, #21: the restyle C sticker files (not .v2), 1920×1080, pad = art off-white", async () => {
   const { createHash } = await import("node:crypto");
   const { readFileSync, existsSync } = await import("node:fs");
   const { getPost } = await import("../content/posts.ts");
   const want = {
-    "the-ai-safety-paradox": ["56f842e310dd4c9f26e07f6f3ac4a3bca7da239ce075f908193ca555a3f88749", "#F0CD5F"],
-    "ask-before-doing-what-wasnt-asked": ["0e9310cfb6c542870776529de3df358c62f8edd45118da70f840e4b467b26a23", "#EE83C3"],
-    "refuse-answers-sources-do-not-support": ["8e881972b6b1b488d6f903fc530f9be94b553bfac985ebc322bc8e2ae2ccc74c", "#F0CD5F"],
-    "compare-models-only-under-a-locked-setup": ["ca591e9604e83c65aaf648c601f77fdd1fafd111c8bd35230d070b7894a04074", "#96E4B7"],
+    "the-ai-safety-paradox": ["3de0936f85bddd9bd2a2d0a5503ae0659776b138f017ec0c94d9fda31e727951", "#FDFAF5"],
+    "ask-before-doing-what-wasnt-asked": ["7032deba351a9e358478b14ffa14523234262a174e72946163037f45a58e0951", "#FDFAF5"],
+    "refuse-answers-sources-do-not-support": ["63bbd3d8c2350a421d798ced5dee443ad1061ce8ac349694f977c67b06e4b3ab", "#FDFAF5"],
+    "compare-models-only-under-a-locked-setup": ["bd9a7d40b864f23e61625fb1efdaba7bd1cf8eb5dba09fe5b6f9f903ec669c24", "#FDFAF5"],
   };
   for (const [slug, [sha, pad]] of Object.entries(want)) {
     const f = `public/art/digest/${slug}-sticker.webp`;
@@ -1545,7 +1545,9 @@ const footerOf = (html) => html.slice(html.indexOf('<footer class="fx-footer">')
 
 test("homepage mission: the dek sits directly under the locked display line and above the two pills; nothing else added", async () => {
   const html = await companyHtml("/");
-  const head = html.slice(html.indexOf('<section class="fx-home-head"'), html.indexOf('<section class="fx-feed"'));
+  // Restyle C: the page illustration sits beside the head (outside it), so the head ends at its own </section>.
+  const hs = html.indexOf('<section class="fx-home-head"');
+  const head = html.slice(hs, html.indexOf("</section>", hs) + "</section>".length);
   assert.equal(
     head,
     '<section class="fx-home-head" aria-label="Start"><h1 class="fx-display">Small tools for busy people, and AI techniques in plain English.</h1>' +
@@ -1750,7 +1752,7 @@ test("Daily Digest marks (Release B): 7-day New window for everyone, Updated rul
   assert.equal(m.markFor("p", "2026-10-09", "2026-10-10", null, T), "none");
   // css: at most one mark per card
   const css = m.newMarkCss({ a: "new", b: "updated", c: "none" });
-  assert.equal(css, '.fx-scard[data-post-card ="a"] .fx-eyebrow::before{content:"New" / ""}.fx-scard[data-post-card ="b"] .fx-eyebrow::before{content:"Updated" / ""}');
+  assert.equal(css, '.fx-scard[data-post-card ="a"] .fx-eyebrow::before{content:"New" / ""}.fx-scard[data-post-card ="b"] .fx-eyebrow::before{content:"Updated" / "";background:#DCD8FA;color:#3F35A8}');
   assert.equal(m.localDay(new Date(2026, 9, 10, 23, 50)), T);
   assert.equal(m.daysBetween("2026-02-27", "2026-03-01"), 2);
 });

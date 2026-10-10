@@ -58,7 +58,7 @@ export function ArticleStoryCard({
 }) {
   const art = cardImage(post);
   return (
-    <article className={`fx-scard${lead ? " fx-lead" : ""}`} data-kind="article" data-post-card={post.slug}>
+    <article className={`fx-scard${lead ? " fx-lead" : ""}`} data-kind="article" data-post-card={post.slug} data-tag={postTag(post)}>
       <ArtFigure slug={post.slug} className="fx-scard-art" src={art.src} alt={art.alt} pad={art.pad} eager={eager} />
       <div className="fx-scard-text">
         <p className="fx-eyebrow">{eyebrow ?? postTag(post)}</p>
