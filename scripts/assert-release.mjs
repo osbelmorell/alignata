@@ -68,6 +68,47 @@ test("no copy placeholder ([LEGAL ENTITY NAME], [CONTACT EMAIL], [DATE], [GOVERN
   assert.deepEqual(hits, [], `copy placeholders still in:\n  ${hits.join("\n  ")}`);
 });
 
+/**
+ * "blog" gate (CEO: the public name is "Daily Digest", never "blog"). Flags the word in our own copy and any link to a blog on
+ * our own site: relative /blog…, alignata.com/blog…, www. or any other alignata.com subdomain. Absolute links to OTHER hosts
+ * (cited sources such as sparktoro.com/blog/… or aisearch.similarweb.com/blog/…) are stripped first, so a source URL that
+ * happens to contain /blog/ doesn't fail the page. JSON-escaped slashes (https:\/\/…) in inlined flight data count too.
+ */
+const URL_RE = /(?:https?:)?(?:\\?\/){2}([a-z0-9.-]+)(?::\d+)?(?:\\?\/[^\s"'<>)\]]*)?/gi;
+const OWN_HOST = (h) => /(^|\.)alignata\.com$/i.test(h.replace(/\.$/, ""));
+export function blogHit(html) {
+  const rest = html.replace(URL_RE, (m, host) => (OWN_HOST(host) ? m : " "));
+  return /\bblog/i.test(rest);
+}
+
+test("blog gate: fails on our own /blog links and copy, passes cited sources whose URL contains /blog/", () => {
+  const fail = [
+    '<a href="/blog/old-post">x</a>', '<a href="/blog">x</a>',
+    '<a href="https://alignata.com/blog/old-post">x</a>', '<a href="http://alignata.com/blog">x</a>',
+    '<a href="https://www.alignata.com/blog/x">x</a>', '<a href="www.alignata.com/blog/x">x</a>',
+    '<a href="https://news.alignata.com/blog/x">x</a>', '<a href="//alignata.com/blog/x">x</a>',
+    '{"href":"https:\\/\\/alignata.com\\/blog\\/x"}', "<p>Read our blog.</p>",
+    '<a href="https://sparktoro.com/blog/x">our blog</a>',
+  ];
+  const pass = [
+    '<a href="https://sparktoro.com/blog/in-2026-less-than-one-third-of-google-searches-still-send-a-click/">SparkToro\'s analysis of Similarweb data</a>',
+    '<a href="https://aisearch.similarweb.com/blog/zero-click-marketing/">Similarweb</a>',
+    '{"href":"https:\\/\\/sparktoro.com\\/blog\\/in-2026-less-than-one-third-of-google-searches-still-send-a-click\\/"}',
+    '<a href="https://alignata.com/daily-digest/x">x</a>', '<a href="https://notalignata.com.example.org/x">x</a>',
+  ];
+  for (const h of fail) assert.equal(blogHit(h), true, `should fail: ${h}`);
+  for (const h of pass) assert.equal(blogHit(h), false, `should pass: ${h}`);
+  assert.equal(blogHit('<a href="https://alignata.com.evil.example/blog/x">x</a>'), false, "look-alike host is not ours (external link)");
+});
+
+test("/blog redirects (next.config.ts) are still permanent 301s to /daily-digest", async () => {
+  const cfg = (await import("../next.config.ts")).default;
+  const r = await cfg.redirects();
+  const find = (src) => r.find((x) => x.source === src);
+  assert.deepEqual(find("/blog"), { source: "/blog", destination: "/daily-digest", statusCode: 301 });
+  assert.deepEqual(find("/blog/:path*"), { source: "/blog/:path*", destination: "/daily-digest/:path*", statusCode: 301 });
+});
+
 test("built pages (npm run build first): no copy placeholder, no 'Paramount', no 'blog' in any prerendered page", () => {
   const root = join(".next", "server", "app");
   assert.ok(existsSync(root), "no build output: run `npm run build` before `npm run test:release`");
@@ -87,7 +128,7 @@ test("built pages (npm run build first): no copy placeholder, no 'Paramount', no
     const route = "/" + p.slice(root.length + 1).replace(/\.html$/, "").replace(/(^|\/)index$/, "");
     const found = [...new Set(html.match(PLACEHOLDER_RE) || [])];
     if (/paramount/i.test(html)) found.push("Paramount");
-    if (/\bblog/i.test(html)) found.push("blog");
+    if (blogHit(html)) found.push("blog");
     if (found.length) bad.push(`${route}: ${found.join(", ")}`);
   }
   assert.deepEqual(bad, [], `built pages that fail the release grep:\n  ${bad.join("\n  ")}`);
