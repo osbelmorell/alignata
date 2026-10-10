@@ -815,6 +815,28 @@ export const posts: Post[] = [
       "- [Sentry code](https://github.com/nuglifeleoji/Sentry)",
     ],
   },
+  {
+    slug: "google-ai-search-eating-its-own-traffic",
+    title: "Google's AI Search Is Eating Its Own Traffic",
+    dek: "Google's AI answers, not ChatGPT, are draining clicks from the web.",
+    cardDek: "Google's AI answers, not ChatGPT, are draining clicks from the web.",
+    date: "2026-10-10",
+    tag: "Essay",
+    kind: "essay",
+    hero: {
+      src: "/art/digest/google-ai-search-eating-its-own-traffic-sticker.webp",
+      alt: "A white search bar with jagged steel jaws at one end, biting down on a gold chain link.",
+      pad: "#EE83C3",
+    },
+    paragraphs: [
+      "Google's own AI features are doing the damage, not ChatGPT. A [randomized study posted in August 2026](https://arxiv.org/abs/2608.18352) found that when users were put into Google's AI Mode, clicks to outside websites dropped nearly 19 percentage points. Removing AI Overviews actually increased those clicks, by an estimated 8.8 points. The researchers are from the University of Pennsylvania and Northeastern, and they tracked 1,100 US Google users for a week.",
+      "Chartbeat's latest publisher data, [as reported by Search Engine Journal](https://www.searchenginejournal.com/google-search-decline-publishers-chartbeat/590681/), shows Google Search referrals to news sites fell about 40% year over year between July 2025 and July 2026. Separately, [SparkToro's analysis of Similarweb data](https://sparktoro.com/blog/in-2026-less-than-one-third-of-google-searches-still-send-a-click/) puts zero-click searches at 68% of US Google searches, meaning more than two in three searches end without anyone visiting another site. On desktop alone, [Similarweb](https://aisearch.similarweb.com/blog/zero-click-marketing/) says the figure is closer to 80%.",
+      "The traffic isn't fleeing to rivals - it's being swallowed inside Google's own answer box. Google still holds [roughly 90% of traditional search share](https://gs.statcounter.com/search-engine-market-share), and all AI chatbots combined only account for [about 3% of web visits](https://onelittleweb.com/digital-market-intelligence/ai-tools/chatbots/) across the sites tracked.",
+      "Google's Gemini is gaining ground fast, jumping from 17% to 30% of US AI prompt share in five months while ChatGPT lost 20 points, [according to Comscore](https://www.comscore.com/Insights/Press-Releases/2026/9/Comscores-Q2-2026-AI-Intelligence-Report).",
+      "AI Overviews now appear on about 39% of US Google desktop searches, up from 26% a year earlier, [per the same Comscore report](https://www.comscore.com/Insights/Press-Releases/2026/9/Comscores-Q2-2026-AI-Intelligence-Report).",
+      "Bottom line: the cannibalization is real, but it's Google eating its own ecosystem rather than being replaced by outside competitors.",
+    ],
+  },
 ];
 
 export function getPost(slug: string): Post | undefined {
