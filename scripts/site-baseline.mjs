@@ -5,7 +5,11 @@
 //   /apps → tool_open conversion, tool_open rate (tool_open / /apps page_view), tool_open per card slug,
 //   distinct Daily Digest readers (distinct vid with article_view), second-article rate
 //   (sessions whose article n reached ≥ 2 / sessions with ≥ 1 article_view),
-//   homepage home_click per target, sessions/visitors, and / sessions with ≥ 1 tap.
+//   homepage home_click per target, sessions/visitors, and / sessions with ≥ 1 tap,
+//   Daily Digest "New" mark (Release A): digest_open split by was_new, distinct New openers (vid with ≥ 1
+//   was_new:true open) and how many of them came back on a different day than their first visit (kill bar: < 3 in
+//   14 days → the mark comes out). Visitor = vid; day = the stored America/New_York `day` (the only day the store
+//   has; the browser's own local day is never sent); first visit = the vid's earliest counted day in the window.
 // Excluded: dogfood events and non-alignata.com hosts (owner device and automated browsers never send).
 //
 // Usage:
@@ -13,6 +17,7 @@
 //     reads the store: KV_REST_API_URL + KV_REST_API_READ_ONLY_TOKEN (preferred) or KV_REST_API_TOKEN,
 //     or UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN. Only SCAN and LRANGE on site:ev:* are issued.
 //   node scripts/site-baseline.mjs --file events.jsonl [...]   (one JSON event per line, no store needed)
+//   node scripts/site-baseline.mjs --fixture scripts/fixtures/digest-open-events.sample.jsonl   (same; offline QA)
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -57,7 +62,13 @@ function bucket(events) {
   const homeClickSessions = new Set();
   const homeClickVisitors = new Set();
   const homeByTarget = {};
+  let digestOpens = 0;
+  let digestOpensNew = 0;
+  const newOpeners = new Set();
+  const daysByVid = new Map();
   for (const e of events) {
+    if (!daysByVid.has(e.vid)) daysByVid.set(e.vid, new Set());
+    daysByVid.get(e.vid).add(e.day);
     const p = e.props || {};
     if (e.event === "page_view") {
       views[p.path] = (views[p.path] || 0) + 1;
@@ -79,6 +90,12 @@ function bucket(events) {
       homeClickSessions.add(e.sid);
       homeClickVisitors.add(e.vid);
       homeByTarget[p.target] = (homeByTarget[p.target] || 0) + 1;
+    } else if (e.event === "digest_open") {
+      digestOpens++;
+      if (p.was_new === true) {
+        digestOpensNew++;
+        newOpeners.add(e.vid);
+      }
     }
   }
   const appsToTool = [...appsSessions].filter((s) => toolSessions.has(s)).length;
@@ -109,6 +126,12 @@ function bucket(events) {
     homeSessionsWithClick: [...homeSessions].filter((s) => homeClickSessions.has(s)).length,
     homeClickRate: ratio([...homeSessions].filter((s) => homeClickSessions.has(s)).length, homeSessions.size),
     homeClickByTarget: Object.fromEntries(Object.entries(homeByTarget).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))),
+    digestOpens,
+    digestOpensNew,
+    digestOpensNotNew: digestOpens - digestOpensNew,
+    digestNewOpeners: newOpeners.size,
+    // first visit = earliest counted day for the vid; "came back" = any counted event on another day
+    digestNewOpenersReturned: [...newOpeners].filter((v) => daysByVid.get(v).size >= 2).length,
     visitors: new Set(events.map((e) => e.vid)).size,
     sessions: new Set(events.map((e) => e.sid)).size,
   };
@@ -193,6 +216,8 @@ function printBucket(label, b) {
   console.log(`  Homepage: ${b.homeClicks} home_click from ${b.homeClickSessions} sessions, ${b.homeClickVisitors} visitors`);
   console.log(`    / sessions with ≥1 tap: ${pct(b.homeClickRate)} (${b.homeSessionsWithClick}/${b.homeSessions} sessions)`);
   for (const [t, n] of Object.entries(b.homeClickByTarget)) console.log(`    ${String(n).padStart(6)}  ${t}`);
+  console.log(`  Digest New mark: ${b.digestOpens} digest_open (was_new true ${b.digestOpensNew}, false ${b.digestOpensNotNew})`);
+  console.log(`    distinct New openers: ${b.digestNewOpeners}; came back on a different day: ${b.digestNewOpenersReturned} (kill bar: < 3 in 14 days)`);
 }
 
 async function main() {
@@ -201,7 +226,8 @@ async function main() {
     const i = args.indexOf(name);
     return i >= 0 ? args[i + 1] : undefined;
   };
-  const file = opt("--file");
+  // --fixture is an alias of --file (QA, offline): only that file is read; no store client, no network.
+  const file = opt("--file") ?? opt("--fixture");
   const events = file ? parseLog(readFileSync(file, "utf8")) : await readStore();
   const since = opt("--since") ? Date.parse(opt("--since")) : -Infinity;
   const until = opt("--until") ? Date.parse(opt("--until")) : Infinity;

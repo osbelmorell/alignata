@@ -1632,7 +1632,7 @@ test("/privacy (COPY.md §5 v4 FINAL): no art, H1, dek, 'Last updated' + SHIP_DA
   const h2s = [...html.matchAll(/<h2>([^<]+)<\/h2>/g)].map((m) => m[1]);
   assert.deepEqual(h2s, ["The short version", "Your files", "What we count", "Vercel Web Analytics", "What&#x27;s saved in your browser", "Services we use", "What we don&#x27;t do", "Changes"]);
   for (const f of [
-    '<h1 class="fx-story-title">Privacy</h1><p class="fx-story-dek">What Alignata collects, and what it doesn&#x27;t.</p><p class="fx-meta fx-story-meta">Last updated <time dateTime="2026-10-03">October 3, 2026</time></p>',
+    '<h1 class="fx-story-title">Privacy</h1><p class="fx-story-dek">What Alignata collects, and what it doesn&#x27;t.</p><p class="fx-meta fx-story-meta">Last updated <time dateTime="2026-10-10">October 10, 2026</time></p>',
     "<li>Files you drop into a tool stay in your browser. We don&#x27;t upload them.</li><li>We count visits and taps without your name, email or IP address.</li><li>We don&#x27;t set cookies, show ads, or sell data.</li>",
     "For a file with 3 or more orders, it also sends a scrambled code made from the order numbers. We use it only to tell different files apart.</p>",
     "<h2>Services we use</h2><p>Vercel hosts the site, and Upstash stores our usage log. We don&#x27;t store your IP address. Vercel processes it briefly to serve and protect the site, and keeps its request logs for about a day. Our fonts are hosted on our own site.</p>",
@@ -1682,12 +1682,12 @@ test("4-link release (CEO 9:43 AM ET): no /contact or /terms route, no link to e
 test("[DATE] = SHIP_DATE: one constant in content/company.ts, rendered as the real date", async () => {
   const { readFileSync } = await import("node:fs");
   const { SHIP_DATE, shipDateLabel } = await import("../content/company.ts");
-  assert.equal(SHIP_DATE, "2026-10-03");
-  assert.equal(shipDateLabel(), "October 3, 2026");
+  assert.equal(SHIP_DATE, "2026-10-10");
+  assert.equal(shipDateLabel(), "October 10, 2026");
   assert.equal(shipDateLabel("2026-11-09"), "November 9, 2026", "change SHIP_DATE and the page follows");
   for (const bad of ["Oct 3", "2026-13-01", "2026-10-00", ""]) assert.throws(() => shipDateLabel(bad), /YYYY-MM-DD/, bad);
   assert.equal((readFileSync("content/company.ts", "utf8").match(/SHIP_DATE = "/g) || []).length, 1, "defined once");
-  assert.ok((await companyHtml("/privacy")).includes("Last updated <time dateTime=\"2026-10-03\">October 3, 2026</time>"));
+  assert.ok((await companyHtml("/privacy")).includes("Last updated <time dateTime=\"2026-10-10\">October 10, 2026</time>"));
 });
 
 test("Daily Digest New mark (Release A): dd_since/dd_read rules, 29 vs 30 local days, first visit, opens, trim, blocked storage", async () => {
@@ -1777,4 +1777,38 @@ test("New mark boot script = isNewPost (inline ES5 parity, random states incl. c
   const blocked = { window: { get localStorage() { throw new Error("SecurityError"); } }, document: {}, Date, JSON, Object, Array };
   assert.doesNotThrow(() => vm.runInNewContext(m.bootScript(posts), blocked));
   assert.ok(!m.bootScript({ "x</script>": "2026-10-01" }).includes("</script>"), "map is escaped");
+});
+
+test("baseline digest_open (Release A): was_new split, distinct New openers, came back on another day; dogfood + Vercel host dropped (Product fixture)", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { parseLog } = await import("./site-baseline.mjs");
+  const s = summarize(parseLog(readFileSync("scripts/fixtures/digest-open-events.sample.jsonl", "utf8")));
+  assert.deepEqual(s.excluded, { dogfood: 1, nonProdHost: 1, outsideWindow: 0 }, "same filters as every other event");
+  assert.equal(s.window.digestOpens, 4);
+  assert.equal(s.window.digestOpensNew, 2);
+  assert.equal(s.window.digestOpensNotNew, 2);
+  assert.equal(s.window.digestNewOpeners, 2, "Product: 2 distinct New openers (the Vercel-host visitor is not one)");
+  assert.equal(s.window.digestNewOpenersReturned, 1, "Product: 1 came back (B's second open is the same day at 23:50; B's later open is dogfood)");
+  assert.equal(s.days["2026-10-10"].digestNewOpenersReturned, 0, "within one day nobody has come back");
+  assert.equal(s.days["2026-10-11"].digestOpens, 1);
+  assert.equal(s.days["2026-10-12"], undefined, "the dogfood-only day is not counted");
+  // without the exclusions the numbers would differ (proves the fixture exercises them)
+  const raw = parseLog(readFileSync("scripts/fixtures/digest-open-events.sample.jsonl", "utf8")).map((e) => ({ ...e, dogfood: false, prod: true }));
+  assert.equal(summarize(raw).window.digestNewOpeners, 3);
+  assert.equal(summarize(raw).window.digestNewOpenersReturned, 2);
+  assert.equal(summarize([]).window.digestNewOpeners, 0);
+});
+
+test("baseline --fixture / --file: reads only the file; no fetch, no store client, no env needed", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const guard = "data:text/javascript," + encodeURIComponent('globalThis.fetch=()=>{process.stderr.write("FETCH_CALLED");process.exit(9)};');
+  const env = { PATH: process.env.PATH, KV_REST_API_URL: "https://must-not-be-used.invalid", KV_REST_API_TOKEN: "x" };
+  for (const flag of ["--fixture", "--file"]) {
+    const out = execFileSync(process.execPath, ["--import", guard, "scripts/site-baseline.mjs", flag, "scripts/fixtures/digest-open-events.sample.jsonl", "--json"], { env, encoding: "utf8" });
+    const j = JSON.parse(out);
+    assert.equal(j.window.digestNewOpeners, 2, flag);
+    assert.equal(j.window.digestNewOpenersReturned, 1, flag);
+  }
+  // control: without a file it does try the store (fetch) — so the guard really detects store access
+  assert.throws(() => execFileSync(process.execPath, ["--import", guard, "scripts/site-baseline.mjs"], { env, encoding: "utf8", stdio: "pipe" }), (e) => e.status === 9);
 });

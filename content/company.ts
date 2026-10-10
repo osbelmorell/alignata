@@ -7,7 +7,7 @@
  */
 
 /** COPY.md [DATE]: the ship date, ISO YYYY-MM-DD. Change only this if the release date slips. */
-export const SHIP_DATE = "2026-10-03";
+export const SHIP_DATE = "2026-10-10"; // Oct 10 2026: Daily Digest Release A privacy lines (CEO: factual date change)
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 /** SHIP_DATE as shown ("October 3, 2026"); parsed by hand so the build's time zone can't shift the day. */
 export function shipDateLabel(iso: string = SHIP_DATE): string {
