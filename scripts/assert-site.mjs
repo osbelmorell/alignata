@@ -2066,3 +2066,13 @@ test("Images (Oct 11 2026): every /art file has a blur preview and built 640/960
   assert.ok(/fetchPriority="high"|fetchpriority="high"/.test(tags[0]) && !/loading="lazy"/.test(tags[0]), "hero eager");
   assert.ok(tags.slice(1).every((t) => /loading="lazy"/.test(t) && /decoding="async"/.test(t)), "below the fold lazy + async decode");
 });
+
+test("Images (Oct 11 2026): a load after an earlier error clears data-error, so the image shows", async () => {
+  const { readFileSync } = await import("node:fs");
+  const img = readFileSync(new URL("../components/appstore/Img.tsx", import.meta.url), "utf8");
+  const done = img.slice(img.indexOf("const done"), img.indexOf("const failed"));
+  assert.match(done, /removeAttribute\("data-error"\)/, "onLoad clears data-error");
+  assert.match(done, /removeAttribute\("data-pending"\)/);
+  assert.match(done, /setAttribute\("data-loaded", ""\)/);
+  assert.match(img, /onLoad=\{done\}/);
+});
