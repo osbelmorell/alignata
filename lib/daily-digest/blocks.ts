@@ -146,9 +146,12 @@ function emphasis(text: string): InlineSegment[] {
   return out;
 }
 
-const INLINE_LINK_RE = /\[([^\[\]\n]+)\]\((https?:\/\/[^\s()<>"'`]+)\)/gi;
+const INLINE_LINK_RE = /\[([^\[\]\n]+)\]\((https?:\/\/[^\s()<>"'`]+|\/daily-digest\/[a-z0-9-]+)\)/gi;
+/** Internal Daily Digest links: site-relative "/daily-digest/<slug>" only (same tab; nothing else relative). */
+const INTERNAL_DIGEST_RE = /^\/daily-digest\/[a-z0-9-]+$/;
 
 function safeHttpUrl(raw: string): string | null {
+  if (INTERNAL_DIGEST_RE.test(raw)) return raw;
   try {
     const url = new URL(raw);
     if (url.protocol !== "http:" && url.protocol !== "https:") return null;

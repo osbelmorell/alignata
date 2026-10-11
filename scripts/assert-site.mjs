@@ -1041,10 +1041,21 @@ test("Daily Digest kind + byline: default technique, AI Safety Paradox is an ess
   assert.equal(meta.postKind(getPost("the-ai-safety-paradox")), "essay");
   assert.equal(meta.postKind(getPost("break-loops-when-progress-stalls")), "technique");
   assert.equal(meta.postKind({ ...getPost("break-loops-when-progress-stalls"), kind: undefined }), "technique", "no kind → technique");
-  // Every Essay is an essay; a Deep dive may also carry the author byline (Oct 13 ai-harnesses-explained). Techniques never do.
-  for (const p of posts) {
-    if (meta.postTag(p) === "Essay") assert.equal(meta.postKind(p), "essay", `${p.slug}: tag Essay ⇒ kind essay`);
-    if (meta.postKind(p) === "essay") assert.ok(["Essay", "Deep dive"].includes(meta.postTag(p)), `${p.slug}: kind essay ⇒ Essay or Deep dive`);
+  // Strict byline (QA pr9-2407959 negative/strict-byline.patch.mjs): the exact author-byline set, every Essay is an
+  // essay, the approved bio exactly, and the rendered byline on every post.
+  {
+    const { renderToStaticMarkup } = await import("react-dom/server");
+    const { default: Article } = await import("../app/daily-digest/[slug]/page.tsx");
+    const ESSAY_BYLINE_SLUGS = ["ai-agents-reverse-engineering-games-software", "ai-harnesses-explained", "google-ai-search-eating-its-own-traffic", "the-ai-safety-paradox"];
+    assert.deepEqual(posts.filter((p) => meta.postKind(p) === "essay").map((p) => p.slug).sort(), ESSAY_BYLINE_SLUGS, "exact author-byline set");
+    for (const p of posts) if (meta.postTag(p) === "Essay") assert.equal(meta.postKind(p), "essay", p.slug);
+    assert.equal(author.AUTHOR_BIO, "Osbel Morell is a software engineering leader who builds small tools at Alignata.", "approved bio, exact");
+    const esc = (t) => t.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
+    for (const p of posts) {
+      const html = renderToStaticMarkup(await Article({ params: Promise.resolve({ slug: p.slug }) }));
+      if (meta.postKind(p) === "essay") assert.ok(html.includes(`<div class="fx-author" data-byline="essay"><p class="fx-author-name">By Osbel Morell</p><p class="fx-author-bio">${esc("Osbel Morell is a software engineering leader who builds small tools at Alignata.")}</p></div>`), `${p.slug}: essay byline + bio`);
+      else { assert.ok(html.includes('<div class="fx-author" data-byline="technique"><p class="fx-author-name">Daily Digest · Edited by Osbel Morell</p></div>'), `${p.slug}: technique byline`); assert.ok(!html.includes("fx-author-bio"), `${p.slug}: no bio`); }
+    }
   }
   assert.equal(meta.postKind(getPost("ai-harnesses-explained")), "essay", "the harnesses deep dive carries the By Osbel Morell byline");
   assert.equal(meta.postTag(getPost("ai-harnesses-explained")), "Deep dive");
@@ -1989,11 +2000,16 @@ test("Oct 13 deep dive ai-harnesses-explained: bold, table and emphasis render (
   assert.ok(!/>\s*\|/.test(body), "no raw table rows");
   assert.equal((body.match(/<table>/g) || []).length, 1);
   assert.equal((body.match(/<tr>/g) || []).length, 7, "header + 6 workloads");
+  assert.match(body, /<div class="fx-table-wrap" role="region" aria-label="Table: [^"]+ \(scrolls sideways\)" tabindex="0"><table>/, "labelled, focusable scroll region");
+  assert.ok(!body.includes("https://alignata.com/daily-digest/") && body.includes('href="https://osworld-v1.xlang.ai/"'), "internal tips relative; OSWorld https host");
+  const fcss = (await import("node:fs")).readFileSync("app/fantasy.css", "utf8");
+  assert.match(fcss, /\.fx-prose table \{[^}]*min-width: 560px; overflow-wrap: normal/, "table never splits words at 390 (scrolls instead)");
+  assert.match(fcss, /\.fx-table-wrap:focus-visible \{ outline: 3px solid/, "visible focus ring on the table region");
   assert.ok(body.includes("<strong>Model:</strong>"));
   assert.ok(body.includes("<em>Editorial note: capabilities"));
   for (const s of ["require-held-out-lift-before-shipping-harness-edits", "compare-models-only-under-a-locked-setup", "load-only-the-tools-this-turn-needs", "prove-it-before-irreversible-actions", "check-each-tool-step-before-next"]) {
     assert.ok(getPost(s), `${s} exists`);
-    assert.ok(body.includes(`href="https://alignata.com/daily-digest/${s}"`), `links tip ${s}`);
+    assert.ok(body.includes(`<a href="/daily-digest/${s}">`), `links tip ${s} (relative, same tab)`);
   }
   assert.ok(html.includes('data-byline="essay"><p class="fx-author-name">By Osbel Morell</p>'));
   assert.ok(html.includes("Deep dive · <time"));

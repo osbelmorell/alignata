@@ -1,7 +1,8 @@
 /**
  * Daily Digest author and bylines (board GO, Oct 3 2026).
- * - Essays: "By Osbel Morell" + AUTHOR_BIO; JSON-LD author = Person.
- * - Techniques (every other article, incl. deep dives): "Daily Digest · Edited by Osbel Morell"; JSON-LD author =
+ * - kind "essay" (every Essay, plus the ai-harnesses-explained Deep dive): "By Osbel Morell" + AUTHOR_BIO; JSON-LD
+ *   author = Person.
+ * - Every other article (techniques and the other deep dives): "Daily Digest · Edited by Osbel Morell"; JSON-LD author =
  *   Organization "Alignata Daily Digest", editor = Person.
  *
  * AUTHOR_BIO: approved by the board 6:38 AM ET Oct 3 2026 (Brand Creator passed, Voice Gate cleared, Product Copy confirmed).

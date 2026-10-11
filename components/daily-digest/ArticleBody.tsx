@@ -8,13 +8,14 @@ import {
   type ArticleSection,
 } from "@/lib/daily-digest/blocks";
 
-/** Inline text with safe Markdown links ("[label](https://…)", http(s) only). External links open in a new tab. */
+/** Inline text with safe Markdown links ("[label](https://…)" or a relative "/daily-digest/<slug>"). External links
+ *  open in a new tab; internal Daily Digest links stay in the same tab. */
 function InlineText({ text }: { text: string }) {
   return (
     <>
       {parseInline(text).map((seg, i) =>
         seg.kind === "link" ? (
-          <a key={i} href={seg.href} target="_blank" rel="noopener noreferrer">
+          <a key={i} href={seg.href} {...(seg.href.startsWith("/") ? {} : { target: "_blank", rel: "noopener noreferrer" })}>
             {seg.text}
           </a>
         ) : seg.kind === "strong" ? (
@@ -95,7 +96,8 @@ export function ArticleBody({
             break;
           case "table":
             el = (
-              <div className="fx-table-wrap">
+              // Scrolls sideways on phones (table min-width 560px), so it is a labelled, keyboard-focusable region.
+              <div className="fx-table-wrap" role="region" aria-label={`Table: ${block.head.map((c) => toPlainText(c)).join(", ")} (scrolls sideways)`} tabIndex={0}>
                 <table>
                   <thead>
                     <tr>
