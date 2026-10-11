@@ -1,6 +1,7 @@
 import type { HubApp } from "@/lib/types";
 import type { ToolOpenSource } from "@/lib/site/events";
 import { toolArt } from "@/lib/apps";
+import Link from "next/link";
 import { Img } from "@/components/appstore/Img";
 
 /**
@@ -17,7 +18,10 @@ export function AppRow({
   row,
   homeTarget = false,
   secondary = false,
+  storyHref,
 }: {
+  /** Feed card: the name is the card's stretched link (::after over the whole card) → the tool's story. */
+  storyHref?: string;
   app: HubApp;
   pos: number;
   /** Story end row: same row, soft Open, so the page keeps one primary (QA 679156c). */
@@ -33,7 +37,15 @@ export function AppRow({
     <div className={`fx-app-row${variant === "story" ? " fx-story-row" : ""}`} {...(row ? { "data-row": row } : {})}>
       <Img className="fx-icon" src={art.icon} alt={art.iconAlt} width={256} height={256} decoding="async" />
       <div className="fx-app-meta">
-        <p className="fx-app-name">{app.name}</p>
+        <p className="fx-app-name">
+          {storyHref ? (
+            <Link className="fx-stretch" href={storyHref}>
+              {app.name}
+            </Link>
+          ) : (
+            app.name
+          )}
+        </p>
         <p className="fx-app-line">{app.blurb}</p>
       </div>
       <OpenPill app={app} pos={pos} primary={variant === "story" && !secondary} homeTarget={homeTarget} src={variant === "story" ? "story" : "feed"} />

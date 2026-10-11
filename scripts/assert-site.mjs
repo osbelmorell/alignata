@@ -1937,3 +1937,25 @@ test("restyle C QA 679156c: one back link on every subpage, one primary per tool
   assert.match(read("app/apps/[slug]/page.tsx"), /row="end" secondary/, "end row Open is soft");
   assert.match(read("app/scorecard/page.tsx"), /<Scorecard initial=\{initialScorecard\(\)\} \/>/, "scorecard data in the server HTML");
 });
+
+test("tool cards + rows (bug 7c0ddeb): card body (stretched name link) → /apps/<slug>, Open → the tool; no nested links", async () => {
+  const { readFileSync, existsSync } = await import("node:fs");
+  const { getApps, storyHref } = await import("../lib/apps.ts");
+  const url = Object.fromEntries(getApps().map((a) => [a.id, a.url]));
+  for (const [page, re] of [["index", /<article class="fx-scard[^"]*" data-kind="tool" data-slug="([a-z0-9-]+)"[\s\S]*?<\/article>/g], ["apps", /<li class="fx-arow" data-slug="([a-z0-9-]+)"[\s\S]*?<\/li>/g]]) {
+    const f = `.next/server/app/${page}.html`;
+    if (!existsSync(f)) continue;
+    const cards = [...readFileSync(f, "utf8").matchAll(re)];
+    assert.ok(cards.length >= (page === "index" ? 2 : 10), `${page}: tool cards found`);
+    for (const [card, slug] of cards) {
+      const stretch = card.match(/<a class="fx-stretch"[^>]*href="([^"]+)"/g) || [];
+      assert.equal(stretch.length, 1, `${page} ${slug}: one stretched link`);
+      assert.ok(stretch[0].includes(`href="${storyHref(slug) ?? url[slug]}"`), `${page} ${slug}: card body → story`);
+      assert.match(card, new RegExp(`<a class="fx-open[^"]*" href="${url[slug].replace(/[?]/g, "\\?")}"`), `${page} ${slug}: Open → the tool`);
+      assert.ok(!/<a [^>]*>(?:(?!<\/a>)[\s\S])*<a /.test(card), `${page} ${slug}: no nested links`);
+    }
+  }
+  const css = readFileSync("app/restyle-c.css", "utf8");
+  assert.match(css, /\.fx-stretch::after[^{]*\{[^}]*inset: 0; z-index: 1/, "stretched overlay");
+  assert.match(css, /\.fx-open \{ z-index: 2; min-height: 44px/, "Open above the overlay, 44px");
+});
