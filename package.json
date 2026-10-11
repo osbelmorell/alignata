@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node --import tsx scripts/og-images.mjs && next build",
+    "og:images": "node --import tsx scripts/og-images.mjs",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",

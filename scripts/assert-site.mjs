@@ -33,8 +33,8 @@ const mem = (init = {}) => {
   return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), m };
 };
 
-test("validator: the six allow-listed events with exactly their props (digest_open added by Release A, Oct 10)", () => {
-  assert.deepEqual(Object.keys(SITE_EVENT_PROPS), ["page_view", "apps_view", "tool_open", "article_view", "home_click", "digest_open"]);
+test("validator: the seven allow-listed events with exactly their props (digest_open added by Release A, Oct 10; share_click by Share, Oct 11)", () => {
+  assert.deepEqual(Object.keys(SITE_EVENT_PROPS), ["page_view", "apps_view", "tool_open", "article_view", "home_click", "digest_open", "share_click"]);
   for (const [ev, props] of [
     ["page_view", { path: "/" }],
     ["page_view", { path: "/daily-digest/break-loops-when-progress-stalls" }],
@@ -1640,13 +1640,13 @@ test("/privacy (COPY.md §5 v4 FINAL): no art, H1, dek, 'Last updated' + SHIP_DA
   const h2s = [...html.matchAll(/<h2>([^<]+)<\/h2>/g)].map((m) => m[1]);
   assert.deepEqual(h2s, ["The short version", "Your files", "What we count", "Vercel Web Analytics", "What&#x27;s saved in your browser", "Services we use", "What we don&#x27;t do", "Changes"]);
   for (const f of [
-    '<h1 class="fx-story-title">Privacy</h1><p class="fx-story-dek">What Alignata collects, and what it doesn&#x27;t.</p><p class="fx-meta fx-story-meta">Last updated <time dateTime="2026-10-10">October 10, 2026</time></p>',
+    '<h1 class="fx-story-title">Privacy</h1><p class="fx-story-dek">What Alignata collects, and what it doesn&#x27;t.</p><p class="fx-meta fx-story-meta">Last updated <time dateTime="2026-10-11">October 11, 2026</time></p>',
     "<li>Files you drop into a tool stay in your browser. We don&#x27;t upload them.</li><li>We count visits and taps without your name, email or IP address.</li><li>We don&#x27;t set cookies, show ads, or sell data.</li>",
     "For a file with 3 or more orders, it also sends a scrambled code made from the order numbers. We use it only to tell different files apart.</p>",
     "<h2>Services we use</h2><p>Vercel hosts the site, and Upstash stores our usage log. We don&#x27;t store your IP address. Vercel processes it briefly to serve and protect the site, and keeps its request logs for about a day. Our fonts are hosted on our own site.</p>",
     "<p>Entries are deleted automatically after about 180 days (about 120 days for Engrave Merge).</p>",
     "<p>Each entry has a random ID. A visitor ID stays in your browser until you clear this site&#x27;s data, and a session ID usually lasts only as long as the tab. Engrave Merge keeps its own random ID in your browser, like the visitor ID.</p>",
-    "<h2>What we count</h2><p>We keep our own small log of how the site is used: which pages you visit, which tool you open and where on the site you tapped it, which articles you read, and which links you tap on the homepage. When you open a Daily Digest article, we also note whether it was marked New or Updated. On Engrave Merge, we also count when the page opens, when you download or print a result, and whether you saw the price question and how you answered it. If one of our guides sent you, we also note which one, as part of those counts.</p>",
+    "<h2>What we count</h2><p>We keep our own small log of how the site is used: which pages you visit, which tool you open and where on the site you tapped it, which articles you read, and which links you tap on the homepage. When you tap Share, we also note which page it was and whether you used your device&#x27;s share menu, copied the link, or the share didn&#x27;t work. Links shared this way include a small tag, utm_source=share, so we can tell when a visit came from a share. When you open a Daily Digest article, we also note whether it was marked New or Updated. On Engrave Merge, we also count when the page opens, when you download or print a result, and whether you saw the price question and how you answered it. If one of our guides sent you, we also note which one, as part of those counts.</p>",
     "<p>Engrave Merge also keeps a small note on this device: how many files you&#x27;ve dropped into it, which days it showed you the price question, and your answer if you gave one. That way it doesn&#x27;t keep asking.</p><p>To mark Daily Digest articles as New or Updated, your browser keeps the date it began marking articles and a list of the articles you&#x27;ve opened, with the day you opened each one. It forgets each opened article after 90 days. The date and the list stay on this device.</p><h2>Services we use</h2>",
     "<h2>Changes</h2><p>If we change what we collect, for example when paid plans arrive, we&#x27;ll update this page first and change the date at the top.</p>",
   ]) assert.ok(html.includes(f), `privacy has: ${f.slice(0, 80)}`);
@@ -1690,12 +1690,12 @@ test("4-link release (CEO 9:43 AM ET): no /contact or /terms route, no link to e
 test("[DATE] = SHIP_DATE: one constant in content/company.ts, rendered as the real date", async () => {
   const { readFileSync } = await import("node:fs");
   const { SHIP_DATE, shipDateLabel } = await import("../content/company.ts");
-  assert.equal(SHIP_DATE, "2026-10-10");
-  assert.equal(shipDateLabel(), "October 10, 2026");
+  assert.equal(SHIP_DATE, "2026-10-11");
+  assert.equal(shipDateLabel(), "October 11, 2026");
   assert.equal(shipDateLabel("2026-11-09"), "November 9, 2026", "change SHIP_DATE and the page follows");
   for (const bad of ["Oct 3", "2026-13-01", "2026-10-00", ""]) assert.throws(() => shipDateLabel(bad), /YYYY-MM-DD/, bad);
   assert.equal((readFileSync("content/company.ts", "utf8").match(/SHIP_DATE = "/g) || []).length, 1, "defined once");
-  assert.ok((await companyHtml("/privacy")).includes("Last updated <time dateTime=\"2026-10-10\">October 10, 2026</time>"));
+  assert.ok((await companyHtml("/privacy")).includes("Last updated <time dateTime=\"2026-10-11\">October 11, 2026</time>"));
 });
 
 test("Daily Digest marks (Release B): 7-day New window for everyone, Updated rules, 90-day dd_read, blocked storage", async () => {
@@ -1961,4 +1961,57 @@ test("tool cards + rows (bug 7c0ddeb): card body (stretched name link) → /apps
   const css = readFileSync("app/restyle-c.css", "utf8");
   assert.match(css, /\.fx-stretch::after[^{]*\{[^}]*inset: 0; z-index: 1/, "stretched overlay");
   assert.match(css, /\.fx-open \{ z-index: 2; min-height: 44px/, "Open above the overlay, 44px");
+});
+
+test("Share (Oct 11 2026): one Share on articles, tool stories and /daily-digest (not home/guides), utm_source=share only, per-page OG JPEG + summary_large_image, share_click {slug, method}, privacy line", async () => {
+  const { readFileSync, existsSync } = await import("node:fs");
+  const { shareUrl } = await import("../lib/share/url.ts");
+  assert.equal(shareUrl("/apps/stripe-cleaver"), "https://alignata.com/apps/stripe-cleaver?utm_source=share", "utm_source=share only, no ref");
+  const pages = [
+    ["daily-digest/break-loops-when-progress-stalls", "/daily-digest/break-loops-when-progress-stalls", "/og/daily-digest/break-loops-when-progress-stalls.jpg", 2],
+    ["apps/stripe-cleaver", "/apps/stripe-cleaver", "/og/apps/stripe-cleaver.jpg", 1],
+    ["daily-digest", "/daily-digest", "/og/daily-digest.jpg", 1],
+  ];
+  for (const [file, path, og, n] of pages) {
+    const f = `.next/server/app/${file}.html`;
+    assert.ok(existsSync(f), `${f} missing: run npm run build before test:site`);
+    const html = readFileSync(f, "utf8");
+    const share = html.match(/<a class="fx-share" href="[^"]+"/g) || [];
+    assert.equal(share.length, n, `${path}: ${n} Share control(s), a plain link in the server HTML (no-JS)`);
+    for (const s of share) assert.ok(s.includes(`href="https://alignata.com${path}?utm_source=share"`), `${path}: share URL`);
+    assert.ok(/<div class="fx-wrap fx-back" data-share-row=""[^>]*><a data-back=[^>]*>(?:(?!<\/div>)[\s\S])*?<\/a><a class="fx-share"/.test(html), `${path}: Share sits on the back-link row`);
+    assert.ok(html.includes(`<link rel="canonical" href="https://alignata.com${path}"/>`), `${path}: canonical has no params`);
+    assert.ok(html.includes(`<meta property="og:image" content="https://alignata.com${og}"/>`), `${path}: og:image = its own JPEG`);
+    assert.ok(html.includes('<meta property="og:image:width" content="1200"/>') && html.includes('<meta property="og:image:height" content="630"/>'));
+    assert.ok(html.includes('<meta name="twitter:card" content="summary_large_image"/>') && html.includes(`<meta name="twitter:image" content="https://alignata.com${og}"/>`), `${path}: X large card`);
+    assert.ok(existsSync(`public${og}`), `${og} made at build time`);
+  }
+  for (const f of [".next/server/app/index.html", ".next/server/app/guides/lightburn-variable-text-etsy-csv.html", ".next/server/app/apps.html"])
+    if (existsSync(f)) assert.ok(!readFileSync(f, "utf8").includes('class="fx-share"'), `${f}: no Share`);
+  const src = readFileSync("components/site/ShareButton.tsx", "utf8");
+  assert.ok(src.includes('sendSiteEvent(') && src.includes('"share_click", { slug, method }'), "share_click via the first-party sendSiteEvent, slug + method only");
+  assert.ok(!/\btrack\(|@vercel\/analytics/.test(src), "Share never calls Vercel track()");
+  assert.equal((src.match(/aria-live=/g) || []).length, 1, "one live region per page (rendered by the top Share only)");
+  const { validateSiteEvent, SITE_EVENT_PROPS } = await import("../lib/site/events.ts");
+  assert.deepEqual([...SITE_EVENT_PROPS.share_click], ["slug", "method"], "share_click allow-list = {slug, method}");
+  const env = (props) => ({ v: 1, event: "share_click", sid: "11111111-1111-4111-8111-111111111111", vid: "22222222-2222-4222-8222-222222222222", dogfood: false, props });
+  for (const m of ["native", "copy", "fail"]) assert.deepEqual(validateSiteEvent(env({ slug: "stripe-cleaver", method: m })).event?.props, { slug: "stripe-cleaver", method: m });
+  for (const extra of [{ url: "https://alignata.com/x?q=1" }, { referrer: "https://news.example.org/?id=42" }, { path: "/x" }, { title: "T" }, { query: "q=1" }])
+    assert.equal(validateSiteEvent(env({ slug: "stripe-cleaver", method: "copy", ...extra })).ok, false, `share_click rejects ${Object.keys(extra)[0]} (never stored)`);
+  assert.equal(validateSiteEvent(env({ slug: "stripe-cleaver", method: "email" })).ok, false, "unknown method rejected");
+  assert.equal(validateSiteEvent(env({ slug: "Bad Slug?x=1", method: "copy" })).ok, false, "slug can't carry a query");
+  const env2 = { ...env({ slug: "s", method: "copy" }), referrer: "https://x" };
+  assert.equal(validateSiteEvent(env2).ok, false, "no referrer in the envelope either");
+  assert.ok(src.includes('"AbortError"') && src.includes('execCommand("copy")') && src.includes("navigator.clipboard.writeText(url)") && src.includes('aria-live="polite"'), "AbortError ignored, clipboard → execCommand → panel, live toast");
+  assert.ok(src.includes('matchMedia("(pointer: coarse)")'), "desktop (fine pointer) always copies");
+  const css = readFileSync("app/restyle-c.css", "utf8");
+  assert.match(css, /\.fx-share, \.fx-share:visited \{[^}]*height: 44px; min-width: 88px/, "44px target");
+  assert.match(css, /prefers-reduced-motion: reduce\) \{ \.fx-toast \{ animation: none; \}/, "reduced motion");
+  const { PRIVACY, SHIP_DATE } = await import("../content/company.ts");
+  const va = PRIVACY.sections.find((s) => s.h2 === "Vercel Web Analytics");
+  assert.ok(!va.paras.join(" ").includes("Share"), "no Share line under Vercel Web Analytics (share_click is first-party)");
+  const count = PRIVACY.sections.find((s) => s.h2 === "What we count").paras[0];
+  assert.ok(count.includes("which links you tap on the homepage. When you tap Share, we also note which page it was and whether you used your device's share menu, copied the link, or the share didn't work. Links shared this way include a small tag, utm_source=share, so we can tell when a visit came from a share. When you open a Daily Digest article"), "Share line in What we count");
+  assert.ok(PRIVACY.sections.some((s) => s.paras.some((p) => p.startsWith("Each entry has a random ID."))), "share_click carries sid/vid, so 'Each entry has a random ID.' stays");
+  assert.equal(SHIP_DATE, "2026-10-11");
 });

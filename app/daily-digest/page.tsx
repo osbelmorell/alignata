@@ -5,6 +5,9 @@ import { NewMarkBoot } from "@/components/daily-digest/NewMarkBoot";
 import { PageFade } from "@/components/appstore/Motion";
 import { BackLink } from "@/components/site/BackLink";
 import { PageHero } from "@/components/site/PageHero";
+import { ogImage, ogPath, shareMeta } from "@/lib/share/og";
+
+const SHARE = shareMeta({ title: "Daily Digest", description: "Techniques for building with agents — Alignata", image: ogImage(ogPath.digestIndex(), "The Alignata Daily Digest illustration.") });
 
 export const metadata: Metadata = {
   title: "Daily Digest",
@@ -19,7 +22,9 @@ export const metadata: Metadata = {
     description: "Techniques for building with agents — Alignata",
     url: "/daily-digest",
     siteName: "Alignata",
+    images: SHARE.images,
   },
+  twitter: SHARE.twitter,
 };
 
 /**
@@ -31,7 +36,7 @@ export default function DailyDigestIndexPage() {
   const posts = getPostsNewestFirst();
   return (
     <PageFade>
-      <BackLink href="/" label="Home" />
+      <BackLink href="/" label="Home" share={{ path: "/daily-digest", slug: "daily-digest", label: "Share the Daily Digest", title: "Daily Digest" }} />
       <main className="fx-wrap">
         <NewMarkBoot posts={posts} />
         <section className="fx-page-head fx-head-split">
