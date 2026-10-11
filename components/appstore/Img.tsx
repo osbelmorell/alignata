@@ -18,9 +18,12 @@ type Entry = { w: number; b: string };
 const MAP = BLUR as Record<string, Entry>;
 
 const pending = (img: HTMLImageElement | null) => {
-  if (img && !img.complete) img.setAttribute("data-pending", "");
+  if (img) img.setAttribute(img.complete && img.naturalWidth > 0 ? "data-loaded" : "data-pending", "");
 };
-const done = (e: React.SyntheticEvent<HTMLImageElement>) => e.currentTarget.removeAttribute("data-pending");
+const done = (e: React.SyntheticEvent<HTMLImageElement>) => {
+  e.currentTarget.removeAttribute("data-pending");
+  e.currentTarget.setAttribute("data-loaded", "");
+};
 
 export function Img({ className, sizes, style, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) {
   const src = typeof props.src === "string" ? props.src : "";
