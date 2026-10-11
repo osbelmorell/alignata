@@ -17,6 +17,10 @@ function InlineText({ text }: { text: string }) {
           <a key={i} href={seg.href} target="_blank" rel="noopener noreferrer">
             {seg.text}
           </a>
+        ) : seg.kind === "strong" ? (
+          <strong key={i}>{seg.text}</strong>
+        ) : seg.kind === "em" ? (
+          <em key={i}>{seg.text}</em>
         ) : (
           <Fragment key={i}>{seg.text}</Fragment>
         ),
@@ -88,6 +92,34 @@ export function ArticleBody({
             break;
           case "rule":
             el = <hr />;
+            break;
+          case "table":
+            el = (
+              <div className="fx-table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      {block.head.map((c, j) => (
+                        <th key={j} scope="col">
+                          <InlineText text={c} />
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {block.rows.map((row, r) => (
+                      <tr key={r}>
+                        {row.map((c, j) => (
+                          <td key={j}>
+                            <InlineText text={c} />
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
             break;
           default:
             el = (

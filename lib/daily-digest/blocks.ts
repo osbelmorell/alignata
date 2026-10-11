@@ -7,6 +7,8 @@
  * - "- item" / "* item" lines (consecutive) → <ul>
  * - "1. item" / "1) item" lines (consecutive) → <ol> (start number kept)
  * - "---" (or "***") on its own line → section break (<hr>)
+ * - "| a | b |" lines (consecutive) → <table>; the first row is the header, a "|---|" row after it is skipped
+ * - inline "**bold**" → <strong>; a whole line wrapped in single "*…*" → <em> paragraph
  * - anything else → <p>
  * Each paragraph string may hold one line or several lines separated by "\n".
  *
@@ -28,7 +30,8 @@ export type ArticleBlock =
   | { kind: "paragraph"; text: string }
   | { kind: "rule" }
   | { kind: "ul"; items: string[] }
-  | { kind: "ol"; start: number; items: string[] };
+  | { kind: "ol"; start: number; items: string[] }
+  | { kind: "table"; head: string[]; rows: string[][] };
 
 export type ArticleSection = { heading: string; body: string[] };
 
@@ -38,6 +41,15 @@ const H2_RE = /^##\s+(.+)$/;
 const UL_RE = /^[-*]\s+(.*)$/;
 const OL_RE = /^(\d+)[.)]\s+(.*)$/;
 const RULE_RE = /^(?:-{3,}|\*{3,})$/;
+const TABLE_RE = /^\|.*\|$/;
+const TABLE_SEP_RE = /^\|(?:\s*:?-{3,}:?\s*\|)+$/;
+
+function tableCells(line: string): string[] {
+  return line
+    .slice(1, -1)
+    .split("|")
+    .map((c) => c.trim());
+}
 
 function heading(line: string): { level: 2 | 3; text: string } | null {
   const h3 = H3_RE.exec(line);
@@ -61,6 +73,15 @@ export function parseArticle(paragraphs: string[]): ArticleBlock[] {
   for (const line of lines) {
     if (RULE_RE.test(line)) {
       blocks.push({ kind: "rule" });
+      continue;
+    }
+    if (TABLE_RE.test(line)) {
+      const prev = blocks[blocks.length - 1];
+      if (prev?.kind === "table") {
+        if (!(prev.rows.length === 0 && TABLE_SEP_RE.test(line))) prev.rows.push(tableCells(line));
+      } else {
+        blocks.push({ kind: "table", head: tableCells(line), rows: [] });
+      }
       continue;
     }
     const h = heading(line);
@@ -102,7 +123,28 @@ export function parseSections(sections: ArticleSection[]): ArticleBlock[] {
  */
 export type InlineSegment =
   | { kind: "text"; text: string }
+  | { kind: "strong"; text: string }
+  | { kind: "em"; text: string }
   | { kind: "link"; text: string; href: string };
+
+const STRONG_RE = /\*\*(?=\S)([^*\n]+?)(?<=\S)\*\*/g;
+const WHOLE_EM_RE = /^\*(?!\*)(?=\S)([^*\n]+?)(?<=\S)\*$/;
+
+/** Plain text → text / strong / em segments ("**bold**"; a whole line in single "*…*" is emphasis). */
+function emphasis(text: string): InlineSegment[] {
+  const em = WHOLE_EM_RE.exec(text);
+  if (em) return [{ kind: "em", text: em[1] }];
+  const out: InlineSegment[] = [];
+  let cursor = 0;
+  for (const m of text.matchAll(STRONG_RE)) {
+    const start = m.index ?? 0;
+    if (start > cursor) out.push({ kind: "text", text: text.slice(cursor, start) });
+    out.push({ kind: "strong", text: m[1] });
+    cursor = start + m[0].length;
+  }
+  if (cursor < text.length) out.push({ kind: "text", text: text.slice(cursor) });
+  return out;
+}
 
 const INLINE_LINK_RE = /\[([^\[\]\n]+)\]\((https?:\/\/[^\s()<>"'`]+)\)/gi;
 
@@ -124,11 +166,11 @@ export function parseInline(text: string): InlineSegment[] {
     const label = m[1].trim();
     const href = safeHttpUrl(m[2]);
     if (!href || !label) continue;
-    if (start > cursor) out.push({ kind: "text", text: text.slice(cursor, start) });
+    if (start > cursor) out.push(...emphasis(text.slice(cursor, start)));
     out.push({ kind: "link", text: label, href });
     cursor = start + m[0].length;
   }
-  if (cursor < text.length) out.push({ kind: "text", text: text.slice(cursor) });
+  if (cursor < text.length) out.push(...emphasis(text.slice(cursor)));
   return out;
 }
 
