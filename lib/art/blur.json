@@ -1,0 +1,202 @@
+{
+ "/art/about-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRngAAABXRUJQVlA4IGwAAADwAgCdASoQAAkAA4BaJZACdH8D2Hf/+RRBXPgqyc1YQAD+8EmZ2wuPZ+tsigoe7UzqRgAe32stMHHtcXa4pTiGWzKwmPg6JxXFJ883VTuPNWEP08cQawlA9SagA7qrRrcVbgslW7dQHYPpgAA="
+ },
+ "/art/agent-bundle-tag-sticker-icon.webp": {
+  "w": 256,
+  "b": "data:image/webp;base64,UklGRn4AAABXRUJQVlA4IHIAAAAwAgCdASoQABAAA4BaJbACdIExFxNQaOG/wAD+3gNQ4NTGBuSXOppkqiGw4UBYYIFC95px8lzyaf7RmYOPhSFYBFukVGAQicaQzXe75ve68zL8fXC3ejfbTizdDwO4xDML4X7m4qKJr8SM+arexZcaAAA="
+ },
+ "/art/agent-bundle-tag-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlgAAABXRUJQVlA4IEwAAACwAQCdASoQAAkAA4BaJYwCw7Dp21eMAP7yj7Tv/o+9Nd78BqQQxw4StNMP7UCrQjYDghnFZk//RGhEn8RCJYKNsN9umfCL+HGYEgAA"
+ },
+ "/art/agent-eval-go-no-go-sticker-icon.webp": {
+  "w": 256,
+  "b": "data:image/webp;base64,UklGRnAAAABXRUJQVlA4IGQAAAAQAgCdASoQABAAA4BaJaACdAD0sY6DT0dgAP7XP/JEkt7U78w0JIV4URgzwGxUDfut4SHNYzPDN9ee/PLnxRlQXIF36cSLriU07N/i+0hmd96lhNe8+64aykMW+W+aX1POmQAA"
+ },
+ "/art/agent-eval-go-no-go-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlgAAABXRUJQVlA4IEwAAADwAQCdASoQAAkAA4BaJYwCdAEN5AVV+6gA/vZoM9aCw9m2lH/f8N21VwoiRtwyczt+7M1NsvmGHRjruaHciktwlSoV4wOIDJ0rggAA"
+ },
+ "/art/deploy-decision-card-sticker-icon.webp": {
+  "w": 256,
+  "b": "data:image/webp;base64,UklGRnIAAABXRUJQVlA4IGYAAACwAQCdASoQABAAA4BaJYgCdAD0jGAAAP7yPioJ1otWaZhhFTPW92S/rExS5us3+VFmdBTF08j02hHD97MLpLyqsX5AbjEEUkr2TlUGD1krN4zavDEU7KTL5BeAGTZlMf4NUguAAAA="
+ },
+ "/art/digest-hero-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRl4AAABXRUJQVlA4IFIAAADwAQCdASoQAAkAA4BaJQBOgB7HosRYjXAA/vVZvZmVms6fRPiNwKRIlhfb+E63j9kcXkpk8x1tGztI71Wk0PdgwAI9eHd1I7amgGGXE/Icc0AA"
+ },
+ "/art/digest/ai-agents-reverse-engineering-games-software-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAAAQAgCdASoQAAkAA4BaJZQCdAYp5mp3njAAAP74GWqpz82wOmpSvvsfoLInfOEw2dbPqoxQvkJlBLzy6n95Sz1GsbuT5AjYhGUjt+4gAAA="
+ },
+ "/art/digest/ask-before-doing-what-wasnt-asked-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAAAQAgCdASoQAAkAA4BaJZgCdH8AGYHKahgAAP73+p3n5CufB7Gqn90ydILFs567/mV8PxWTdgu9qljtgeMTzY8LoQICnt2O+qP2xeqyAAA="
+ },
+ "/art/digest/bind-every-claim-to-a-real-citation-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlgAAABXRUJQVlA4IEwAAADQAQCdASoQAAkAA4BaJYwCdADygHiAgAD+9BJKbuZrxlavTbd4jCW5yGKjoo+C++CriDlLYtoUZTeX8v6fgSNnsN4rM6CQcUAHgAAA"
+ },
+ "/art/digest/block-done-if-code-changed-after-tests-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAAAwAgCdASoQAAkAA4BaJQBOgMXI4Fpk3q4QAAD+9Au7gHLuFh4XQOh00bJk7ScPd+OUGgDxXIxMCm6rRSmt2KH/Ksa5ACIqPRgF8/Z28AA="
+ },
+ "/art/digest/break-loops-when-progress-stalls-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlwAAABXRUJQVlA4IFAAAAAwAgCdASoQAAkAA4BaJQBOgMUy3mnwNHkvAAD+9Ub4MRjcZCzvBj3notAZ7bd4FKg0foG78DYaylhRL8kW8HZgv9PNgyVmep+hfT7mGFOAAA=="
+ },
+ "/art/digest/check-each-tool-step-before-next-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRk4AAABXRUJQVlA4IEIAAACwAQCdASoQAAkAA4BaJZQCdADv3y9wAP738TXWI+5ofbe/G2r+80S1o7PsLWVPXtnYqid9yIASTAE9KABETP8AAAA="
+ },
+ "/art/digest/compare-models-only-under-a-locked-setup-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAADwAQCdASoQAAkAA4BaJQBOgCHwj23OlQAA/vZqFwVR4u7B602jDuTsrFfESi9/p1QD764tcDUVVsIQtVChJgQEA269N11JrKQuHUCAAAA="
+ },
+ "/art/digest/do-not-swap-tools-on-a-hunch-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlIAAABXRUJQVlA4IEYAAADwAQCdASoQAAkAA4BaJQBYdiIj6dFyNgAA/vZ3HARMILuIBqdZf52h6Q8WtFeTiHnReBcvmDWtFlmGCCvMqKQJ4lh+AAAA"
+ },
+ "/art/digest/dont-blind-retry-sends-or-charges-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRl4AAABXRUJQVlA4IFIAAADwAQCdASoQAAkAA4BaJQBOgCIfxflalcAA/vZm3gt2ntL4Ci9tSBr3Mvbu51/0gFpISGTNZz8ZTlP++wqIG3VlEiPF1AnqTH7eGggo3PLIAAAA"
+ },
+ "/art/digest/dont-follow-orders-in-tool-text-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAADwAQCdASoQAAkAA4BaJZQCw7EN+HB1uWAA/vTmmYITdzAVMA+FWpERz8SKM/Q/487+NIoBOMnSiH+vMKiLFgANiVSAAA=="
+ },
+ "/art/digest/google-ai-search-eating-its-own-traffic-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRk4AAABXRUJQVlA4IEIAAADQAQCdASoQAAkAA4BaJZQCsAEeeTIiAAD+9w/nnBgEXbXL/sCsf1wElm6vhd9Hc4CQ0uxjv8mA7zioIc72ahmoAAA="
+ },
+ "/art/digest/keep-hard-rules-sticky-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRmAAAABXRUJQVlA4IFQAAAAQAgCdASoQAAkAA4BaJagCdAD0VYyAq6sAAP7ifTYU15naXpD4RVX3P7KkbRm1EgswPcDtkr2T2Iw46t4uP8f7L4gc6QmfoLX/I90rLWbf9BLAAAA="
+ },
+ "/art/digest/laya-ai-deep-dive-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlQAAABXRUJQVlA4IEgAAADwAQCdASoQAAkAA4BaJZQCdADdI+ZnjYAA/vc+DC/GFwK4m42BPoyb6p/XygVIBDM/uqkNyxAcYFEYs1Gz3bTP8UgACllAAAA="
+ },
+ "/art/digest/load-only-the-tools-this-turn-needs-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRl4AAABXRUJQVlA4IFIAAABQAgCdASoQAAkAA4BaJZACdAEPSp6hWC3mhAAA/uirgoImD2oIa7RsegWjw28gTRserYRPAB5Mcax7srhYrEHgeHW4/JKbC3mRSMLQSJ+A4AAA"
+ },
+ "/art/digest/make-routers-pick-from-a-fixed-list-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRkwAAABXRUJQVlA4IEAAAADQAQCdASoQAAkAA4BaJYwAAugvHudJAAD+9Ul4iIg4XNospyJE9gEeYY1vOsbPlTyXWhGuULg7318qFwd44AAA"
+ },
+ "/art/digest/paperclip-deep-dive-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAADwAQCdASoQAAkAA4BaJQBOgCKKhfz+QgAA/vKF5NeE6pmkb9Df1MtQCDthbloLumNvJqTZaFbw+OCSnX2SKYHSZlWqwpNZVMVDMwLKm09kB73DotxoAA=="
+ },
+ "/art/digest/prove-it-before-irreversible-actions-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRmAAAABXRUJQVlA4IFQAAADQAQCdASoQAAkAA4BaJYwCdADDy3yAAAD+9zsbWgyyM9JCDWn07qJGMm+X60qbPQp+M0aLfDc+cgcggxJ3SfB7FXwLIBseUgADq7JhRn1qn8WAAAA="
+ },
+ "/art/digest/refuse-answers-sources-do-not-support-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRk4AAABXRUJQVlA4IEIAAADQAQCdASoQAAkAA4BaJQBOgBu03Ci7AAD+9zzC0FlNsokvkh+f+Qd5oBpk+FZf7qQvroUZusEFeO5do6CeCAIXMAA="
+ },
+ "/art/digest/refuse-answers-that-dont-match-tool-results-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlQAAABXRUJQVlA4IEgAAADwAQCdASoQAAkAA4BaJYwCw7ELZVgERPAA/vVZMHEX1qbekaMr6FjF45AL7JfnzbiomdrzJMSNX4+BIw3tbs2PtIZI3zNUigA="
+ },
+ "/art/digest/require-held-out-lift-before-shipping-harness-edits-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRl4AAABXRUJQVlA4IFIAAAAQAgCdASoQAAkAA4BaJYwCdAEeoWCeBiQAAP70EhHqHpL0SSd0sIOUGq8EnPVZ7OTVuKfa712xFCGzuyFkDUEvNwuukwr5GPpt6OSj587zQAAA"
+ },
+ "/art/digest/reuse-the-same-key-when-a-tool-retries-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAADQAQCdASoQAAkAA4BaJZQC7ADwudVmQAD+8nIlYoZuzojPtq+zFoOXzSRcJ+tYiWCYxFh+uHHS0OMXZ5h1FW+ndj/+FTaqEjAAAA=="
+ },
+ "/art/digest/show-fixes-only-when-things-break-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRk4AAABXRUJQVlA4IEIAAADQAQCdASoQAAkAA4BaJQBOgB6PdKWkAAD+9Au7n/Y+N/98m6wOTMs8H7epHL18wlqkLy7pV2SsOwECOdPcT6MD0AA="
+ },
+ "/art/digest/system-one-and-jev-deep-dive-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlwAAABXRUJQVlA4IFAAAADQAQCdASoQAAkAA4BaJQBOgBkqOFEgAAD+9AyLpkfTLjuLeTzLYIZTmulOjC7NvQTJlXZldE5WcQkkbYk/znZVwi9UCAriVuN/HgpK/pWwAA=="
+ },
+ "/art/digest/tell-failed-tools-what-to-try-next-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlgAAABXRUJQVlA4IEwAAAAQAgCdASoQAAkAA4BaJYwCdADdJCso0TAAAP71WTA6SIVFOnRzA1yk/vlHD9uUYJypn0Sq8S68AI5prkWgGVxttJV+AmxWLj4poyAA"
+ },
+ "/art/digest/test-search-before-saying-none-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlwAAABXRUJQVlA4IFAAAADQAQCdASoQAAkAA4BaJZQCdACxq71ZSAD+9kLRl7U+SBO3CpZ/gXfoiv7FnOpt5089pgwvHVebHM69I6yYQCzYHYZHTfPbbJFdANsIqgAAAA=="
+ },
+ "/art/digest/the-ai-safety-paradox-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlIAAABXRUJQVlA4IEYAAACwAQCdASoQAAkAA4BaJYwCdADcx39AAP72QtKDlsExp6CCt2m5IZHJhcxvF9sPy5W2NC/NH/Fn6ipZ3ApyaFkIuH+qAAAA"
+ },
+ "/art/digest/trim-long-logs-from-both-ends-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRkgAAABXRUJQVlA4IDwAAACQAQCdASoQAAkAA4BaJZScAEd4IQAA/vLicSh+8j1pifrz7t+ELwngNgFlSF5dxe5Qf36+EuHwaTOAgAA="
+ },
+ "/art/engrave-merge-sticker-icon.webp": {
+  "w": 256,
+  "b": "data:image/webp;base64,UklGRmQAAABXRUJQVlA4IFgAAADQAQCdASoQABAAA4BaJYgCdAEPC2sAAAD+88ZPdzCCmGN57yJzsH8nEO0Vm0bBnsDQP50yNBgl0IUIM8KEDbPLxX00qprRhBPQzDPsf8U5nMC8Q6qL6AAA"
+ },
+ "/art/engrave-merge-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlIAAABXRUJQVlA4IEYAAAAQAgCdASoQAAkAA4BaJQBOgCPtlHxLHL8AAP72RgyYcpFAxhqyPH2RyQ3WZhAE8V213dlzExaiAwot1dD5uCrti2cRAsAA"
+ },
+ "/art/enterprise-scorecard-sticker-icon.webp": {
+  "w": 256,
+  "b": "data:image/webp;base64,UklGRoIAAABXRUJQVlA4IHYAAABQAgCdASoQABAAA4BaJaACdAEeg/7FOZ5q1AAA4jgQlntfXER9nhtlQ9fZ4OnEC0udMBJKBaTThcigx91fyIUsVhdIkmcjDQ3vN2WZLg5+cgODVbiOuUGkEve/RpyhT0BUP+Ch5JEX/+yYvyPCC7fJgxwwsAAA"
+ },
+ "/art/enterprise-scorecard-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlgAAABXRUJQVlA4IEwAAADQAQCdASoQAAkAA4BaJYwCdAEDdIfdAAD+9RjmbRMLUayn0vW7vRU5tEz7ZqhK98g9y9FYlQJszbsCD3K9UP19vJMAp1JV4A81bAAA"
+ },
+ "/art/hobby-deploy-burn-digest-sticker-icon.webp": {
+  "w": 256,
+  "b": "data:image/webp;base64,UklGRnIAAABXRUJQVlA4IGYAAADwAQCdASoQABAAA4BaJbAC7ADpoZz/lAAA/vVZ9EPRrzP3u0cLxthK2//KXQzrsshfBfQRDeOniQGMQ/YHOzCatBJuwT5tNBBoVPKCdlrF0U0PuTmBtxCOCuIVoeVluZ+E7M/TkAA="
+ },
+ "/art/hobby-deploy-burn-digest-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRkoAAABXRUJQVlA4ID4AAADwAQCdASoQAAkAA4BaJYwAAqH+pBzPRQoA/vfw4oibu6KIVCUJy7+Lbq2uYcpNlffbdJ5tFywMBV+cq3wAAA=="
+ },
+ "/art/home-hero-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAAAQAgCdASoQAAkAA4BaJYwCdAERB/gMPZAAAP73PKjntTF+Y3Fz2OiU/FqAICjhMzmtqpzA7dhgHOzp1bAZlJUv4NVeqxx2RlFe0yw/gAA="
+ },
+ "/art/license-gate-sticker-icon.webp": {
+  "w": 256,
+  "b": "data:image/webp;base64,UklGRm4AAABXRUJQVlA4IGIAAABQAgCdASoQABAAA4BaJYwCdAYuRwn+GYkydoAA/vYw/6pK8qo96q2Oc4xLi8w/FNJjLUe/OpeGj2cXGtplgw06wXlv+32vbykqry5rFu32FtwcwjH6ye8tp+gYwkAE+AAAAA=="
+ },
+ "/art/license-gate-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRkoAAABXRUJQVlA4ID4AAACQAQCdASoQAAkAA4BaJZQAAl1Hw6AA/vc9d1SMWfOUKNwhglYv1wiDi1c2xphnbEjfj2I/RerUHgfvZVJAAA=="
+ },
+ "/art/llm-feature-cost-tag-sticker-icon.webp": {
+  "w": 256,
+  "b": "data:image/webp;base64,UklGRm4AAABXRUJQVlA4IGIAAAAQAgCdASoQABAAA4BaJYgCdADdlQ7nuHEAAP7WK/I4pjHEK4dC/Csxb63OjbYN6Fy0zeZ57qUMgxrNrmVOKLk6mN3HlRZj52r92bAPlyb2x1tcpUNSh2+i7da5vwthvxRAAA=="
+ },
+ "/art/llm-feature-cost-tag-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlQAAABXRUJQVlA4IEgAAAAwAgCdASoQAAkAA4BaJZQC7AD2PNpj2BCrAAD+9mgU2KdpEB4JXDKpZ/0jndnOgiJeER1I0GIkqN0QhbyV+o1WIA1tsdYAAAA="
+ },
+ "/art/stripe-cleaver-sticker-icon.webp": {
+  "w": 256,
+  "b": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAADwAQCdASoQABAAA4BaJQBOgCHONhxrvMAA/uupLkyoGmIWUu6LWZimZz+zfO04rgAVMVNZmn92qPl7Om48YZk27H7uzrfG2FBLtiJk3dTjMIwXIATGAA=="
+ },
+ "/art/stripe-cleaver-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRk4AAABXRUJQVlA4IEIAAADQAQCdASoQAAkAA4BaJZwCdAEf/prQAAD+9nZ0WMds2KaeJ/txx++CEwU1VMPeojjoSUQUSIB6/bLEpCZYZWCgAAA="
+ },
+ "/art/tool-hero-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAAAQAgCdASoQAAkAA4BaJZACdAEUUq/Ih1UAAP7rxHeeE/wtpM3AAPFb23V4zpB+DXhhAfF/oHN8JWFxq5f3E/Arzpfpos2q8sr4CqFzfKCmmOFTGD2b4X0Pbx0HgAAA"
+ },
+ "/art/what-changed-card-sticker-icon.webp": {
+  "w": 256,
+  "b": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAADQAQCdASoQABAAA4BaJZACdAELUqGZOAD+9PPP9jU9j6qM8xLzWPVTReo6K3EE5+RO1oijrUHO1alYhRQnxYs+qt8bgX1kFRfwCenydolIMD2jL4ogAA=="
+ },
+ "/art/what-changed-card-sticker.webp": {
+  "w": 1920,
+  "b": "data:image/webp;base64,UklGRlQAAABXRUJQVlA4IEgAAAAQAgCdASoQAAkAA4BaJZQCdAEfB89HjpHAAP71ScRc6kRY3z5gfYXUGqlxs4i/7qSSqMqsC9r2gmau4lcQRcJfLmR2BkAAAAA="
+ }
+}
