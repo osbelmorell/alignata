@@ -129,7 +129,7 @@ body:has(.fx-sticky-open.fx-on) .fx-toast, body:has(.fx-sticky-open.fx-on) .fx-s
 .fx-ph { display: block; position: relative; overflow: hidden;
   background: var(--ph, none) center / cover no-repeat, linear-gradient(100deg, #EFEAFB 20%, #F8F5FF 40%, #FDEDE8 60%, #EFEAFB 80%) 0 0 / 300% 100%; }
 .fx-ph > img { display: block; width: 100%; transition: opacity 200ms ease-out; }
-.fx-ph > img[data-pending] { opacity: 0; }
+.fx-ph > img[data-pending], .fx-ph > img[data-error] { opacity: 0; }
 .fx-ph:has(> img[data-pending])::after { content: ""; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%) 0 0 / 300% 100%; animation: fx-shimmer 1.4s linear infinite; }
 @keyframes fx-shimmer { from { background-position: 100% 0; } to { background-position: -50% 0; } }

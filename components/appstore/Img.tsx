@@ -18,11 +18,16 @@ type Entry = { w: number; b: string };
 const MAP = BLUR as Record<string, Entry>;
 
 const pending = (img: HTMLImageElement | null) => {
-  if (img) img.setAttribute(img.complete && img.naturalWidth > 0 ? "data-loaded" : "data-pending", "");
+  if (img) img.setAttribute(!img.complete ? "data-pending" : img.naturalWidth > 0 ? "data-loaded" : "data-error", "");
 };
 const done = (e: React.SyntheticEvent<HTMLImageElement>) => {
   e.currentTarget.removeAttribute("data-pending");
   e.currentTarget.setAttribute("data-loaded", "");
+};
+/** A failed image (offline, 404) is hidden and its blur preview stays, so nothing ever shows a broken-image glyph. */
+const failed = (e: React.SyntheticEvent<HTMLImageElement>) => {
+  e.currentTarget.removeAttribute("data-pending");
+  e.currentTarget.setAttribute("data-error", "");
 };
 
 export function Img({ className, sizes, style, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) {
@@ -33,7 +38,7 @@ export function Img({ className, sizes, style, ...props }: React.ImgHTMLAttribut
   return (
     <span className={className ? `fx-ph ${className}` : "fx-ph"} style={hit ? ({ ...style, "--ph": `url("${hit.b}")` } as React.CSSProperties) : style}>
       {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
-      <img {...props} srcSet={srcSet} sizes={srcSet ? (sizes ?? (hit!.w >= 1920 ? "(max-width: 899.98px) 100vw, 640px" : "56px")) : sizes} ref={pending} onLoad={done} onError={done} />
+      <img {...props} srcSet={srcSet} sizes={srcSet ? (sizes ?? (hit!.w >= 1920 ? "(max-width: 899.98px) 100vw, 640px" : "48px")) : sizes} ref={pending} onLoad={done} onError={failed} />
     </span>
   );
 }

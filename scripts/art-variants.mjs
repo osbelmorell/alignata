@@ -1,5 +1,6 @@
 // Build step (runs before next build): responsive variants of every /art webp into public/art/_r/ (gitignored),
-// and tiny blur previews into lib/art/blur.json (committed; `--check` fails if it drifts from public/art).
+// and tiny blur previews into lib/art/blur.json, regenerated on every build so a new hero (e.g. a new Digest article)
+// can never break the Vercel build. The committed copy is only there so typecheck works on a fresh clone.
 import { readdirSync, mkdirSync, existsSync, readFileSync, writeFileSync, statSync } from "node:fs";
 import { join, dirname, relative } from "node:path";
 import sharp from "sharp";

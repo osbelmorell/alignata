@@ -2047,8 +2047,15 @@ test("Images (Oct 11 2026): every /art file has a blur preview and built 640/960
     }
   }
   const img = readFileSync(new URL("../components/appstore/Img.tsx", import.meta.url), "utf8");
-  assert.match(img, /srcSet=/); assert.match(img, /data-pending/); assert.match(img, /fx-ph/);
   const css = readFileSync(new URL("../app/restyle-c.css", import.meta.url), "utf8");
+  assert.match(img, /srcSet=/); assert.match(img, /data-pending/); assert.match(img, /fx-ph/);
+  // A failed load hides the img and keeps the blur: onError marks data-error (never data-loaded, which clears the frame).
+  assert.match(img, /onError=\{failed\}/);
+  assert.match(img, /const failed = [^;]*?\{\s*e\.currentTarget\.removeAttribute\("data-pending"\);\s*e\.currentTarget\.setAttribute\("data-error", ""\);\s*\}/);
+  assert.ok(!/const failed[\s\S]*?data-loaded[\s\S]*?\};/.test(img.slice(img.indexOf("const failed"), img.indexOf("export function"))), "error never sets data-loaded");
+  assert.match(css, /\.fx-ph > img\[data-pending\], \.fx-ph > img\[data-error\] \{ opacity: 0; \}/);
+  assert.ok(!/\.fx-ph:has\(> img\[data-error\]\)[^{]*\{[^}]*background:\s*none/.test(css), "blur stays on error");
+  assert.match(readFileSync(new URL("../package.json", import.meta.url), "utf8"), /"build": "node --import tsx scripts\/art-variants\.mjs && /, "build generates variants + blur.json (no --check)");
   assert.match(css, /\.fx-ph > img \{[^}]*transition: opacity 200ms/);
   assert.match(css, /prefers-reduced-motion: reduce\) \{\s*\.fx-ph > img \{ transition: none; \}\s*\.fx-ph:has\(> img\[data-pending\]\)::after \{ animation: none; \}/);
   assert.match(readFileSync(new URL("../next.config.ts", import.meta.url), "utf8"), /source: "\/art\/:path\*"/);
