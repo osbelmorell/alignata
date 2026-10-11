@@ -11,6 +11,8 @@ export const SITE_EVENT_PROPS = {
   article_view: ["slug", "n"],
   home_click: ["target"],
   digest_open: ["slug", "mark"],
+  /** Share (Oct 11 2026): only the page slug and how it was shared. No URL, query, title or referrer. */
+  share_click: ["slug", "method"],
 } as const;
 
 /**
@@ -27,7 +29,10 @@ export const TOOL_OPEN_SOURCES = ["feed", "apps", "story", "sticky", "guide"] as
 export type ToolOpenSource = (typeof TOOL_OPEN_SOURCES)[number];
 
 export type SiteEventName = keyof typeof SITE_EVENT_PROPS;
-export type SiteEventProps = { path?: string; slug?: string; position?: number; n?: number; target?: string; source?: ToolOpenSource; mark?: DigestMark };
+export type SiteEventProps = { path?: string; slug?: string; position?: number; n?: number; target?: string; source?: ToolOpenSource; mark?: DigestMark; method?: ShareMethod };
+/** share_click.method: the device share menu, a copied link, or a failed share. */
+export const SHARE_METHODS = ["native", "copy", "fail"] as const;
+export type ShareMethod = (typeof SHARE_METHODS)[number];
 /** digest_open.mark (Release B, replaces was_new): which Daily Digest mark the card showed. */
 export const DIGEST_MARKS = ["new", "updated", "none"] as const;
 export type DigestMark = (typeof DIGEST_MARKS)[number];
@@ -106,6 +111,10 @@ export function validateSiteEvent(raw: unknown): SiteValidated {
   if ("mark" in props) {
     if (typeof props.mark !== "string" || !(DIGEST_MARKS as readonly string[]).includes(props.mark)) return { ok: false, reason: "bad_mark" };
     out.mark = props.mark as DigestMark;
+  }
+  if ("method" in props) {
+    if (typeof props.method !== "string" || !(SHARE_METHODS as readonly string[]).includes(props.method)) return { ok: false, reason: "bad_method" };
+    out.method = props.method as ShareMethod;
   }
   if ("source" in props) {
     if (typeof props.source !== "string" || !(TOOL_OPEN_SOURCES as readonly string[]).includes(props.source)) {

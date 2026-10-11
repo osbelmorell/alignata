@@ -95,7 +95,7 @@ a.fx-open, a.fx-open:visited, a.fx-open:hover { background: #fff; color: var(--i
 
 /* Share (Oct 11 2026; share-spec/SPEC.md): soft secondary pill on the back-link row (never filled; the page's one
    primary stays the only filled control), toast + failure panel fixed (no layout shift). No dark mode on the site. */
-.fx-back[data-share-row] { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.fx-back[data-share-row] { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .fx-share, .fx-share:visited { display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box; height: 44px; min-width: 88px; padding: 0 16px; border: 0; border-radius: var(--r-pill, 999px);
   background: var(--tint-essay); color: var(--purple); font: 600 15px/1 var(--body), sans-serif; text-decoration: none; cursor: pointer; flex: none; -webkit-tap-highlight-color: transparent; }
 @media (hover: hover) { .fx-share:hover { background: color-mix(in srgb, var(--tint-essay) 88%, var(--purple)); } }
@@ -103,7 +103,7 @@ a.fx-open, a.fx-open:visited, a.fx-open:hover { background: #fff; color: var(--i
 .fx-share[aria-busy="true"] { cursor: progress; }
 .fx-share:focus-visible { outline: 3px solid var(--purple); outline-offset: 3px; }
 .fx-share-live { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); border: 0; }
-.fx-share-end { display: flex; align-items: center; gap: 12px; margin: 40px 0 8px; padding: 14px 16px 14px 20px; border-radius: var(--r-card); background: var(--tint-essay); }
+.fx-share-end { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 40px 0 8px; padding: 14px 16px 14px 20px; border-radius: var(--r-card); background: var(--tint-essay); }
 .fx-share-end p { margin: 0; font-size: 15px; font-weight: 500; color: var(--ink); }
 .fx-share-end .fx-share { margin-left: auto; background: #fff; }
 .fx-toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 90; display: flex; align-items: center; gap: 10px;
@@ -118,4 +118,6 @@ a.fx-open, a.fx-open:visited, a.fx-open:hover { background: #fff; color: var(--i
 .fx-sharefail-row button { min-height: 44px; min-width: 44px; padding: 0 14px; border: 0; background: none; color: var(--purple); font: 600 15px var(--body), sans-serif; cursor: pointer; }
 .fx-sharefail-row button:focus-visible, .fx-sharefail input:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
 body:has(.fx-sticky-open.fx-on) .fx-toast, body:has(.fx-sticky-open.fx-on) .fx-sharefail { bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+/* Phones: the failure panel sits inline under its control (full row width), so it never covers the page (e.g. Next article). */
+@media (max-width: 899.98px) { .fx-sharefail { position: static; transform: none; width: 100%; flex-basis: 100%; margin-top: 4px; box-shadow: none; } }
 @media (prefers-reduced-motion: reduce) { .fx-toast { animation: none; } .fx-share:active { transform: none; } }

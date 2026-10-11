@@ -11,7 +11,7 @@ export function BackLink({ href, label, share }: { href: string; label: string; 
       <Link href={href} data-back={href}>
         <span aria-hidden="true">←</span> {label}
       </Link>
-      {share ? <ShareButton {...share} /> : null}
+      {share ? <ShareButton {...share} live /> : null}
     </div>
   );
 }

@@ -1,18 +1,32 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { track } from "@vercel/analytics";
+import { SID_KEY, VID_KEY, dogfoodSession, getOrCreateId, sendSiteEvent, shouldSkip } from "@/lib/site/client";
+import type { ShareMethod } from "@/lib/site/events";
 import { shareUrl } from "@/lib/share/url";
 
-export type ShareMethod = "native" | "copy" | "fail";
 
-/** share_click via Vercel Analytics: only the slug and the method. Blocked or failing analytics never affects sharing. */
+/**
+ * share_click {slug, method} through the site's own first-party log (/api/site/e, allow-listed server-side; no URL,
+ * query, title or referrer), with the usual sid/vid ids, dogfood flag and skip rule. Never Vercel Analytics.
+ * Blocked storage or a failed beacon never affects sharing.
+ */
 function trackShare(slug: string, method: ShareMethod) {
   try {
-    track("share_click", { slug, method });
+    const local = window.localStorage;
+    const session = window.sessionStorage;
+    if (shouldSkip({ webdriver: navigator.webdriver, local })) return;
+    sendSiteEvent({ sid: getOrCreateId(session, SID_KEY), vid: getOrCreateId(local, VID_KEY), dogfood: dogfoodSession(location.search, session) }, "share_click", { slug, method });
   } catch {
-    /* analytics blocked: ignore */
+    /* storage blocked: no event */
   }
+}
+
+/** The page's ONE aria-live region (rendered by the top Share in the back-link row), shared by every Share on it. */
+export const SHARE_LIVE_ID = "fx-share-live";
+function announce(msg: string) {
+  const el = document.getElementById(SHARE_LIVE_ID);
+  if (el) el.textContent = msg;
 }
 
 /** Legacy copy (execCommand) for browsers or in-app WebViews where the async Clipboard API is missing or refused. */
@@ -51,7 +65,7 @@ const ICON = (
  * - desktop / unsupported → clipboard.writeText → execCommand → the selected-URL panel.
  * Shared URL = canonical + ?utm_source=share. share_click {slug, method}. Focus returns to the button.
  */
-export function ShareButton({ path, slug, label, title }: { path: string; slug: string; label: string; title: string }) {
+export function ShareButton({ path, slug, label, title, live = false }: { path: string; slug: string; label: string; title: string; /** Render the page's one live region (top control only). */ live?: boolean }) {
   const url = shareUrl(path);
   // false in the server HTML (plain link), true once hydrated (the button); no setState-in-effect.
   const js = useSyncExternalStore(noop, () => true, () => false);
@@ -60,7 +74,6 @@ export function ShareButton({ path, slug, label, title }: { path: string; slug: 
   const [busy, setBusy] = useState(false);
   const btn = useRef<HTMLButtonElement>(null);
   const input = useRef<HTMLInputElement>(null);
-  const live = useRef<HTMLSpanElement>(null);
   const timer = useRef<number | undefined>(undefined);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
@@ -80,9 +93,6 @@ export function ShareButton({ path, slug, label, title }: { path: string; slug: 
     return () => document.removeEventListener("keydown", onKey);
   }, [fail]);
 
-  const announce = (msg: string) => {
-    if (live.current) live.current.textContent = msg;
-  };
   const copied = () => {
     trackShare(slug, "copy");
     setToast(true);
@@ -152,7 +162,7 @@ export function ShareButton({ path, slug, label, title }: { path: string; slug: 
           <span>Share</span>
         </a>
       )}
-      <span ref={live} className="fx-share-live" role="status" aria-live="polite" aria-atomic="true" />
+      {live ? <span id={SHARE_LIVE_ID} className="fx-share-live" role="status" aria-live="polite" aria-atomic="true" /> : null}
       {toast ? (
         <div className="fx-toast" aria-hidden="true">
           <i>✓</i>Link copied

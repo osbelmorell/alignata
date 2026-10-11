@@ -33,8 +33,8 @@ const mem = (init = {}) => {
   return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), m };
 };
 
-test("validator: the six allow-listed events with exactly their props (digest_open added by Release A, Oct 10)", () => {
-  assert.deepEqual(Object.keys(SITE_EVENT_PROPS), ["page_view", "apps_view", "tool_open", "article_view", "home_click", "digest_open"]);
+test("validator: the seven allow-listed events with exactly their props (digest_open added by Release A, Oct 10; share_click by Share, Oct 11)", () => {
+  assert.deepEqual(Object.keys(SITE_EVENT_PROPS), ["page_view", "apps_view", "tool_open", "article_view", "home_click", "digest_open", "share_click"]);
   for (const [ev, props] of [
     ["page_view", { path: "/" }],
     ["page_view", { path: "/daily-digest/break-loops-when-progress-stalls" }],
@@ -1646,7 +1646,7 @@ test("/privacy (COPY.md §5 v4 FINAL): no art, H1, dek, 'Last updated' + SHIP_DA
     "<h2>Services we use</h2><p>Vercel hosts the site, and Upstash stores our usage log. We don&#x27;t store your IP address. Vercel processes it briefly to serve and protect the site, and keeps its request logs for about a day. Our fonts are hosted on our own site.</p>",
     "<p>Entries are deleted automatically after about 180 days (about 120 days for Engrave Merge).</p>",
     "<p>Each entry has a random ID. A visitor ID stays in your browser until you clear this site&#x27;s data, and a session ID usually lasts only as long as the tab. Engrave Merge keeps its own random ID in your browser, like the visitor ID.</p>",
-    "<h2>What we count</h2><p>We keep our own small log of how the site is used: which pages you visit, which tool you open and where on the site you tapped it, which articles you read, and which links you tap on the homepage. When you open a Daily Digest article, we also note whether it was marked New or Updated. On Engrave Merge, we also count when the page opens, when you download or print a result, and whether you saw the price question and how you answered it. If one of our guides sent you, we also note which one, as part of those counts.</p>",
+    "<h2>What we count</h2><p>We keep our own small log of how the site is used: which pages you visit, which tool you open and where on the site you tapped it, which articles you read, and which links you tap on the homepage. When you tap Share, we also note which page it was and whether you used your device&#x27;s share menu, copied the link, or the share didn&#x27;t work. Links shared this way include a small tag, utm_source=share, so we can tell when a visit came from a share. When you open a Daily Digest article, we also note whether it was marked New or Updated. On Engrave Merge, we also count when the page opens, when you download or print a result, and whether you saw the price question and how you answered it. If one of our guides sent you, we also note which one, as part of those counts.</p>",
     "<p>Engrave Merge also keeps a small note on this device: how many files you&#x27;ve dropped into it, which days it showed you the price question, and your answer if you gave one. That way it doesn&#x27;t keep asking.</p><p>To mark Daily Digest articles as New or Updated, your browser keeps the date it began marking articles and a list of the articles you&#x27;ve opened, with the day you opened each one. It forgets each opened article after 90 days. The date and the list stay on this device.</p><h2>Services we use</h2>",
     "<h2>Changes</h2><p>If we change what we collect, for example when paid plans arrive, we&#x27;ll update this page first and change the date at the top.</p>",
   ]) assert.ok(html.includes(f), `privacy has: ${f.slice(0, 80)}`);
@@ -1974,7 +1974,7 @@ test("Share (Oct 11 2026): one Share on articles, tool stories and /daily-digest
   ];
   for (const [file, path, og, n] of pages) {
     const f = `.next/server/app/${file}.html`;
-    if (!existsSync(f)) continue;
+    assert.ok(existsSync(f), `${f} missing: run npm run build before test:site`);
     const html = readFileSync(f, "utf8");
     const share = html.match(/<a class="fx-share" href="[^"]+"/g) || [];
     assert.equal(share.length, n, `${path}: ${n} Share control(s), a plain link in the server HTML (no-JS)`);
@@ -1989,7 +1989,19 @@ test("Share (Oct 11 2026): one Share on articles, tool stories and /daily-digest
   for (const f of [".next/server/app/index.html", ".next/server/app/guides/lightburn-variable-text-etsy-csv.html", ".next/server/app/apps.html"])
     if (existsSync(f)) assert.ok(!readFileSync(f, "utf8").includes('class="fx-share"'), `${f}: no Share`);
   const src = readFileSync("components/site/ShareButton.tsx", "utf8");
-  assert.ok(src.includes('track("share_click", { slug, method })'), "share_click via Vercel Analytics track, slug + method only");
+  assert.ok(src.includes('sendSiteEvent(') && src.includes('"share_click", { slug, method }'), "share_click via the first-party sendSiteEvent, slug + method only");
+  assert.ok(!/\btrack\(|@vercel\/analytics/.test(src), "Share never calls Vercel track()");
+  assert.equal((src.match(/aria-live=/g) || []).length, 1, "one live region per page (rendered by the top Share only)");
+  const { validateSiteEvent, SITE_EVENT_PROPS } = await import("../lib/site/events.ts");
+  assert.deepEqual([...SITE_EVENT_PROPS.share_click], ["slug", "method"], "share_click allow-list = {slug, method}");
+  const env = (props) => ({ v: 1, event: "share_click", sid: "11111111-1111-4111-8111-111111111111", vid: "22222222-2222-4222-8222-222222222222", dogfood: false, props });
+  for (const m of ["native", "copy", "fail"]) assert.deepEqual(validateSiteEvent(env({ slug: "stripe-cleaver", method: m })).event?.props, { slug: "stripe-cleaver", method: m });
+  for (const extra of [{ url: "https://alignata.com/x?q=1" }, { referrer: "https://news.example.org/?id=42" }, { path: "/x" }, { title: "T" }, { query: "q=1" }])
+    assert.equal(validateSiteEvent(env({ slug: "stripe-cleaver", method: "copy", ...extra })).ok, false, `share_click rejects ${Object.keys(extra)[0]} (never stored)`);
+  assert.equal(validateSiteEvent(env({ slug: "stripe-cleaver", method: "email" })).ok, false, "unknown method rejected");
+  assert.equal(validateSiteEvent(env({ slug: "Bad Slug?x=1", method: "copy" })).ok, false, "slug can't carry a query");
+  const env2 = { ...env({ slug: "s", method: "copy" }), referrer: "https://x" };
+  assert.equal(validateSiteEvent(env2).ok, false, "no referrer in the envelope either");
   assert.ok(src.includes('"AbortError"') && src.includes('execCommand("copy")') && src.includes("navigator.clipboard.writeText(url)") && src.includes('aria-live="polite"'), "AbortError ignored, clipboard → execCommand → panel, live toast");
   assert.ok(src.includes('matchMedia("(pointer: coarse)")'), "desktop (fine pointer) always copies");
   const css = readFileSync("app/restyle-c.css", "utf8");
@@ -1997,6 +2009,9 @@ test("Share (Oct 11 2026): one Share on articles, tool stories and /daily-digest
   assert.match(css, /prefers-reduced-motion: reduce\) \{ \.fx-toast \{ animation: none; \}/, "reduced motion");
   const { PRIVACY, SHIP_DATE } = await import("../content/company.ts");
   const va = PRIVACY.sections.find((s) => s.h2 === "Vercel Web Analytics");
-  assert.equal(va.paras.at(-1), "When you tap Share, Vercel Web Analytics also counts it, along with the page and whether you used your device's share menu, copied the link, or the share didn't work. Links shared this way include utm_source=share so we can tell when a visit came from a share.");
+  assert.ok(!va.paras.join(" ").includes("Share"), "no Share line under Vercel Web Analytics (share_click is first-party)");
+  const count = PRIVACY.sections.find((s) => s.h2 === "What we count").paras[0];
+  assert.ok(count.includes("which links you tap on the homepage. When you tap Share, we also note which page it was and whether you used your device's share menu, copied the link, or the share didn't work. Links shared this way include a small tag, utm_source=share, so we can tell when a visit came from a share. When you open a Daily Digest article"), "Share line in What we count");
+  assert.ok(PRIVACY.sections.some((s) => s.paras.some((p) => p.startsWith("Each entry has a random ID."))), "share_click carries sid/vid, so 'Each entry has a random ID.' stays");
   assert.equal(SHIP_DATE, "2026-10-11");
 });
