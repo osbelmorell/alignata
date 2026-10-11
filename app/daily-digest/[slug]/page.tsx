@@ -10,6 +10,8 @@ import { heroImage, nextPost, postCardDek, postTag, readMinutes, shortDate } fro
 import { Morph, PageFade } from "@/components/appstore/Motion";
 import { Byline } from "@/components/daily-digest/Byline";
 import { BackLink } from "@/components/site/BackLink";
+import { ShareEnd } from "@/components/site/ShareButton";
+import { ogImage, ogPath, shareMeta } from "@/lib/share/og";
 import { DigestOpen } from "@/components/daily-digest/DigestOpen";
 import { articleJsonLd, jsonLdScript } from "@/lib/daily-digest/jsonld";
 
@@ -42,7 +44,9 @@ export async function generateMetadata({
       siteName: "Alignata",
       publishedTime: post.date,
       ...(post.updated ? { modifiedTime: post.updated.date } : {}),
+      images: shareMeta({ title: post.title, description: toPlainText(post.dek), image: ogImage(ogPath.article(post.slug), heroImage(post).alt) }).images,
     },
+    twitter: shareMeta({ title: post.title, description: toPlainText(post.dek), image: ogImage(ogPath.article(post.slug), heroImage(post).alt) }).twitter,
   };
 }
 
@@ -66,7 +70,7 @@ export default async function DailyDigestPostPage({
   return (
     <PageFade story>
       <DigestOpen slug={post.slug} date={post.date} updated={post.updated?.date} />
-      <BackLink href="/daily-digest" label="Daily Digest" />
+      <BackLink href="/daily-digest" label="Daily Digest" share={{ path: `/daily-digest/${post.slug}`, slug: post.slug, label: "Share this article", title: post.title }} />
       <main className="fx-story">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(articleJsonLd(post)) }} />
         <article>
@@ -94,6 +98,7 @@ export default async function DailyDigestPostPage({
             </header>
             <ArticleBody paragraphs={post.paragraphs} sections={post.sections} pullQuote={post.pullQuote} />
             {post.sourceNote ? <p className="fx-prose fx-note">{post.sourceNote}</p> : null}
+            <ShareEnd path={`/daily-digest/${post.slug}`} slug={post.slug} label="Share this article" title={post.title} />
             <aside className="fx-next" aria-label="Next article">
               <h2>Next article</h2>
               {next ? <ArticleStoryCard post={next} heading="h3" /> : null}

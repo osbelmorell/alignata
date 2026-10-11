@@ -7,7 +7,7 @@
  */
 
 /** COPY.md [DATE]: the ship date, ISO YYYY-MM-DD. Change only this if the release date slips. */
-export const SHIP_DATE = "2026-10-10"; // Oct 10 2026: Daily Digest Release A privacy lines (CEO: factual date change)
+export const SHIP_DATE = "2026-10-11"; // Oct 11 2026: Share line in "Vercel Web Analytics" (was Oct 10: Daily Digest Release A privacy lines)
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 /** SHIP_DATE as shown ("October 3, 2026"); parsed by hand so the build's time zone can't shift the day. */
 export function shipDateLabel(iso: string = SHIP_DATE): string {
@@ -104,6 +104,8 @@ export const PRIVACY = {
       h2: "Vercel Web Analytics",
       paras: [
         "We also use Vercel Web Analytics to count page views and see which sites send people here. Vercel says it uses no cookies and doesn't store your IP address. It records the page, the site you came from, your rough location and your type of device and browser.",
+        // Share (Oct 11 2026, approved wording): share_click via Vercel Analytics track + utm_source=share.
+        "When you tap Share, Vercel Web Analytics also counts it, along with the page and whether you used your device's share menu, copied the link, or the share didn't work. Links shared this way include utm_source=share so we can tell when a visit came from a share.",
       ],
     },
     {

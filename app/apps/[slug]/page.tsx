@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BackLink } from "@/components/site/BackLink";
+import { ogImage, ogPath, shareMeta } from "@/lib/share/og";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getApps, TOOL_STORY, toolAbout, toolArt, toolsOrder } from "@/lib/apps";
@@ -34,11 +35,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const t = find(slug);
   if (!t) return {};
+  const share = shareMeta({ title: t.story.title, description: t.story.dek, image: ogImage(ogPath.tool(slug), t.art.alt) });
   return {
     title: t.story.title,
     description: t.story.dek,
     alternates: { canonical: `/apps/${slug}` },
-    openGraph: { type: "article", title: t.story.title, description: t.story.dek, url: `/apps/${slug}`, siteName: "Alignata" },
+    openGraph: { type: "article", title: t.story.title, description: t.story.dek, url: `/apps/${slug}`, siteName: "Alignata", images: share.images },
+    twitter: share.twitter,
   };
 }
 
@@ -57,7 +60,7 @@ export default async function ToolStoryPage({ params }: { params: Promise<{ slug
   return (
     <PageFade story>
       <div className="fx-page">
-        <BackLink href="/apps" label="Tools" />
+        <BackLink href="/apps" label="Tools" share={{ path: `/apps/${app.id}`, slug: app.id, label: "Share this tool", title: story.title }} />
         <main className="fx-story">
           <article>
             <ArtFigure slug={app.id} className="fx-story-hero" src={art.art} alt={art.alt} pad={art.pad} hero />
