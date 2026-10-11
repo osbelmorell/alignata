@@ -71,7 +71,8 @@ a.fx-open, a.fx-open:visited, a.fx-open:hover { background: #fff; color: var(--i
 .fx-arow { background: var(--tint-tool); border-bottom: 0; border-radius: var(--r-card); padding: 13px 16px; min-height: 70px; gap: 14px; box-sizing: border-box; }
 .fx-arow .fx-icon, .fx-icon { border-radius: 14px; box-shadow: none; }
 @media (min-width: 900px) { .fx-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } .fx-arow { padding: 20px 22px; } }
-/* Under 900px: tool lists are compact rows (icon, title, one line, Open) on home too */
+/* Under 900px: tool lists are compact rows (icon, name, one line, Open) on home too.
+   The card title (story link) is hidden with the art; the row name is the stretch link to the story (AppRow card variant). Open stays the tool. */
 @media (max-width: 899.98px) {
   .fx-app-line { font-size: 14px; }
   .fx-feed .fx-scard[data-kind="tool"] .fx-scard-art, .fx-feed .fx-scard[data-kind="tool"] .fx-scard-text { display: none; }
@@ -79,4 +80,3 @@ a.fx-open, a.fx-open:visited, a.fx-open:hover { background: #fff; color: var(--i
   .fx-feed .fx-scard[data-kind="tool"] .fx-app-row .fx-icon { display: block; width: 48px; height: 48px; }
   .fx-feed { gap: 12px; }
 }
-

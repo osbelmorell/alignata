@@ -1,11 +1,15 @@
+import Link from "next/link";
 import type { HubApp } from "@/lib/types";
 import type { ToolOpenSource } from "@/lib/site/events";
-import { toolArt } from "@/lib/apps";
+import { storyHref, toolArt } from "@/lib/apps";
 import { Img } from "@/components/appstore/Img";
 
 /**
  * App row (SPEC v2 §3/§4): icon, locked name + one-liner, and an Open pill straight to the tool.
  * - variant "card": soft Open (feed cards). "story": black Open, the page's one primary (tool story rows).
+ * - Card variant: the name is a stretched link to the tool story (/apps/<slug>). On desktop the card title is
+ *   already that link; on phone the restyle hides the title (compact row), so the name is the one that remains.
+ *   Open stays a sibling link to the tool (no nested anchors). Tools with no story keep a plain name.
  * - The Open is a plain <a href> to the tool route, exactly like the v1.5 tool links QA passed on 75a11f3:
  *   it carries data-tool-slug / data-tool-pos (the tool's /apps position) so the site tracker adds ?dogfood=1 in a
  *   dogfood session and counts tool_open where it does today. It is never a click handler.
@@ -29,11 +33,20 @@ export function AppRow({
   homeTarget?: boolean;
 }) {
   const art = toolArt(app.id);
+  const story = variant === "card" ? storyHref(app.id) : null;
   return (
     <div className={`fx-app-row${variant === "story" ? " fx-story-row" : ""}`} {...(row ? { "data-row": row } : {})}>
       <Img className="fx-icon" src={art.icon} alt={art.iconAlt} width={256} height={256} decoding="async" />
       <div className="fx-app-meta">
-        <p className="fx-app-name">{app.name}</p>
+        <p className="fx-app-name">
+          {story ? (
+            <Link className="fx-stretch" href={story}>
+              {app.name}
+            </Link>
+          ) : (
+            app.name
+          )}
+        </p>
         <p className="fx-app-line">{app.blurb}</p>
       </div>
       <OpenPill app={app} pos={pos} primary={variant === "story" && !secondary} homeTarget={homeTarget} src={variant === "story" ? "story" : "feed"} />
