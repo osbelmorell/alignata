@@ -14,6 +14,11 @@ const llmDigestRedirects: [string, string][] = [
 ];
 
 const nextConfig: NextConfig = {
+  // Art files are not content-hashed, so no `immutable`: phones keep them a day and revalidate in the background for a
+  // week, instead of the default max-age=0 round trip on every view (Oct 11 2026 slow-image audit).
+  async headers() {
+    return [{ source: "/art/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }] }];
+  },
   async redirects() {
     return [
       { source: "/blog", destination: "/daily-digest", statusCode: 301 },

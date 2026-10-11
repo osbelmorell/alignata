@@ -294,7 +294,7 @@ test("/apps (v2 §5): 10 app rows in /apps order (Env Diff retired); row body �
     const r = rows[i];
     assert.ok(r.startsWith(` data-slug="${a.id}" data-pos="${i + 1}"`), `row ${i + 1} is ${a.id}`);
     const t = toolArt(a.id);
-    assert.ok(r.includes(`<img class="fx-icon" src="${t.icon}" alt="${t.iconAlt.replace(/'/g, "&#x27;")}"`), `${a.id} icon + FINAL alt`);
+    assert.ok(r.includes(`src="${t.icon}" alt="${t.iconAlt.replace(/'/g, "&#x27;")}"`) && r.includes('<span class="fx-ph fx-icon"'), `${a.id} icon + FINAL alt`);
     const open = [...r.matchAll(/<a class="fx-open" href="([^"]+)" data-tool-slug="([^"]+)" data-tool-pos="(\d+)" data-tool-src="apps" aria-label="Open ([^"]+)">Open<\/a>/g)];
     assert.equal(open.length, 1, `${a.id}: one soft Open`);
     assert.deepEqual([open[0][1], open[0][2], +open[0][3]], [a.url, a.id, i + 1], `${a.id}: Open → tool, tracked at its position`);
@@ -588,7 +588,7 @@ test("art: tool stickers + icons with FINAL alt, every file a real WebP of the r
     assert.deepEqual(await webpSize(`public${t.art}`), [1920, 1080], `${slug}: one 16:9 file`);
     assert.equal(t.alt, heroAlt, `${slug} hero alt, verbatim`);
   }
-  const files = readdirSync("public/art", { recursive: true }).map(String).filter((f) => /\.[a-z]+$/.test(f));
+  const files = readdirSync("public/art", { recursive: true }).map(String).filter((f) => /\.[a-z]+$/.test(f) && !f.startsWith("_r/"));
   for (const f of files) assert.match(f, /^(digest\/)?[a-z0-9-]+-sticker(-icon)?\.webp$/, `public/art/${f} is sticker art (no clay, no fallback tile)`);
   assert.equal(files.length, 28 + 9 + 10 + 1 + 3, "28 Digest heroes + 9 tool heroes + 10 icons + the About hero + 3 page heroes (restyle C)");
   assert.ok(files.includes("about-sticker.webp"), "About hero (company pages, Oct 3)");
@@ -678,7 +678,7 @@ test("motion (SPEC v2 §7): one switch, morph names on both sides, reduced motio
     assert.match(read(f), /return \(\n\s*<PageFade( story)?>\n/, `${f}: <PageFade> is outermost`);
   }
   // Rule 6: React holds a commit for an unloaded <img> inside a <ViewTransition> unless it has onLoad.
-  assert.match(read("components/appstore/Img.tsx"), /onLoad=\{noop\}/);
+  assert.match(read("components/appstore/Img.tsx"), /onLoad=\{done\}/);
   for (const f of ["components/appstore/ArtFigure.tsx", "components/appstore/AppRow.tsx", "components/appstore/ToolsList.tsx", "components/appstore/StickyOpen.tsx"]) {
     assert.ok(!/<img\b/.test(read(f)), `${f}: images go through <Img> (never hold navigation)`);
   }
@@ -1624,7 +1624,7 @@ test("/about (COPY.md §3): story template, one sticker hero with alt, H1, missi
   const mod = await import("../app/about/page.tsx");
   assert.equal(mod.metadata.title, "About");
   assert.equal(mod.metadata.alternates.canonical, "/about");
-  assert.ok(html.includes('<main class="fx-story fx-company" data-page="about"><article><figure class="fx-story-hero" style="--art-pad:#FDFAF5" data-art="about"><img src="/art/about-sticker.webp" alt="A maker at a workbench hands a tool card to a busy person with a laptop and a coffee." width="1920" height="1080"'));
+  assert.ok(html.includes('<main class="fx-story fx-company" data-page="about"><article><figure class="fx-story-hero" style="--art-pad:#FDFAF5" data-art="about"><span class="fx-ph" style="--ph:url(&quot;data:image/webp;base64,') && html.includes('<img src="/art/about-sticker.webp" alt="A maker at a workbench hands a tool card to a busy person with a laptop and a coffee." width="1920" height="1080"'));
   const order = [
     '<h1 class="fx-story-title">About Alignata</h1>',
     `<p class="fx-story-dek">${MISSION_TXT}</p>`,
@@ -1952,7 +1952,7 @@ test("restyle C QA 679156c: one back link on every subpage, one primary per tool
   assert.ok(!hub.includes("All tools"), "no old grey '← All tools' bar");
   assert.match(read("components/site/BackLink.tsx"), /className="fx-wrap fx-back"/, "BackLink sits on the site container (same x everywhere)");
   const css = read("app/restyle-c.css");
-  assert.ok(!/text-overflow:\s*ellipsis|white-space:\s*nowrap/.test(css), "no truncated tool lines");
+  assert.ok(!/text-overflow:\s*ellipsis|white-space:\s*nowrap/.test(css.replace(/\.fx-share-end \.fx-share \{[^}]*\}/, "")), "no truncated tool lines (the one-word Share pill may not wrap)");
   assert.ok(!/grid-auto-rows/.test(css), "/apps rows size to their own content (QA abe0c50 F1)");
   assert.match(css, /\.fx-arow \{[^}]*padding: 13px 16px/, "13px top and bottom on every row");
   assert.ok(!/\.fx-arow \{[^}]*[^-]height:/.test(css), "no fixed row height");
@@ -2068,4 +2068,55 @@ test("Share (Oct 11 2026): one Share on articles, tool stories and /daily-digest
   assert.ok(count.includes("which links you tap on the homepage. When you tap Share, we also note which page it was and whether you used your device's share menu, copied the link, or the share didn't work. Links shared this way include a small tag, utm_source=share, so we can tell when a visit came from a share. When you open a Daily Digest article"), "Share line in What we count");
   assert.ok(PRIVACY.sections.some((s) => s.paras.some((p) => p.startsWith("Each entry has a random ID."))), "share_click carries sid/vid, so 'Each entry has a random ID.' stays");
   assert.equal(SHIP_DATE, "2026-10-11");
+});
+
+test("Share strip (Oct 11 2026): text and pill share one centred row; pill never wraps; failure panel takes its own row on phones", async () => {
+  const { readFileSync } = await import("node:fs");
+  const css = readFileSync(new URL("../app/restyle-c.css", import.meta.url), "utf8");
+  const rule = (sel) => (css.match(new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*\\{([^}]*)\\}")) || [])[1] || "";
+  const strip = rule(".fx-share-end"), text = rule(".fx-share-end p"), pill = rule(".fx-share-end .fx-share");
+  assert.match(strip, /display:\s*flex/); assert.match(strip, /align-items:\s*center/);
+  assert.match(strip, /padding:\s*14px 16px 14px 20px/, "same padding");
+  assert.match(text, /flex:\s*1 1 0%/); assert.match(text, /min-width:\s*0/);
+  assert.match(pill, /flex-shrink:\s*0/); assert.match(pill, /white-space:\s*nowrap/);
+  assert.match(css, /@media \(max-width: 899\.98px\) \{ \.fx-sharefail \{[^}]*flex-basis:\s*100%/, "panel on its own row");
+});
+
+test("Images (Oct 11 2026): every /art file has a blur preview and built 640/960/1280 (or 128) variants; frame keeps size, fades in, honours reduced motion", async () => {
+  const { readFileSync, readdirSync, statSync, existsSync } = await import("node:fs");
+  const { join, relative } = await import("node:path");
+  const { variantPath, ART_WIDTHS, ICON_WIDTHS } = await import("../lib/art/variants.ts");
+  const pub = new URL("../public/", import.meta.url).pathname;
+  const walk = (d) => readdirSync(d).flatMap((f) => { const p = join(d, f); return f === "_r" ? [] : statSync(p).isDirectory() ? walk(p) : p.endsWith(".webp") ? [p] : []; });
+  const files = walk(join(pub, "art")).map((p) => "/" + relative(pub, p)).sort();
+  const blur = JSON.parse(readFileSync(new URL("../lib/art/blur.json", import.meta.url), "utf8"));
+  assert.deepEqual(Object.keys(blur).sort(), files, "blur.json covers exactly public/art");
+  for (const f of files) {
+    assert.match(blur[f].b, /^data:image\/webp;base64,/);
+    assert.ok(blur[f].b.length < 600, `${f} blur is tiny`);
+    for (const w of (blur[f].w >= 1920 ? ART_WIDTHS : ICON_WIDTHS)) {
+      const v = join(pub, variantPath(f, w).slice(1));
+      assert.ok(existsSync(v), `${v} built (run npm run build first)`);
+      assert.ok(statSync(v).size < 150_000, `${v} under 150KB`);
+    }
+  }
+  const img = readFileSync(new URL("../components/appstore/Img.tsx", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../app/restyle-c.css", import.meta.url), "utf8");
+  assert.match(img, /srcSet=/); assert.match(img, /data-pending/); assert.match(img, /fx-ph/);
+  // A failed load hides the img and keeps the blur: onError marks data-error (never data-loaded, which clears the frame).
+  assert.match(img, /onError=\{failed\}/);
+  assert.match(img, /const failed = [^;]*?\{\s*e\.currentTarget\.removeAttribute\("data-pending"\);\s*e\.currentTarget\.setAttribute\("data-error", ""\);\s*\}/);
+  assert.ok(!/const failed[\s\S]*?data-loaded[\s\S]*?\};/.test(img.slice(img.indexOf("const failed"), img.indexOf("export function"))), "error never sets data-loaded");
+  assert.match(css, /\.fx-ph > img\[data-pending\], \.fx-ph > img\[data-error\] \{ opacity: 0; \}/);
+  assert.ok(!/\.fx-ph:has\(> img\[data-error\]\)[^{]*\{[^}]*background:\s*none/.test(css), "blur stays on error");
+  assert.match(readFileSync(new URL("../package.json", import.meta.url), "utf8"), /"build": "node --import tsx scripts\/art-variants\.mjs && /, "build generates variants + blur.json (no --check)");
+  assert.match(css, /\.fx-ph > img \{[^}]*transition: opacity 200ms/);
+  assert.match(css, /prefers-reduced-motion: reduce\) \{\s*\.fx-ph > img \{ transition: none; \}\s*\.fx-ph:has\(> img\[data-pending\]\)::after \{ animation: none; \}/);
+  assert.match(readFileSync(new URL("../next.config.ts", import.meta.url), "utf8"), /source: "\/art\/:path\*"/);
+  // Built pages: art <img> carry srcset + sizes, below-the-fold stay lazy, and the story hero is eager + high priority.
+  const html = readFileSync(new URL("../.next/server/app/daily-digest/break-loops-when-progress-stalls.html", import.meta.url), "utf8");
+  const tags = html.match(/<img [^>]*src="\/art\/[^"]+"[^>]*>/g) || [];
+  assert.ok(tags.length >= 2 && tags.every((t) => /srcSet="|srcset="/.test(t) && /sizes="/.test(t)), "art imgs have srcset+sizes");
+  assert.ok(/fetchPriority="high"|fetchpriority="high"/.test(tags[0]) && !/loading="lazy"/.test(tags[0]), "hero eager");
+  assert.ok(tags.slice(1).every((t) => /loading="lazy"/.test(t) && /decoding="async"/.test(t)), "below the fold lazy + async decode");
 });

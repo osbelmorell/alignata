@@ -104,8 +104,10 @@ a.fx-open, a.fx-open:visited, a.fx-open:hover { background: #fff; color: var(--i
 .fx-share:focus-visible { outline: 3px solid var(--purple); outline-offset: 3px; }
 .fx-share-live { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); border: 0; }
 .fx-share-end { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 40px 0 8px; padding: 14px 16px 14px 20px; border-radius: var(--r-card); background: var(--tint-essay); }
-.fx-share-end p { margin: 0; font-size: 15px; font-weight: 500; color: var(--ink); }
-.fx-share-end .fx-share { margin-left: auto; background: #fff; }
+/* One row: text wraps, pill never does. Basis 0 (not auto) so the line-break pass sizes the text at 0, not its
+   max-content width, which is what pushed the pill onto its own line at 390. The failure panel takes its own row (flex-basis:100%). */
+.fx-share-end p { flex: 1 1 0%; min-width: 0; margin: 0; font-size: 15px; font-weight: 500; color: var(--ink); }
+.fx-share-end .fx-share { flex-shrink: 0; white-space: nowrap; margin-left: auto; background: #fff; }
 .fx-toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 90; display: flex; align-items: center; gap: 10px;
   padding: 12px 18px; border-radius: 999px; background: #23233F; color: #fff; font: 600 15px/1.2 var(--body), sans-serif; box-shadow: 0 8px 24px rgba(35, 35, 63, .18); animation: fx-toast-in .18s ease-out; }
 .fx-toast i { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: #2FA37A; font-style: normal; font-size: 12px; }
@@ -121,3 +123,22 @@ body:has(.fx-sticky-open.fx-on) .fx-toast, body:has(.fx-sticky-open.fx-on) .fx-s
 /* Phones: the failure panel sits inline under its control (full row width), so it never covers the page (e.g. Next article). */
 @media (max-width: 899.98px) { .fx-sharefail { position: static; transform: none; width: 100%; flex-basis: 100%; margin-top: 4px; box-shadow: none; } }
 @media (prefers-reduced-motion: reduce) { .fx-toast { animation: none; } .fx-share:active { transform: none; } }
+
+/* Image loading (Oct 11 2026): every /art image sits in a .fx-ph frame that keeps the slot's size from first paint,
+   shows the image's own 16px blur (--ph, build-time) over a soft pastel shimmer, and fades the pixels in over 200ms. */
+.fx-ph { display: block; position: relative; overflow: hidden;
+  background: var(--ph, none) center / cover no-repeat, linear-gradient(100deg, #EFEAFB 20%, #F8F5FF 40%, #FDEDE8 60%, #EFEAFB 80%) 0 0 / 300% 100%; }
+.fx-ph > img { display: block; width: 100%; transition: opacity 200ms ease-out; }
+.fx-ph > img[data-pending], .fx-ph > img[data-error] { opacity: 0; }
+.fx-ph:has(> img[data-pending])::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%) 0 0 / 300% 100%; animation: fx-shimmer 1.4s linear infinite; }
+@keyframes fx-shimmer { from { background-position: 100% 0; } to { background-position: -50% 0; } }
+.fx-scard-art > .fx-ph, .fx-story-hero > .fx-ph { width: 100%; height: 100%; }
+/* Art is letterboxed (object-fit: contain), so its blur is too, and no shimmer sits in the letterbox once it's in. */
+.fx-scard-art > .fx-ph, .fx-story-hero > .fx-ph { background: var(--ph, none) center / contain no-repeat; }
+.fx-ph:has(> img[data-loaded]) { background: none; }
+.fx-icon > img { height: 100%; object-fit: cover; }
+@media (prefers-reduced-motion: reduce) {
+  .fx-ph > img { transition: none; }
+  .fx-ph:has(> img[data-pending])::after { animation: none; }
+}
