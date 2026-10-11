@@ -7,7 +7,7 @@
  */
 
 /** COPY.md [DATE]: the ship date, ISO YYYY-MM-DD. Change only this if the release date slips. */
-export const SHIP_DATE = "2026-10-10"; // Oct 10 2026: Daily Digest Release A privacy lines (CEO: factual date change)
+export const SHIP_DATE = "2026-10-11"; // Oct 11 2026: Share line in "Vercel Web Analytics" (was Oct 10: Daily Digest Release A privacy lines)
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 /** SHIP_DATE as shown ("October 3, 2026"); parsed by hand so the build's time zone can't shift the day. */
 export function shipDateLabel(iso: string = SHIP_DATE): string {
@@ -92,7 +92,7 @@ export const PRIVACY = {
       // "I'd pay"."), then the guide-ref line (FINAL 8:45 AM ET; CEO 9:13 AM ET: in, as the droppable ref commit).
       h2: "What we count",
       paras: [
-        "We keep our own small log of how the site is used: which pages you visit, which tool you open and where on the site you tapped it, which articles you read, and which links you tap on the homepage. When you open a Daily Digest article, we also note whether it was marked New or Updated. On Engrave Merge, we also count when the page opens, when you download or print a result, and whether you saw the price question and how you answered it. If one of our guides sent you, we also note which one, as part of those counts.",
+        "We keep our own small log of how the site is used: which pages you visit, which tool you open and where on the site you tapped it, which articles you read, and which links you tap on the homepage. When you tap Share, we also note which page it was and whether you used your device's share menu, copied the link, or the share didn't work. Links shared this way include a small tag, utm_source=share, so we can tell when a visit came from a share. When you open a Daily Digest article, we also note whether it was marked New or Updated. On Engrave Merge, we also count when the page opens, when you download or print a result, and whether you saw the price question and how you answered it. If one of our guides sent you, we also note which one, as part of those counts.",
         // Session ID fix, FINAL (Brand Creator PASS + Voice Gate pre-approved exact text, 9:32 AM ET Oct 3).
         "Each entry has a random ID. A visitor ID stays in your browser until you clear this site's data, and a session ID usually lasts only as long as the tab. Engrave Merge keeps its own random ID in your browser, like the visitor ID.",
         "Our log doesn't hold your name, email address, IP address, browser details, file names or file contents.",

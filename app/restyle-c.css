@@ -92,3 +92,32 @@ a.fx-open, a.fx-open:visited, a.fx-open:hover { background: #fff; color: var(--i
 .fx-scard[data-kind="tool"], .fx-arow { transition: transform .15s ease, box-shadow .15s ease; }
 @media (hover: hover) { .fx-scard[data-kind="tool"]:has(.fx-stretch:hover), .fx-arow:has(.fx-stretch:hover) { box-shadow: 0 4px 14px rgba(35, 35, 63, .08); } }
 .fx-scard[data-kind="tool"]:has(.fx-stretch:active), .fx-arow:has(.fx-stretch:active) { transform: scale(.99); }
+
+/* Share (Oct 11 2026; share-spec/SPEC.md): soft secondary pill on the back-link row (never filled; the page's one
+   primary stays the only filled control), toast + failure panel fixed (no layout shift). No dark mode on the site. */
+.fx-back[data-share-row] { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.fx-share, .fx-share:visited { display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box; height: 44px; min-width: 88px; padding: 0 16px; border: 0; border-radius: var(--r-pill, 999px);
+  background: var(--tint-essay); color: var(--purple); font: 600 15px/1 var(--body), sans-serif; text-decoration: none; cursor: pointer; flex: none; -webkit-tap-highlight-color: transparent; }
+@media (hover: hover) { .fx-share:hover { background: color-mix(in srgb, var(--tint-essay) 88%, var(--purple)); } }
+.fx-share:active { transform: scale(.98); }
+.fx-share[aria-busy="true"] { cursor: progress; }
+.fx-share:focus-visible { outline: 3px solid var(--purple); outline-offset: 3px; }
+.fx-share-live { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); border: 0; }
+.fx-share-end { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 40px 0 8px; padding: 14px 16px 14px 20px; border-radius: var(--r-card); background: var(--tint-essay); }
+.fx-share-end p { margin: 0; font-size: 15px; font-weight: 500; color: var(--ink); }
+.fx-share-end .fx-share { margin-left: auto; background: #fff; }
+.fx-toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 90; display: flex; align-items: center; gap: 10px;
+  padding: 12px 18px; border-radius: 999px; background: #23233F; color: #fff; font: 600 15px/1.2 var(--body), sans-serif; box-shadow: 0 8px 24px rgba(35, 35, 63, .18); animation: fx-toast-in .18s ease-out; }
+.fx-toast i { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: #2FA37A; font-style: normal; font-size: 12px; }
+@keyframes fx-toast-in { from { opacity: 0; transform: translate(-50%, 8px); } }
+.fx-sharefail { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 90; box-sizing: border-box; width: min(560px, calc(100vw - 24px));
+  padding: 16px; border-radius: 20px; background: #fff; border: 1px solid var(--coral); box-shadow: 0 8px 24px rgba(35, 35, 63, .14); color: var(--ink); font: 500 15px/1.4 var(--body), sans-serif; }
+.fx-sharefail p { margin: 0 0 8px; font-weight: 600; }
+.fx-sharefail input { box-sizing: border-box; width: 100%; min-height: 44px; padding: 0 12px; border-radius: 12px; border: 2px solid var(--purple); background: #F6F3FF; color: var(--ink); font: 15px var(--body), sans-serif; }
+.fx-sharefail-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 13px; color: var(--ink-2); }
+.fx-sharefail-row button { min-height: 44px; min-width: 44px; padding: 0 14px; border: 0; background: none; color: var(--purple); font: 600 15px var(--body), sans-serif; cursor: pointer; }
+.fx-sharefail-row button:focus-visible, .fx-sharefail input:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
+body:has(.fx-sticky-open.fx-on) .fx-toast, body:has(.fx-sticky-open.fx-on) .fx-sharefail { bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+/* Phones: the failure panel sits inline under its control (full row width), so it never covers the page (e.g. Next article). */
+@media (max-width: 899.98px) { .fx-sharefail { position: static; transform: none; width: 100%; flex-basis: 100%; margin-top: 4px; box-shadow: none; } }
+@media (prefers-reduced-motion: reduce) { .fx-toast { animation: none; } .fx-share:active { transform: none; } }
