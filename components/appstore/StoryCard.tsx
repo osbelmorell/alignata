@@ -11,7 +11,9 @@ import { NewMarkSr } from "@/components/daily-digest/NewMark";
 /**
  * Story card (SPEC v2 §3): one rounded white card. Art full-bleed on top (4:3 phone, 16:9 desktop, never cropped),
  * then eyebrow, title and dek on the card surface (never on the art). The title is the link to the story, stretched
- * over the card with ::after; a tool card's Open is a separate sibling link above it (no nested anchors).
+ * over the card with ::after; a tool card's Open is a separate sibling link above it (no nested anchors). Tool cards:
+ * the stretched link is the app row's name (visible at every width, incl. the <900px compact row), so the whole card
+ * body → /apps/<slug> on phones too; the card title is plain text.
  */
 export function ToolStoryCard({ app, pos, lead = false, homeTarget = false }: { app: HubApp; pos: number; lead?: boolean; homeTarget?: boolean }) {
   const art = toolArt(app.id);
@@ -24,14 +26,12 @@ export function ToolStoryCard({ app, pos, lead = false, homeTarget = false }: { 
         <p className="fx-eyebrow">Tool</p>
         <Morph name={`title-${app.id}`}>
           <h2 className="fx-scard-title">
-            <Link className="fx-stretch" href={`/apps/${app.id}`}>
-              {story.title}
-            </Link>
+            {story.title}
           </h2>
         </Morph>
         <p className="fx-scard-dek">{story.dek}</p>
       </div>
-      <AppRow app={app} pos={pos} homeTarget={homeTarget} />
+      <AppRow app={app} pos={pos} homeTarget={homeTarget} storyHref={`/apps/${app.id}`} />
     </article>
   );
 }
