@@ -19,9 +19,9 @@
 /* Fill, don't letterbox (Oct 12 2026): every art slot is sized to the masters' own 16:9, so cover crops nothing but sub-pixel
    rounding; --art-focus (default centre) is the per-image focal point if a slot ever drifts off 16:9. */
 .fx-scard-art img, .fx-story-hero img { width: 100%; height: 100%; object-fit: cover; object-position: var(--art-focus, 50% 50%); }
-/* Phones: explicit art width (card minus the 12px + 12px inset). WebKit otherwise derives the 16:9 height from the
-   stretched width *before* margins (350 wide -> 197 tall in a 326 slot), which is a 13px letterbox / crop. */
-@media (max-width: 899.98px) { .fx-scard-art { width: calc(100% - 24px); align-self: flex-start; } }
+/* Explicit art width (card minus the 12px + 12px inset). In flex-column cards (phones, the story page's Next card)
+   WebKit otherwise derives the 16:9 height from the stretched width *before* margins (350 -> 197 tall in a 326 slot). */
+.fx-scard-art { width: calc(100% - 24px); align-self: flex-start; }
 .fx-scard-text { padding: var(--card-pad); }
 .fx-eyebrow { font-size: 14px; line-height: 1.3; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-2); }
 .fx-scard-title { margin-top: 8px; font-family: var(--display); font-weight: 600; font-size: 26px; line-height: 1.2; letter-spacing: -0.015em; color: var(--ink); }

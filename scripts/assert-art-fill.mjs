@@ -23,7 +23,7 @@ test("art fill: card + hero art cover a 16:9 slot (no contain, no 4:3 slot)", ()
   assert.match(a, /\.fx-feed \.fx-scard\.fx-lead \.fx-scard-art \{ height: calc\(\(\(100cqi - 11 \* 24px\) \/ 12 \* 7 \+ 6 \* 24px - 24px\) \* 9 \/ 16\); \}/, "lead height = art width (7 cols - 24px inset) x 9/16");
   assert.match(r, /\.fx-scard-art > \.fx-ph, \.fx-story-hero > \.fx-ph \{ background: var\(--ph, none\) var\(--art-focus, 50% 50%\) \/ cover no-repeat; \}/, "blur placeholder covers too");
   assert.match(r, /\.fx-scard-art \{ margin: 12px 12px 0;/, "12px art inset unchanged");
-  assert.match(a, /@media \(max-width: 899\.98px\) \{ \.fx-scard-art \{ width: calc\(100% - 24px\); align-self: flex-start; \} \}/, "phone art width = card - inset (WebKit aspect-ratio)");
+  assert.match(a, /\n\.fx-scard-art \{ width: calc\(100% - 24px\); align-self: flex-start; \}/, "art width = card - inset (WebKit aspect-ratio in flex cards)");
 });
 
 const BASE = process.env.ART_FILL_URL;
