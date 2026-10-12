@@ -2066,3 +2066,10 @@ test("Images (Oct 11 2026): every /art file has a blur preview and built 640/960
   assert.ok(/fetchPriority="high"|fetchpriority="high"/.test(tags[0]) && !/loading="lazy"/.test(tags[0]), "hero eager");
   assert.ok(tags.slice(1).every((t) => /loading="lazy"/.test(t) && /decoding="async"/.test(t)), "below the fold lazy + async decode");
 });
+
+test("Featured lead card (Oct 11 2026): desktop art inset matches the standard cards' 12px on all four sides", async () => {
+  const { readFileSync } = await import("node:fs");
+  const css = readFileSync(new URL("../app/restyle-c.css", import.meta.url), "utf8");
+  assert.match(css, /\.fx-scard-art \{ margin: 12px 12px 0;/, "standard inset 12px");
+  assert.match(css, /@media \(min-width: 900px\) \{ \.fx-scard\.fx-lead \.fx-scard-art \{ margin: 12px; align-self: start; \} \}/, "lead inset 12px all sides on desktop");
+});

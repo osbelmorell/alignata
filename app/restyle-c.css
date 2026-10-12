@@ -142,3 +142,7 @@ body:has(.fx-sticky-open.fx-on) .fx-toast, body:has(.fx-sticky-open.fx-on) .fx-s
   .fx-ph > img { transition: none; }
   .fx-ph:has(> img[data-pending])::after { animation: none; }
 }
+
+/* Featured (lead) card, desktop: the art keeps the standard cards' 12px inset on every side, including the bottom,
+   which the side-by-side layout used to leave flush (Oct 11 2026). Phones keep the stacked 12px 12px 0. */
+@media (min-width: 900px) { .fx-scard.fx-lead .fx-scard-art { margin: 12px; align-self: start; } }
