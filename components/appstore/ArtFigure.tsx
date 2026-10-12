@@ -15,6 +15,7 @@ export function ArtFigure({
   pad,
   eager = false,
   hero = false,
+  sizes,
 }: {
   slug: string;
   className: string;
@@ -23,6 +24,7 @@ export function ArtFigure({
   pad: string;
   eager?: boolean;
   hero?: boolean;
+  sizes?: string;
 }) {
   return (
     <Morph name={`art-${slug}`}>
@@ -32,7 +34,7 @@ export function ArtFigure({
           alt={alt}
           width={ART_W}
           height={ART_H}
-          sizes={hero ? "(max-width: 899.98px) 100vw, 680px" : undefined}
+          sizes={sizes ?? (hero ? "(max-width: 899.98px) 100vw, 680px" : undefined)}
           {...(hero || eager ? { fetchPriority: "high" as const } : { loading: "lazy" as const })}
           decoding="async"
         />

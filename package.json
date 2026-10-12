@@ -15,6 +15,7 @@
     "lint:engrave": "eslint app/engrave-merge app/api/engrave-merge components/engrave-merge lib/engrave-merge scripts/assert-engrave-merge.mjs scripts/engrave-merge-kpis.mjs",
     "test:site": "node --import tsx --test scripts/assert-site.mjs",
     "test:release": "node --import tsx --test scripts/assert-release.mjs",
+    "test:layout": "node --test scripts/assert-layout.mjs",
     "site:baseline": "node scripts/site-baseline.mjs"
   },
   "dependencies": {
@@ -33,6 +34,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.8",
+    "playwright": "^1.63.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5"

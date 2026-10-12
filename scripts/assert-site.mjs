@@ -2071,5 +2071,5 @@ test("Featured lead card (Oct 11 2026): desktop art inset matches the standard c
   const { readFileSync } = await import("node:fs");
   const css = readFileSync(new URL("../app/restyle-c.css", import.meta.url), "utf8");
   assert.match(css, /\.fx-scard-art \{ margin: 12px 12px 0;/, "standard inset 12px");
-  assert.match(css, /@media \(min-width: 900px\) \{ \.fx-scard\.fx-lead \.fx-scard-art \{ margin: 12px; align-self: start; \} \}/, "lead inset 12px all sides on desktop");
+  assert.match(css, /\.fx-scard\.fx-lead \.fx-scard-art \{ margin: 12px; align-self: stretch; height: auto;/, "lead frame stretches with a 12px inset (rendered check: npm run test:layout)");
 });
