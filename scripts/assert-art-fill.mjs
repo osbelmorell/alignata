@@ -3,7 +3,7 @@
  * 1) CSS contract (always runs, via test:site): cover, 16:9 slots, desktop feed heights net of the 12px + 12px art inset.
  * 2) Rendered check (runs when ART_FILL_URL is set and playwright is installed, e.g. `npm i --no-save playwright`):
  *    loads home, /daily-digest, one story page and one tool story at 390/768/1280/1440 in Chromium and WebKit and fails
- *    if any visible art image would leave a gap over 2px between the painted art and its slot.
+ *    if any visible art image would leave a gap over 2px between the painted art and its slot (or cover-crop > 2px a side).
  */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -23,6 +23,7 @@ test("art fill: card + hero art cover a 16:9 slot (no contain, no 4:3 slot)", ()
   assert.match(a, /\.fx-feed \.fx-scard\.fx-lead \.fx-scard-art \{ height: calc\(\(\(100cqi - 11 \* 24px\) \/ 12 \* 7 \+ 6 \* 24px - 24px\) \* 9 \/ 16\); \}/, "lead height = art width (7 cols - 24px inset) x 9/16");
   assert.match(r, /\.fx-scard-art > \.fx-ph, \.fx-story-hero > \.fx-ph \{ background: var\(--ph, none\) var\(--art-focus, 50% 50%\) \/ cover no-repeat; \}/, "blur placeholder covers too");
   assert.match(r, /\.fx-scard-art \{ margin: 12px 12px 0;/, "12px art inset unchanged");
+  assert.match(a, /@media \(max-width: 899\.98px\) \{ \.fx-scard-art \{ width: calc\(100% - 24px\); align-self: flex-start; \} \}/, "phone art width = card - inset (WebKit aspect-ratio)");
 });
 
 const BASE = process.env.ART_FILL_URL;
@@ -49,9 +50,11 @@ test("art fill (rendered): no letterbox gap over 2px", { skip: !BASE ? "set ART_
         else if (fit !== "cover" && fit !== "fill") { pw2 = Math.min(r.width, i.naturalWidth); ph = Math.min(r.height, i.naturalHeight); }
         // gap = slot (figure) minus painted art, per axis, split evenly (centred) + any img-vs-figure offset
         const gy = Math.max(f.height - ph, 0) / 2, gx = Math.max(f.width - pw2, 0) / 2;
-        return gy > 2 || gx > 2 ? [{ src: i.currentSrc.split("/").pop(), fit, gx: +gx.toFixed(1), gy: +gy.toFixed(1) }] : [];
+        // cover on a slot that drifted off the art ratio crops instead: flag that too (> 2px per side)
+        const cx = fit === "cover" ? Math.max(r.height * ir - r.width, 0) / 2 : 0, cy = fit === "cover" ? Math.max(r.width / ir - r.height, 0) / 2 : 0;
+        return gy > 2 || gx > 2 || cx > 2 || cy > 2 ? [{ src: i.currentSrc.split("/").pop(), fit, gx: +gx.toFixed(1), gy: +gy.toFixed(1), cx: +cx.toFixed(1), cy: +cy.toFixed(1) }] : [];
       }));
-      for (const g of gaps) bad.push(`${engine.name()} ${path} @${width}: ${g.src} ${g.fit} gap x=${g.gx} y=${g.gy}`);
+      for (const g of gaps) bad.push(`${engine.name()} ${path} @${width}: ${g.src} ${g.fit} gap x=${g.gx} y=${g.gy} crop x=${g.cx} y=${g.cy}`);
       await page.close();
     }
     await browser.close();
