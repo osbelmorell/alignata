@@ -23,6 +23,7 @@ import {
 import { handleSiteEvent } from "../lib/site/handler.ts";
 import { SITE_EVENT_KEY_MATCH, SITE_KEY_PREFIX, siteEventKey } from "../lib/site/store.ts";
 import { readStore, summarize, weekOf } from "./site-baseline.mjs";
+import "./assert-art-fill.mjs"; // art fill CSS contract + rendered no-letterbox check (Oct 12 2026)
 
 const SID = "0b7f2a54-1c1e-4b1a-9d8e-2f3a4b5c6d7e";
 const VID = "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d";

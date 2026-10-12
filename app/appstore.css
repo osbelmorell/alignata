@@ -15,9 +15,13 @@
 .fx-scard { position: relative; background: var(--surface); border-radius: var(--r-card); overflow: hidden; display: flex; flex-direction: column; }
 /* 1px line border drawn as an overlay so the art stays full-bleed to the card edge */
 .fx-scard::before { content: ""; position: absolute; inset: 0; z-index: 2; border: 1px solid var(--line); border-radius: inherit; pointer-events: none; }
-.fx-scard-art { margin: 0; aspect-ratio: 4 / 3; background: var(--art-pad, #E9E3D9); }
-/* Pad, never crop: the whole 16:9 master always shows; any extra slot space is the art's own pad colour. */
-.fx-scard-art img, .fx-story-hero img { width: 100%; height: 100%; object-fit: contain; object-position: center; }
+.fx-scard-art { margin: 0; aspect-ratio: 16 / 9; background: var(--art-pad, #E9E3D9); }
+/* Fill, don't letterbox (Oct 12 2026): every art slot is sized to the masters' own 16:9, so cover crops nothing but sub-pixel
+   rounding; --art-focus (default centre) is the per-image focal point if a slot ever drifts off 16:9. */
+.fx-scard-art img, .fx-story-hero img { width: 100%; height: 100%; object-fit: cover; object-position: var(--art-focus, 50% 50%); }
+/* Explicit art width (card minus the 12px + 12px inset). In flex-column cards (phones, the story page's Next card)
+   WebKit otherwise derives the 16:9 height from the stretched width *before* margins (350 -> 197 tall in a 326 slot). */
+.fx-scard-art { width: calc(100% - 24px); align-self: flex-start; }
 .fx-scard-text { padding: var(--card-pad); }
 .fx-eyebrow { font-size: 14px; line-height: 1.3; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-2); }
 .fx-scard-title { margin-top: 8px; font-family: var(--display); font-weight: 600; font-size: 26px; line-height: 1.2; letter-spacing: -0.015em; color: var(--ink); }
@@ -57,8 +61,9 @@ a.fx-open:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
   .fx-scard-art { aspect-ratio: 16 / 9; }
   /* Feed art heights come from the feed width (16:9 exactly, same crop) instead of aspect-ratio, because WebKit
      over-sizes grid row tracks for aspect-ratio items that sit in (sub)grid rows. */
-  .fx-feed .fx-scard-art { aspect-ratio: auto; height: calc((100cqi - 24px) / 2 * 9 / 16); }
-  .fx-feed .fx-scard.fx-lead .fx-scard-art { height: calc(((100cqi - 11 * 24px) / 12 * 7 + 6 * 24px) * 9 / 16); }
+  .fx-feed .fx-scard-art { aspect-ratio: auto; height: calc(((100cqi - 24px) / 2 - 24px) * 9 / 16); }
+  /* Art widths are the column minus the 12px + 12px art inset (restyle-c), so the 16:9 height is taken from that. */
+  .fx-feed .fx-scard.fx-lead .fx-scard-art { height: calc(((100cqi - 11 * 24px) / 12 * 7 + 6 * 24px - 24px) * 9 / 16); }
   /* Paired cards share 5 row tracks (art / eyebrow / title / dek / app row) via subgrid, so they line up across a row. */
   .fx-feed .fx-scard:not(.fx-lead) { grid-column: span 6; grid-row: span 5; display: grid; grid-template-rows: subgrid; row-gap: 0; margin-top: 24px; }
   .fx-feed .fx-scard:not(.fx-lead) .fx-scard-art { grid-row: 1; }
@@ -80,7 +85,7 @@ a.fx-text-link { display: inline-flex; align-items: center; min-height: 44px; mi
 a.fx-text-link:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
 
 /* ---------- §4 story page ---------- */
-.fx-story-hero { margin: 0 auto; width: 100%; aspect-ratio: 4 / 3; background: var(--art-pad, #E9E3D9); overflow: hidden; }
+.fx-story-hero { margin: 0 auto; width: 100%; aspect-ratio: 16 / 9; background: var(--art-pad, #E9E3D9); overflow: hidden; }
 .fx-story-col { margin: 0 auto; padding: 0 var(--margin); }
 /* v2.3 call 5a (final): desktop story = ONE 680 column centred on the page. The hero fills it (680x383, 16:9, same file
    as the 16:9 desktop card art); eyebrow, H1, dek, app row and prose share its edges. Header stays on the site grid. */
