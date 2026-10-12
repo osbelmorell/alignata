@@ -314,7 +314,7 @@ const SLUG_RE_OK = (s) => validateSiteEvent({ v: 1, event: "tool_open", sid: SID
 /* ---------- Art (SPEC v2 sticker batch v3.1): final alt text, copied verbatim from ART-ALT-DRAFT.md ---------- */
 /** "Digest: FINAL alt text" (Product Copy, Oct 2 11:15 PM ET), all 24 lines, + Oct 9 show-fixes (25), + Oct 10 google-ai-search essay (26, Product Copy FINAL Oct 10), + Oct 11 ai-agents-reverse-engineering essay (27, Product Copy FINAL Oct 10), + Oct 12 stop-picking-tools technique (28). */
 const DIGEST_FINAL_ALT = new Map([
-  ["stop-picking-tools-that-are-down", "A person at a desk passes over a card with a broken plug and reaches for the working card beside it."],
+  ["stop-picking-tools-that-are-down", "A person at a desk points at a card with a broken plug, next to a card with a working plug and a green check."],
   ["ai-agents-reverse-engineering-games-software", "A curious person with a magnifying glass and a friendly robot take apart a retro game cartridge into puzzle pieces on a workbench."],
   ["google-ai-search-eating-its-own-traffic", "A puzzled person watches a long search bar curl around like a snake and swallow a ring of web page cards."],
   ["show-fixes-only-when-things-break", "A relaxed person sits on a cushion beside a closed toolbox while a pipe nearby springs a leak."],

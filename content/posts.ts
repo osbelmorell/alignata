@@ -876,7 +876,7 @@ export const posts: Post[] = [
     dek: "Rank tools by recent success, and retry the ones you benched.",
     hero: {
       src: "/art/digest/stop-picking-tools-that-are-down-sticker.webp",
-      alt: "A person at a desk passes over a card with a broken plug and reaches for the working card beside it.",
+      alt: "A person at a desk points at a card with a broken plug, next to a card with a working plug and a green check.",
       pad: "#FDFAF5",
     },
     date: "2026-10-12",
