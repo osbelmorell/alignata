@@ -4,7 +4,7 @@
 All 41 sticker masters are 1920x1080 (16:9). Slots were not:
 - Phone/tablet (<900px) card slots and the base story hero were `aspect-ratio: 4 / 3` -> with `object-fit: contain` that left up to 40px (390) / 75px (768) pad-coloured bars top and bottom.
 - Desktop feed heights were computed from the full column width, but the art has a 12px + 12px inset (restyle-c), so slots were 1.694:1 (paired) / 1.706:1 (lead) instead of 1.778 -> ~7px bars top and bottom.
-- WebKit phones: in the flex-column card, WebKit derives the aspect-ratio height from the stretched width before the 12px side margins (350 wide -> 197 tall in a 326 slot), so even a 16:9 slot came out 1.656:1. Fixed with an explicit `width: calc(100% - 24px)` on phones.
+- WebKit: in flex-column cards (phones, and the story page's Next card at every width) WebKit derives the aspect-ratio height from the stretched width before the 12px side margins (350 wide -> 197 tall in a 326 slot), so even a 16:9 slot drifted to 1.656:1. Fixed with an explicit `width: calc(100% - 24px)` on `.fx-scard-art`.
 - Baked-in whitespace: every master has 0-11% sticker margin (measured per file). It is part of the art, not the cause, and is kept.
 
 ## Fix
