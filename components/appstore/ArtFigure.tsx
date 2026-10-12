@@ -3,7 +3,7 @@ import { Img } from "@/components/appstore/Img";
 import { Morph } from "@/components/appstore/Motion";
 
 /**
- * Sticker art slot: the one 16:9 file, padded and never cropped (object-fit: contain on the item's own colour).
+ * Sticker art slot: the one 16:9 file in a 16:9 slot (object-fit: cover; slot ratio = art ratio, so nothing is cropped).
  * The card and the story hero render the same URL at the same intrinsic size, so the hero is already cached.
  * Both sides share the morph name art-<slug> (SPEC v2 §7).
  */

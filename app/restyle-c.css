@@ -134,8 +134,8 @@ body:has(.fx-sticky-open.fx-on) .fx-toast, body:has(.fx-sticky-open.fx-on) .fx-s
   background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%) 0 0 / 300% 100%; animation: fx-shimmer 1.4s linear infinite; }
 @keyframes fx-shimmer { from { background-position: 100% 0; } to { background-position: -50% 0; } }
 .fx-scard-art > .fx-ph, .fx-story-hero > .fx-ph { width: 100%; height: 100%; }
-/* Art is letterboxed (object-fit: contain), so its blur is too, and no shimmer sits in the letterbox once it's in. */
-.fx-scard-art > .fx-ph, .fx-story-hero > .fx-ph { background: var(--ph, none) center / contain no-repeat; }
+/* Art covers its 16:9 slot (object-fit: cover), so its blur does too, at the same focal point. */
+.fx-scard-art > .fx-ph, .fx-story-hero > .fx-ph { background: var(--ph, none) var(--art-focus, 50% 50%) / cover no-repeat; }
 .fx-ph:has(> img[data-loaded]) { background: none; }
 .fx-icon > img { height: 100%; object-fit: cover; }
 @media (prefers-reduced-motion: reduce) {
