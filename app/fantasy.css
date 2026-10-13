@@ -60,6 +60,12 @@ a.fx-pill:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
   font-family: var(--display); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); }
 .fx-prose hr { border: 0; border-top: 1px solid var(--line); margin: 40px 0; }
 .fx-prose hr + * { margin-top: 0; }
+.fx-prose strong { font-weight: 600; }
+.fx-prose .fx-table-wrap { overflow-x: auto; }
+.fx-prose .fx-table-wrap:focus-visible { outline: 3px solid var(--purple, #5B4FCF); outline-offset: 3px; border-radius: 6px; }
+.fx-prose table { width: 100%; min-width: 560px; overflow-wrap: normal; word-break: normal; border-collapse: collapse; font-size: 15px; line-height: 1.4; }
+.fx-prose th, .fx-prose td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.fx-prose th { font-weight: 600; border-bottom-color: var(--ink); }
 .fx-prose .fx-byline { margin-top: 32px; font-size: 14px; line-height: 1.3; font-weight: 500; color: var(--ink-2); }
 .fx-pullquote { margin: 40px 0; padding-left: 24px; border-left: 3px solid var(--ink); }
 .fx-prose > .fx-pullquote, .fx-prose > .fx-pullquote + * { margin-top: 40px; }

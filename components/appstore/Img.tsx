@@ -21,6 +21,8 @@ const pending = (img: HTMLImageElement | null) => {
   if (img) img.setAttribute(!img.complete ? "data-pending" : img.naturalWidth > 0 ? "data-loaded" : "data-error", "");
 };
 const done = (e: React.SyntheticEvent<HTMLImageElement>) => {
+  // A load that succeeds after an earlier error (e.g. back online, srcset re-pick) must show: clear the error marker.
+  e.currentTarget.removeAttribute("data-error");
   e.currentTarget.removeAttribute("data-pending");
   e.currentTarget.setAttribute("data-loaded", "");
 };
