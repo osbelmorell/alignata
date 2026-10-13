@@ -315,7 +315,7 @@ const SLUG_RE_OK = (s) => validateSiteEvent({ v: 1, event: "tool_open", sid: SID
 /* ---------- Art (SPEC v2 sticker batch v3.1): final alt text, copied verbatim from ART-ALT-DRAFT.md ---------- */
 /** "Digest: FINAL alt text" (Product Copy, Oct 2 11:15 PM ET), all 24 lines, + Oct 9 show-fixes (25), + Oct 10 google-ai-search essay (26, Product Copy FINAL Oct 10), + Oct 11 ai-agents-reverse-engineering essay (27, Product Copy FINAL Oct 10), + Oct 12 stop-picking-tools technique (28), + Oct 13 ai-harnesses-explained deep dive (29), + Oct 16 muse-grok-bots-chatgpt-dots essay (30). */
 const DIGEST_FINAL_ALT = new Map([
-  ["muse-grok-bots-chatgpt-dots", "A curly-haired person in a yellow sweater holds a phone while three characters float nearby: a beige hooded figure for Meta's Muse, three round navy bots for Grok Bots, and a yellow triangle in glasses for ChatGPT Dots."],
+  ["muse-grok-bots-chatgpt-dots", "A curly-haired person in a yellow sweater holds a phone while a beige hooded figure, three round navy bots and a yellow triangle in glasses float nearby."],
   ["ai-harnesses-explained", "A person in goggles wears a tool-filled harness and holds a glowing brain that beams out a checked-off card."],
   ["stop-picking-tools-that-are-down", "A person at a desk points at a card with a broken plug, next to a card with a working plug and a green check."],
   ["ai-agents-reverse-engineering-games-software", "A curious person with a magnifying glass and a friendly robot take apart a retro game cartridge into puzzle pieces on a workbench."],
@@ -402,8 +402,7 @@ test("Daily Digest: tags, real read time, sticker hero art + FINAL alt, verbatim
     assert.match(hero.pad, /^#[0-9A-F]{6}$/, `${p.slug}: pad colour`);
     assert.deepEqual(meta.cardImage(p), meta.heroImage(p), `${p.slug}: card and hero use the same file, size and alt`);
     assert.deepEqual([meta.heroImage(p).width, meta.heroImage(p).height], [1920, 1080]);
-    // cap 220 (was 200): the approved Oct 16 essay alt is 213 chars
-    assert.match(hero.alt, /^[A-Z].{10,220}\.$/, `${p.slug}: alt is one plain sentence`);
+    assert.match(hero.alt, /^[A-Z].{10,200}\.$/, `${p.slug}: alt is one plain sentence`);
     if (p.pullQuote) {
       const paras = meta.bodyBlocks(p).filter((b) => b.kind === "paragraph").map((b) => toPlainText(b.text));
       assert.ok(paras.some((t) => t.includes(p.pullQuote.text)), `${p.slug}: pull quote is verbatim from the body`);
