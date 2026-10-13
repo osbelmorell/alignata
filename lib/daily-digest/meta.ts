@@ -52,6 +52,8 @@ function blockText(b: ArticleBlock): string[] {
     case "ul":
     case "ol":
       return b.items.map(toPlainText);
+    case "table":
+      return [...b.head, ...b.rows.flat()].map(toPlainText);
     default:
       return [];
   }
