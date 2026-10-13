@@ -5,6 +5,9 @@ import { TOOL_STORY, toolArt } from "@/lib/apps";
 import { cardImage, postCardDek, postTag, shortDate } from "@/lib/daily-digest/meta";
 import { AppRow } from "@/components/appstore/AppRow";
 import { ArtFigure } from "@/components/appstore/ArtFigure";
+
+/** Desktop lead art renders about 510-575 CSS px wide. */
+const LEAD_SIZES = "(max-width: 899.98px) 100vw, 580px";
 import { Morph } from "@/components/appstore/Motion";
 import { NewMarkSr } from "@/components/daily-digest/NewMark";
 
@@ -21,7 +24,7 @@ export function ToolStoryCard({ app, pos, lead = false, homeTarget = false }: { 
   if (!story || !art.art) return null;
   return (
     <article className={`fx-scard${lead ? " fx-lead" : ""}`} data-kind="tool" data-slug={app.id}>
-      <ArtFigure slug={app.id} className="fx-scard-art" src={art.art} alt={art.alt} pad={art.pad} eager={lead} />
+      <ArtFigure slug={app.id} className="fx-scard-art" src={art.art} alt={art.alt} pad={art.pad} eager={lead} sizes={lead ? LEAD_SIZES : undefined} />
       <div className="fx-scard-text">
         <p className="fx-eyebrow">Tool</p>
         <Morph name={`title-${app.id}`}>
@@ -59,7 +62,7 @@ export function ArticleStoryCard({
   const art = cardImage(post);
   return (
     <article className={`fx-scard${lead ? " fx-lead" : ""}`} data-kind="article" data-post-card={post.slug} data-tag={postTag(post)}>
-      <ArtFigure slug={post.slug} className="fx-scard-art" src={art.src} alt={art.alt} pad={art.pad} eager={eager} />
+      <ArtFigure slug={post.slug} className="fx-scard-art" src={art.src} alt={art.alt} pad={art.pad} eager={eager} sizes={lead ? LEAD_SIZES : undefined} />
       <div className="fx-scard-text">
         <p className="fx-eyebrow">{eyebrow ?? postTag(post)}</p>
         <Morph name={`title-${post.slug}`}>

@@ -142,3 +142,13 @@ body:has(.fx-sticky-open.fx-on) .fx-toast, body:has(.fx-sticky-open.fx-on) .fx-s
   .fx-ph > img { transition: none; }
   .fx-ph:has(> img[data-pending])::after { animation: none; }
 }
+
+/* Featured (lead) card, desktop: the art keeps the standard cards' 12px inset on every side (Oct 11 2026). The frame
+   stretches to the card's full height (minus the inset) so a taller text column (900-1030px, home tool lead) never
+   leaves a gap under it; the 16:9 height becomes a minimum, and the art covers the frame. Phones keep 12px 12px 0. */
+@media (min-width: 900px) {
+  .fx-feed .fx-scard.fx-lead .fx-scard-art, .fx-scard.fx-lead .fx-scard-art { margin: 12px; align-self: stretch; height: auto;
+    min-height: calc(((100cqi - 11 * 24px) / 12 * 7 + 6 * 24px - 24px) * 9 / 16); }
+  .fx-scard.fx-lead .fx-scard-art img { object-fit: cover; }
+  .fx-scard.fx-lead .fx-scard-art > .fx-ph { background-size: cover; }
+}
