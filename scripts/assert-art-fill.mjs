@@ -31,7 +31,7 @@ let pw = null;
 if (BASE) { try { pw = await import("playwright"); } catch { pw = null; } }
 
 test("art fill (rendered): no letterbox gap over 2px", { skip: !BASE ? "set ART_FILL_URL to run" : !pw ? "playwright not installed" : false, timeout: 600000 }, async () => {
-  const pages = ["/", "/daily-digest", "/daily-digest/stop-picking-tools-that-are-down", "/daily-digest/muse-grok-bots-chatgpt-dots", "/apps/license-gate"];
+  const pages = ["/", "/daily-digest", "/daily-digest/stop-picking-tools-that-are-down", "/daily-digest/muse-grok-bots-chatgpt-dots", "/daily-digest/check-for-cut-off-answers", "/apps/license-gate"];
   const bad = [];
   for (const engine of [pw.chromium, pw.webkit]) {
     const browser = await engine.launch();
