@@ -1,3 +1,4 @@
+"use client";
 import * as React from "react";
 import { MOTION_ON } from "@/lib/motion";
 
@@ -6,7 +7,16 @@ import { MOTION_ON } from "@/lib/motion";
  * (plain react 19.2 in the test runner) or when the motion switch is off: then these render their children only.
  */
 const VT = (React as unknown as { ViewTransition?: React.ComponentType<React.ViewTransitionProps> }).ViewTransition;
-const active = MOTION_ON && !!VT;
+/**
+ * Installed PWA (iOS home-screen / any standalone display mode): no view transitions. On iPhone standalone, taps into the
+ * Daily Digest took ~10s while the server answered in <0.35s (Oct 16 2026); React holds each navigation commit for the
+ * view transition. Decided once on the client; <ViewTransition> renders no DOM, so the server HTML still hydrates.
+ */
+const standalone =
+  typeof window !== "undefined" &&
+  ((navigator as Navigator & { standalone?: boolean }).standalone === true ||
+    (typeof window.matchMedia === "function" && window.matchMedia("(display-mode: standalone)").matches));
+const active = MOTION_ON && !!VT && !standalone;
 
 /** Shared-element morph: the card side and the story side use the same name; nothing else animates (default="none"). */
 export function Morph({ name, children }: { name: string; children: React.ReactNode }) {
