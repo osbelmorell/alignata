@@ -651,7 +651,9 @@ test("motion (SPEC v2 §7): one switch, morph names on both sides, reduced motio
   const motion = read("components/appstore/Motion.tsx");
   assert.match(motion, /MOTION_ON && !!VT/, "no <ViewTransition> rendered when the switch is off");
   assert.match(motion, /share="morph" default="none"/, "morph pairs only; nothing else animates");
-  assert.ok(!/"use client"/.test(motion), "Motion wrappers are server components (no added client JS)");
+  // Client wrappers since Oct 16 2026: installed PWAs (standalone display mode) skip view transitions (iPhone ~10s taps).
+  assert.match(motion, /MOTION_ON && !!VT && !standalone/, "no <ViewTransition> in an installed PWA (standalone)");
+  assert.match(motion, /\(display-mode: standalone\)/, "standalone detected via display-mode");
   assert.match(read("app/layout.tsx"), /data-motion=\{MOTION_ON \? "on" : "off"\}/, "<html data-motion> follows the switch");
   assert.match(read("app/layout.tsx"), /import "\.\/motion\.css";/);
   const css = read("app/motion.css");
