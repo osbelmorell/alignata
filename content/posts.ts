@@ -1254,6 +1254,38 @@ export const posts: Post[] = [
       "- [AG News dataset](https://huggingface.co/datasets/fancyzhx/ag_news)",
     ],
   },
+  {
+    slug: "match-table-layout-to-table-shape",
+    title: "Match table layout to table shape",
+    dek: "Tall tables read best row by row. Wide ones, column by column.",
+    hero: {
+      src: "/art/digest/match-table-layout-to-table-shape-sticker.webp",
+      alt: "A person at a desk turns a long paper table on its side so its rows become columns.",
+      pad: "#FDFAF5",
+    },
+    date: "2026-10-21",
+    paragraphs: [
+      "## The problem",
+      "When you paste a table into a prompt, it has to be written out as plain text, usually one row per line with the column names on top. To answer a question, the model must find the right row, then count across it to the right column. In a wide table, that column name sits far from the value it labels. It's easy to blame \"wide tables\" when the real cause may be how the table was written down.",
+      "## The technique",
+      "Write the table so the part your question depends on stays close together. A study posted Oct 17 (Ma and others, University of Toronto, arXiv:2610.24798) wrote the same 256-cell tables two ways: row by row with one header line, or column by column with each column's name at the start of its own line. The task: find the row where one column has a given value, then return that row's value in another column. With three small open models (two Qwen 3B models and Phi-3.5 Mini) and 300 tables per shape, the better layout flipped with shape. On tall tables (64 rows, 4 columns), row by row won by 42 to 54 points. On wide tables (4 rows, 64 columns), column by column won by 35 to 59 points. Near square, the gap was small for both Qwen models. For one of the Qwen models, the wrong answers showed why: row-by-row answers tended to come from the right row but the wrong column, and column-by-column answers from the right column but the wrong row. Those are their numbers.",
+      "1. Tall tables (many rows, few columns): one row per line, names on top.",
+      "2. Wide tables (few rows, many columns): one column per line, its name first.",
+      "3. For exact values from a big table, have the model run a query in code or SQL instead of reading the text.",
+      "## What we saw",
+      "Our own check was much smaller: two small Qwen2.5 models, with the paper's templates and fresh tables, asking each question in both layouts.",
+      "Qwen2.5 3B (one of the paper's models), 256-cell tables, 56 questions per shape: on tall tables, row by row got 14% right and column by column 0%. On wide tables, column by column got 21% and row by row 5%. Both gaps were unlikely to be chance (p = 0.008 and 0.02). On wide tables, row-by-row answers came from the right row 59% of the time but the right column only 5%; column-by-column answers hit the right column 82% of the time.",
+      "Qwen2.5 1.5B, smaller 64-cell tables, 64 questions per shape: on wide tables (4 by 16), column by column got 41% right against 11% (p < 0.001). On tall tables (16 by 4) and square ones, the two layouts were about even.",
+      "## Limits",
+      "Our gaps were smaller than the paper's, and accuracy was low in every setting (41% at best). The wide-table result held on both models; the tall-table result showed up only on the 3B model. Both ran compressed to 4-bit on a CPU, one pass each. The tables were random six-digit numbers under made-up names, with one kind of question, so real tables with meaningful names may behave differently. Some answers (up to 14% in one setting) weren't values from the table at all. The paper is a short workshop study, not preregistered, and its code isn't out yet. A better layout doesn't make lookups reliable.",
+      "## Try it",
+      "Take 50 lookup questions you already send with a table. Write the table both ways and ask each question in each layout. Keep the layout that wins for that table's shape, and recheck when the shape changes.",
+      "## Sources",
+      "- [Ma, Chithanar, Goyal, Lee, Table Serialization Determines Which Relations Language Models Preserve, arXiv:2610.24798 (submitted Oct 17, 2026; workshop paper)](https://arxiv.org/abs/2610.24798)",
+      "- [Qwen2.5-3B-Instruct GGUF (model used in our test)](https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF)",
+      "- [Qwen2.5-1.5B-Instruct GGUF (model used in our test)](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF)",
+    ],
+  },
 ];
 
 export function getPost(slug: string): Post | undefined {
