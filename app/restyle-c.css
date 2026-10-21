@@ -7,6 +7,8 @@
   --paper: #F6F7FB; --surface: #FFFFFF; --ink: #23233F; --ink-2: #6E6F88; --line: #ECEDF3;
   --purple: #5B4FCF; --coral: #F2735A; --yellow: #FFC857;
   --tint-tool: #FFEFEA; --tint-essay: #EEECFB; --tint-tech: #EAF1FB; --tint-deep: #E8F6F0;
+  /* Card summary + date. #6E6F88 is 4.20–4.40:1 on the tints above; #656683 is at least 4.76:1 on every one. */
+  --ink-card: #656683;
   --r-card: 20px; --r-art: 16px;
 }
 /* Header: same white sticky bar on every page */
@@ -14,8 +16,10 @@
 .fx-header .fx-wrap { height: 64px; }
 .fx-wordmark::after { content: ""; display: inline-block; width: 12px; height: 3px; margin-left: 4px; border-radius: 2px; background: var(--coral); }
 .fx-nav { gap: 6px; }
-.fx-nav a { font-size: 15px; font-weight: 600; color: var(--ink-2); padding: 0 12px; border-radius: 12px; min-height: 40px; align-self: center; }
-.fx-nav a[aria-current="page"] { text-decoration: none; color: var(--purple); background: var(--tint-essay); }
+/* 44px tap target. The current-page fill stays a 40px pill (::before), so the bar looks the same. */
+.fx-nav a { position: relative; z-index: 0; font-size: 15px; font-weight: 600; color: var(--ink-2); padding: 0 12px; border-radius: 12px; min-height: 44px; align-self: center; }
+.fx-nav a[aria-current="page"] { text-decoration: none; color: var(--purple); background: transparent; }
+.fx-nav a[aria-current="page"]::before { content: ""; position: absolute; z-index: -1; left: 0; right: 0; top: 50%; height: 40px; transform: translateY(-50%); border-radius: 12px; background: var(--tint-essay); }
 html { scroll-padding-top: 80px; }
 /* Back link: one place on every subpage */
 .fx-back { padding-top: 20px; }
@@ -54,9 +58,9 @@ a.fx-open, a.fx-open:visited, a.fx-open:hover { background: #fff; color: var(--i
   background: linear-gradient(var(--accent), var(--accent)) 0 100% / 38% 3px no-repeat, linear-gradient(rgb(35 35 63 / 0.08), rgb(35 35 63 / 0.08)) 0 100% / 100% 3px no-repeat; }
 .fx-scard-title { font-size: 22px; }
 @media (min-width: 900px) { .fx-scard-title { font-size: 24px; } }
-.fx-scard-dek { font-size: 15px; }
+.fx-scard-dek { font-size: 15px; color: var(--ink-card); }
 .fx-app-row { border-top: 0; }
-.fx-scard-date { font-weight: 600; }
+.fx-scard-date { font-weight: 600; color: var(--ink-card); }
 /* New / Updated: filled soft pastel pill (Updated colours come from new-mark.ts). Off until dd-new-style turns it on. */
 .fx-scard[data-kind="article"] .fx-eyebrow::before { padding: 0 10px; margin-right: 8px; border-radius: 999px; box-shadow: none;
   background: #FFD3C7; color: #A8361F; font-size: 12px; font-weight: 700; line-height: 22px; text-transform: none; letter-spacing: 0.01em; }
