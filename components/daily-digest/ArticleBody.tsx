@@ -8,8 +8,8 @@ import {
   type ArticleSection,
 } from "@/lib/daily-digest/blocks";
 
-/** Inline text with safe Markdown links ("[label](https://…)" or a relative "/daily-digest/<slug>"). External links
- *  open in a new tab; internal Daily Digest links stay in the same tab. */
+/** Inline text with safe Markdown links ("[label](https://…)" or a relative "/daily-digest/<slug>"), emphasis, and
+ *  `code`. External links open in a new tab; internal Daily Digest links stay in the same tab. URLs inside code stay text. */
 function InlineText({ text }: { text: string }) {
   return (
     <>
@@ -22,6 +22,8 @@ function InlineText({ text }: { text: string }) {
           <strong key={i}>{seg.text}</strong>
         ) : seg.kind === "em" ? (
           <em key={i}>{seg.text}</em>
+        ) : seg.kind === "code" ? (
+          <code key={i}>{seg.text}</code>
         ) : (
           <Fragment key={i}>{seg.text}</Fragment>
         ),
@@ -94,10 +96,17 @@ export function ArticleBody({
           case "rule":
             el = <hr />;
             break;
+          case "code":
+            el = (
+              <pre>
+                <code>{block.text}</code>
+              </pre>
+            );
+            break;
           case "table":
             el = (
               // Scrolls sideways on phones (table min-width 560px), so it is a labelled, keyboard-focusable region.
-              <div className="fx-table-wrap" role="region" aria-label={`Table: ${block.head.map((c) => toPlainText(c)).join(", ")} (scrolls sideways)`} tabIndex={0}>
+              <div className="fx-table-wrap" role="region" aria-label={`Table: ${block.head.map((c) => toPlainText(c)).filter(Boolean).join(", ")} (scrolls sideways)`} tabIndex={0}>
                 <table>
                   <thead>
                     <tr>

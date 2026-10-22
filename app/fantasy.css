@@ -43,9 +43,11 @@ a.fx-pill:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 
 .fx-prose { max-width: 680px; margin: 48px auto 0; overflow-wrap: anywhere; }
 .fx-prose > * + * { margin-top: 1.1em; }
-.fx-prose a { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.fx-prose a { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; position: relative; }
 .fx-prose a:hover { text-decoration-thickness: 2px; }
 .fx-prose a:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
+/* Inline links stay on the line; the hit box is at least 44×44 without changing the line height. */
+.fx-prose a::after { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: 44px; transform: translate(-50%, -50%); }
 .fx-prose h2 { font-family: var(--display); font-weight: 600; font-size: 26px; line-height: 1.2; letter-spacing: -0.015em; }
 .fx-prose h3 { font-family: var(--display); font-weight: 600; font-size: 22px; line-height: 1.25; letter-spacing: -0.01em; }
 .fx-prose > h2:not(:first-child) { margin-top: 48px; }
@@ -61,11 +63,17 @@ a.fx-pill:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 .fx-prose hr { border: 0; border-top: 1px solid var(--line); margin: 40px 0; }
 .fx-prose hr + * { margin-top: 0; }
 .fx-prose strong { font-weight: 600; }
-.fx-prose .fx-table-wrap { overflow-x: auto; }
+.fx-prose .fx-table-wrap { overflow-x: auto; max-width: 100%; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
 .fx-prose .fx-table-wrap:focus-visible { outline: 3px solid var(--purple, #5B4FCF); outline-offset: 3px; border-radius: 6px; }
+/* Phone: a right-edge shadow shows the table scrolls inside the column, not the page. */
+@media (max-width: 899.98px) {
+  .fx-prose .fx-table-wrap { box-shadow: inset -14px 0 10px -12px rgba(35, 35, 63, 0.35); scrollbar-width: thin; }
+}
 .fx-prose table { width: 100%; min-width: 560px; overflow-wrap: normal; word-break: normal; border-collapse: collapse; font-size: 15px; line-height: 1.4; }
 .fx-prose th, .fx-prose td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
 .fx-prose th { font-weight: 600; border-bottom-color: var(--ink); }
+/* Row labels stay put while a wide table scrolls inside its wrapper. */
+.fx-prose th:first-child, .fx-prose td:first-child { position: sticky; left: 0; background: var(--paper); z-index: 1; }
 .fx-prose .fx-byline { margin-top: 32px; font-size: 14px; line-height: 1.3; font-weight: 500; color: var(--ink-2); }
 .fx-pullquote { margin: 40px 0; padding-left: 24px; border-left: 3px solid var(--ink); }
 .fx-prose > .fx-pullquote, .fx-prose > .fx-pullquote + * { margin-top: 40px; }
