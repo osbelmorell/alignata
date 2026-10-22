@@ -2074,6 +2074,114 @@ test("Oct 22 deep dive cdm-vs-llm-vs-jev: exact body, inline emphasis, table, so
   assert.ok(readFileSync("app/fantasy.css", "utf8").includes(".fx-prose .fx-table-wrap { overflow-x: auto; max-width: 100%;"), "table scroll stays inside the column");
 });
 
+test("bare URLs: never autolink inside inline code or code blocks, and skip localhost, 127.0.0.1, and private hosts", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { parseInline, parseArticle } = await import("../lib/daily-digest/blocks.ts");
+  const { ArticleBody } = await import("../components/daily-digest/ArticleBody.tsx");
+  const { getPost } = await import("../content/posts.ts");
+  const linksOf = (text) => parseInline(text).filter((s) => s.kind === "link");
+  const plain = (text) => parseInline(text).map((s) => s.text).join("");
+  const hrefs = (html) => [...html.matchAll(/href="([^"]*)"/g)].map((m) => m[1]);
+
+  assert.deepEqual(parseInline("run `https://api.typesafe.ai/v1/systemone` now"), [
+    { kind: "text", text: "run " },
+    { kind: "code", text: "https://api.typesafe.ai/v1/systemone" },
+    { kind: "text", text: " now" },
+  ]);
+  assert.deepEqual(parseInline("see `**not bold**` and *em*"), [
+    { kind: "text", text: "see " },
+    { kind: "code", text: "**not bold**" },
+    { kind: "text", text: " and " },
+    { kind: "em", text: "em" },
+  ]);
+  assert.deepEqual(linksOf("docs at https://example.com/a and `https://example.com/secret`."), [
+    { kind: "link", text: "https://example.com/a", href: "https://example.com/a" },
+  ]);
+  assert.deepEqual(linksOf("POST https://api.typesafe.ai/v1/systemone with Authorization: Bearer <API_KEY>."), []);
+  assert.ok(plain("POST https://api.typesafe.ai/v1/systemone with Authorization: Bearer <API_KEY>.").includes("https://api.typesafe.ai/v1/systemone"));
+  assert.equal(linksOf("the head https://example.com/a")[0].href, "https://example.com/a", "English 'head' is not an HTTP method");
+
+  for (const u of [
+    "http://localhost:3100",
+    "http://localhost:3100/docs",
+    "HTTP://LOCALHOST:3100/x",
+    "http://app.localhost:3100/",
+    "http://127.0.0.1:3100",
+    "http://127.0.0.2/",
+    "http://10.1.2.3/x",
+    "http://192.168.1.20/",
+    "http://172.16.0.1/",
+    "http://172.31.255.255/",
+    "http://169.254.1.1/",
+    "http://0.0.0.0:3100/",
+    "http://[::1]/",
+    "http://[::1]:3100/admin",
+    "http://[fd12::1]/",
+    "http://[fe80::1]/",
+  ]) {
+    assert.deepEqual(linksOf(`open ${u} now`), [], u);
+    assert.ok(plain(`open ${u} now`).includes(u), `${u} stays visible`);
+  }
+  assert.equal(linksOf("http://172.15.0.1/a")[0].href, "http://172.15.0.1/a");
+  assert.equal(linksOf("http://172.32.0.1/a")[0].href, "http://172.32.0.1/a");
+  assert.equal(linksOf("http://8.8.8.8/a")[0].href, "http://8.8.8.8/a");
+  assert.equal(linksOf("http://192.167.1.1/a")[0].href, "http://192.167.1.1/a");
+  assert.equal(linksOf("https://localhost.com/a")[0].href, "https://localhost.com/a");
+  assert.equal(linksOf("http://[2001:db8::1]/a")[0].href, "http://[2001:db8::1]/a", "public IPv6 still links, so the private ones were recognized");
+  assert.equal(linksOf("Use http://localhost:3100 or https://example.com/a.")[0].href, "https://example.com/a");
+  assert.deepEqual(linksOf("[local](http://localhost:3100)"), [{ kind: "link", text: "local", href: "http://localhost:3100/" }], "an explicit Markdown link is the author's");
+
+  const blocks = parseArticle([
+    "before https://example.com/a",
+    "```ts",
+    "POST https://api.typesafe.ai/v1/systemone",
+    "http://localhost:3100",
+    "**not bold**",
+    "```",
+    "after https://example.com/b",
+  ]);
+  assert.deepEqual(
+    blocks.find((b) => b.kind === "code"),
+    { kind: "code", text: "POST https://api.typesafe.ai/v1/systemone\nhttp://localhost:3100\n**not bold**" },
+  );
+  assert.equal(linksOf(blocks.find((b) => b.text === "before https://example.com/a").text)[0].href, "https://example.com/a");
+  assert.equal(linksOf(blocks.find((b) => b.text === "after https://example.com/b").text)[0].href, "https://example.com/b");
+  const unclosed = parseArticle(["```", "https://example.com/a", "still text"]);
+  assert.ok(unclosed.every((b) => b.kind !== "code"), "an unclosed fence does not swallow the article");
+  assert.equal(linksOf("https://example.com/a")[0].href, "https://example.com/a");
+
+  const html = renderToStaticMarkup(
+    ArticleBody({
+      paragraphs: [
+        "See https://example.com/docs.",
+        "```",
+        "curl https://example.com/secret",
+        "http://127.0.0.1:9",
+        "```",
+        "Run `https://example.com/hidden` then https://example.com/shown.",
+        "POST https://api.typesafe.ai/v1/systemone now.",
+        "UI at http://localhost:3100 today.",
+      ],
+    }),
+  );
+  assert.deepEqual(hrefs(html), ["https://example.com/docs", "https://example.com/shown"]);
+  assert.ok(html.includes("<code>https://example.com/hidden</code>"));
+  assert.ok(html.includes("<pre><code>curl https://example.com/secret\nhttp://127.0.0.1:9</code></pre>"));
+  assert.ok(html.includes("https://api.typesafe.ai/v1/systemone"));
+  assert.ok(html.includes("http://localhost:3100"));
+
+  const prose = (slug) => renderToStaticMarkup(ArticleBody({ paragraphs: getPost(slug).paragraphs }));
+  const paper = prose("paperclip-deep-dive");
+  assert.equal(hrefs(paper).filter((h) => /localhost|127\.0\.0\.1|192\.168\.|10\.\d/.test(h)).length, 0, "paperclip: no private-host links");
+  assert.equal((paper.match(/localhost:3100/g) || []).length, 2, "both localhost URLs stay in the text");
+  assert.ok(hrefs(paper).includes("https://github.com/paperclipai/paperclip"), "source URLs still link");
+  const sys = prose("system-one-and-jev-deep-dive");
+  assert.ok(!hrefs(sys).some((h) => h.includes("api.typesafe.ai/v1/systemone")), "POST-only endpoint is not a link");
+  assert.ok(sys.includes("https://api.typesafe.ai/v1/systemone"), "the endpoint stays in the sentence");
+  assert.ok(hrefs(sys).includes("https://docs.typesafe.ai/introduction"));
+  assert.ok(hrefs(sys).includes("https://docs.typesafe.ai/llms-full.txt"));
+});
+
 test("Share (Oct 11 2026): one Share on articles, tool stories and /daily-digest (not home/guides), utm_source=share only, per-page OG JPEG + summary_large_image, share_click {slug, method}, privacy line", async () => {
   const { readFileSync, existsSync } = await import("node:fs");
   const { shareUrl } = await import("../lib/share/url.ts");
