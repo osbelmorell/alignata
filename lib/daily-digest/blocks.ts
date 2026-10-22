@@ -8,7 +8,9 @@
  * - "1. item" / "1) item" lines (consecutive) → <ol> (start number kept)
  * - "---" (or "***") on its own line → section break (<hr>)
  * - "| a | b |" lines (consecutive) → <table>; the first row is the header, a "|---|" row after it is skipped
- * - inline "**bold**" → <strong>; a whole line wrapped in single "*…*" → <em> paragraph
+ * - inline "**bold**" → <strong>; inline "*emphasis*" (and a whole line wrapped in single "*…*") → <em>
+ * - inline "[label](https://…)" or "[label](/daily-digest/<slug>)" → link; a bare https? URL or
+ *   "/daily-digest/<slug>" (as in Sources) → a link whose visible text is that URL
  * - anything else → <p>
  * Each paragraph string may hold one line or several lines separated by "\n".
  *
@@ -116,10 +118,14 @@ export function parseSections(sections: ArticleSection[]): ArticleBlock[] {
 }
 
 /**
- * Inline Markdown links inside a block's text: "[label](https://…)".
- * Only absolute http(s) URLs are accepted; anything else (other schemes,
- * relative paths, malformed syntax) stays as literal text. Labels and URLs are
- * returned as plain strings and rendered by React, so nothing is injected as HTML.
+ * Inline Markdown inside a block's text.
+ * - "[label](https://…)" or "[label](/daily-digest/<slug>)" → link. Only absolute http(s) URLs and
+ *   site-relative Daily Digest paths are accepted; anything else stays literal text.
+ * - A bare http(s) URL, or a bare "/daily-digest/<slug>", becomes a link whose visible text is that
+ *   URL (Sources lines). Trailing sentence punctuation stays outside the link.
+ * - "**bold**" → <strong>. "*emphasis*" → <em>, including a whole line wrapped in single asterisks.
+ *   Stray asterisks with spaces around them ("2 * 3 * 4") stay text.
+ * Labels and URLs are returned as plain strings and rendered by React, so nothing is injected as HTML.
  */
 export type InlineSegment =
   | { kind: "text"; text: string }
@@ -127,23 +133,48 @@ export type InlineSegment =
   | { kind: "em"; text: string }
   | { kind: "link"; text: string; href: string };
 
-const STRONG_RE = /\*\*(?=\S)([^*\n]+?)(?<=\S)\*\*/g;
-const WHOLE_EM_RE = /^\*(?!\*)(?=\S)([^*\n]+?)(?<=\S)\*$/;
+/** "**bold**" or inline "*emphasis*" (a whole line of "*…*" is one emphasis segment). */
+const MARK_RE = /\*\*(?=\S)([^*\n]+?)(?<=\S)\*\*|(?<!\*)\*(?!\*)(?=\S)([^*\n]+?)(?<=\S)\*(?!\*)/g;
 
-/** Plain text → text / strong / em segments ("**bold**"; a whole line in single "*…*" is emphasis). */
+/** Plain text → text / strong / em segments. Stray asterisks ("2 * 3 * 4") stay text. */
 function emphasis(text: string): InlineSegment[] {
-  const em = WHOLE_EM_RE.exec(text);
-  if (em) return [{ kind: "em", text: em[1] }];
   const out: InlineSegment[] = [];
   let cursor = 0;
-  for (const m of text.matchAll(STRONG_RE)) {
+  for (const m of text.matchAll(MARK_RE)) {
     const start = m.index ?? 0;
     if (start > cursor) out.push({ kind: "text", text: text.slice(cursor, start) });
-    out.push({ kind: "strong", text: m[1] });
+    out.push(m[1] !== undefined ? { kind: "strong", text: m[1] } : { kind: "em", text: m[2] });
     cursor = start + m[0].length;
   }
   if (cursor < text.length) out.push({ kind: "text", text: text.slice(cursor) });
   return out;
+}
+
+/** Bare http(s) URL, or a site-relative Daily Digest path, not already inside a Markdown link. */
+const BARE_LINK_RE = /https?:\/\/[^\s<>"'`()[\]]+|\/daily-digest\/[a-z0-9-]+/gi;
+
+/** Turn leftover plain-text URLs into links. Sentence punctuation after a URL stays text. */
+function autolink(text: string): InlineSegment[] {
+  const out: InlineSegment[] = [];
+  let cursor = 0;
+  for (const m of text.matchAll(BARE_LINK_RE)) {
+    const start = m.index ?? 0;
+    let raw = m[0];
+    const trail = /[.,;:!?]+$/.exec(raw);
+    if (trail) raw = raw.slice(0, -trail[0].length);
+    const href = raw ? safeHttpUrl(raw) : null;
+    if (!href) continue;
+    if (start > cursor) out.push({ kind: "text", text: text.slice(cursor, start) });
+    out.push({ kind: "link", text: raw, href });
+    cursor = start + raw.length;
+  }
+  if (cursor < text.length) out.push({ kind: "text", text: text.slice(cursor) });
+  return out;
+}
+
+/** Emphasis first, then bare URLs in the remaining text (a URL inside bold or emphasis stays words). */
+function decorate(text: string): InlineSegment[] {
+  return emphasis(text).flatMap((seg) => (seg.kind === "text" ? autolink(seg.text) : [seg]));
 }
 
 const INLINE_LINK_RE = /\[([^\[\]\n]+)\]\((https?:\/\/[^\s()<>"'`]+|\/daily-digest\/[a-z0-9-]+)\)/gi;
@@ -169,11 +200,11 @@ export function parseInline(text: string): InlineSegment[] {
     const label = m[1].trim();
     const href = safeHttpUrl(m[2]);
     if (!href || !label) continue;
-    if (start > cursor) out.push(...emphasis(text.slice(cursor, start)));
+    if (start > cursor) out.push(...decorate(text.slice(cursor, start)));
     out.push({ kind: "link", text: label, href });
     cursor = start + m[0].length;
   }
-  if (cursor < text.length) out.push(...emphasis(text.slice(cursor)));
+  if (cursor < text.length) out.push(...decorate(text.slice(cursor)));
   return out;
 }
 

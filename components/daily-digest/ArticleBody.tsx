@@ -97,7 +97,7 @@ export function ArticleBody({
           case "table":
             el = (
               // Scrolls sideways on phones (table min-width 560px), so it is a labelled, keyboard-focusable region.
-              <div className="fx-table-wrap" role="region" aria-label={`Table: ${block.head.map((c) => toPlainText(c)).join(", ")} (scrolls sideways)`} tabIndex={0}>
+              <div className="fx-table-wrap" role="region" aria-label={`Table: ${block.head.map((c) => toPlainText(c)).filter(Boolean).join(", ")} (scrolls sideways)`} tabIndex={0}>
                 <table>
                   <thead>
                     <tr>
