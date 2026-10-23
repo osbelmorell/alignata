@@ -394,7 +394,7 @@ test("Daily Digest: tags, real read time, sticker hero art + FINAL alt, verbatim
   assert.equal(new Set(posts.map((p) => p.slug)).size, posts.length, "unique slugs");
   const byTag = (t) => posts.filter((p) => meta.postTag(p) === t).map((p) => p.slug).sort();
   assert.deepEqual(byTag("Essay"), ["ai-agents-reverse-engineering-games-software", "approve-button-human-name", "google-ai-search-eating-its-own-traffic", "muse-grok-bots-chatgpt-dots", "the-ai-safety-paradox"]);
-  assert.deepEqual(byTag("Deep dive"), ["ai-harnesses-explained", "cdm-vs-llm-vs-jev", "layered-agent-code-review-round-cap", "laya-ai-deep-dive", "paperclip-deep-dive", "system-one-and-jev-deep-dive"]);
+  assert.deepEqual(byTag("Deep dive"), ["ai-harnesses-explained", "cdm-vs-llm-vs-jev", "laya-ai-deep-dive", "layered-agent-code-review-round-cap", "paperclip-deep-dive", "system-one-and-jev-deep-dive"]);
   assert.equal(byTag("Technique").length, posts.length - 11);
   for (const p of posts) {
     const w = meta.wordCount(p);
