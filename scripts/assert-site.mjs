@@ -313,8 +313,9 @@ test("/apps (v2 §5): 10 app rows in /apps order (Env Diff retired); row body �
 const SLUG_RE_OK = (s) => validateSiteEvent({ v: 1, event: "tool_open", sid: SID, vid: VID, dogfood: false, props: { slug: s, position: 1 } }).ok;
 
 /* ---------- Art (SPEC v2 sticker batch v3.1): final alt text, copied verbatim from ART-ALT-DRAFT.md ---------- */
-/** "Digest: FINAL alt text" (Product Copy, Oct 2 11:15 PM ET), all 24 lines, + Oct 9 show-fixes (25), + Oct 10 google-ai-search essay (26, Product Copy FINAL Oct 10), + Oct 11 ai-agents-reverse-engineering essay (27, Product Copy FINAL Oct 10), + Oct 12 stop-picking-tools technique (28), + Oct 13 ai-harnesses-explained deep dive (29), + Oct 13 check-for-cut-off-answers technique (30), + Oct 15 dont-keep-only-the-shortest-answer technique (31), + Oct 16 muse-grok-bots-chatgpt-dots essay (32), + Oct 17 approve-button-human-name essay (33), + Oct 19 test-review-against-the-better-model technique (34), + Oct 20 check-confidence-before-routing-on-it technique (35), + Oct 21 match-table-layout-to-table-shape technique (36), + Oct 22 cdm-vs-llm-vs-jev deep dive (37). */
+/** "Digest: FINAL alt text" (Product Copy, Oct 2 11:15 PM ET), all 24 lines, + Oct 9 show-fixes (25), + Oct 10 google-ai-search essay (26, Product Copy FINAL Oct 10), + Oct 11 ai-agents-reverse-engineering essay (27, Product Copy FINAL Oct 10), + Oct 12 stop-picking-tools technique (28), + Oct 13 ai-harnesses-explained deep dive (29), + Oct 13 check-for-cut-off-answers technique (30), + Oct 15 dont-keep-only-the-shortest-answer technique (31), + Oct 16 muse-grok-bots-chatgpt-dots essay (32), + Oct 17 approve-button-human-name essay (33), + Oct 19 test-review-against-the-better-model technique (34), + Oct 20 check-confidence-before-routing-on-it technique (35), + Oct 21 match-table-layout-to-table-shape technique (36), + Oct 22 cdm-vs-llm-vs-jev deep dive (37), + Oct 23 layered-agent-code-review-round-cap deep dive (38). */
 const DIGEST_FINAL_ALT = new Map([
+  ["layered-agent-code-review-round-cap", "A person at a desk checks code on a screen through stacked review layers, beside a small round counter and a stop sign."],
   ["cdm-vs-llm-vs-jev", "A person at a workbench looks over a pen, a sorting tray and a magnifying glass on a scroll, deciding which tool to use."],
   ["match-table-layout-to-table-shape", "A person at a desk turns a long paper table on its side so its rows become columns."],
   ["check-confidence-before-routing-on-it", "A person stands where a path splits, dropping a question-marked card into the larger of two trays."],
@@ -368,7 +369,7 @@ const TOOL_FINAL_ALT = [
 ];
 /** Clay files replaced by the sticker batch (alignata-art/clay-replacement-list.md): none may come back. */
 const CLAY_FILES = [
-  ...[...DIGEST_FINAL_ALT.keys()].filter((s) => s !== "the-ai-safety-paradox" && s !== "show-fixes-only-when-things-break" && s !== "google-ai-search-eating-its-own-traffic" && s !== "ai-agents-reverse-engineering-games-software" && s !== "stop-picking-tools-that-are-down" && s !== "ai-harnesses-explained" && s !== "check-for-cut-off-answers" && s !== "dont-keep-only-the-shortest-answer" && s !== "muse-grok-bots-chatgpt-dots" && s !== "approve-button-human-name" && s !== "test-review-against-the-better-model" && s !== "check-confidence-before-routing-on-it" && s !== "match-table-layout-to-table-shape" && s !== "cdm-vs-llm-vs-jev").flatMap((s) => [`public/art/digest/${s}.webp`, `public/art/digest/${s}-card.webp`]),
+  ...[...DIGEST_FINAL_ALT.keys()].filter((s) => s !== "the-ai-safety-paradox" && s !== "show-fixes-only-when-things-break" && s !== "google-ai-search-eating-its-own-traffic" && s !== "ai-agents-reverse-engineering-games-software" && s !== "stop-picking-tools-that-are-down" && s !== "ai-harnesses-explained" && s !== "check-for-cut-off-answers" && s !== "dont-keep-only-the-shortest-answer" && s !== "muse-grok-bots-chatgpt-dots" && s !== "approve-button-human-name" && s !== "test-review-against-the-better-model" && s !== "check-confidence-before-routing-on-it" && s !== "match-table-layout-to-table-shape" && s !== "cdm-vs-llm-vs-jev" && s !== "layered-agent-code-review-round-cap").flatMap((s) => [`public/art/digest/${s}.webp`, `public/art/digest/${s}-card.webp`]),
   ...["fallback-tile", "license-gate", "stripe-cleaver", "the-ai-safety-paradox"].flatMap((b) => [`public/art/${b}-640.webp`, `public/art/${b}-1280.webp`]),
 ];
 /** Width × height of a WebP file (VP8, VP8L or VP8X), read from its header. */
@@ -389,12 +390,12 @@ test("Daily Digest: tags, real read time, sticker hero art + FINAL alt, verbatim
   const { posts, getPostsNewestFirst } = await import("../content/posts.ts");
   const meta = await import("../lib/daily-digest/meta.ts");
   const { toPlainText } = await import("../lib/daily-digest/blocks.ts");
-  assert.equal(posts.length, 37);
+  assert.equal(posts.length, 38);
   assert.equal(new Set(posts.map((p) => p.slug)).size, posts.length, "unique slugs");
   const byTag = (t) => posts.filter((p) => meta.postTag(p) === t).map((p) => p.slug).sort();
   assert.deepEqual(byTag("Essay"), ["ai-agents-reverse-engineering-games-software", "approve-button-human-name", "google-ai-search-eating-its-own-traffic", "muse-grok-bots-chatgpt-dots", "the-ai-safety-paradox"]);
-  assert.deepEqual(byTag("Deep dive"), ["ai-harnesses-explained", "cdm-vs-llm-vs-jev", "laya-ai-deep-dive", "paperclip-deep-dive", "system-one-and-jev-deep-dive"]);
-  assert.equal(byTag("Technique").length, posts.length - 10);
+  assert.deepEqual(byTag("Deep dive"), ["ai-harnesses-explained", "cdm-vs-llm-vs-jev", "layered-agent-code-review-round-cap", "laya-ai-deep-dive", "paperclip-deep-dive", "system-one-and-jev-deep-dive"]);
+  assert.equal(byTag("Technique").length, posts.length - 11);
   for (const p of posts) {
     const w = meta.wordCount(p);
     assert.ok(w > 0, p.slug);
@@ -438,8 +439,8 @@ test("Daily Digest pages render: story cards (eyebrow = tag, title is the link, 
   const { default: Index } = await import("../app/daily-digest/page.tsx");
   const list = getPostsNewestFirst();
   const cards = renderToStaticMarkup(createElement(Index));
-  assert.equal((cards.match(/data-post-card=/g) || []).length, 37);
-  assert.equal((cards.match(/fx-scard fx-lead/g) || []).length, 8, "a lead row every 5 cards (37 cards → 8) (§3 desktop layout repeated)");
+  assert.equal((cards.match(/data-post-card=/g) || []).length, 38);
+  assert.equal((cards.match(/fx-scard fx-lead/g) || []).length, 8, "a lead row every 5 cards (38 cards → 8) (§3 desktop layout repeated)");
   assert.ok(!/>Open</.test(cards), "no Open pill on the digest");
   const esc = (t) => t.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
   for (const p of list) {
@@ -476,19 +477,19 @@ test("homepage (v2 §2): feed order, one black pill, Open → tool with home_cli
   const { default: Home } = await import("../app/page.tsx");
   const html = renderToStaticMarkup(createElement(Home));
   const feed = [...html.matchAll(/<article class="fx-scard[^"]*" data-kind="(tool|article)" data-(?:slug|post-card)="([^"]+)"/g)].map((m) => `${m[1]}:${m[2]}`);
-  assert.deepEqual(feed, ["tool:stripe-cleaver", "article:cdm-vs-llm-vs-jev", "tool:license-gate", "article:match-table-layout-to-table-shape", "article:check-confidence-before-routing-on-it"]);
+  assert.deepEqual(feed, ["tool:stripe-cleaver", "article:layered-agent-code-review-round-cap", "tool:license-gate", "article:cdm-vs-llm-vs-jev", "article:match-table-layout-to-table-shape"]);
   assert.ok(html.includes('class="fx-scard fx-lead" data-kind="tool" data-slug="stripe-cleaver"'), "Cleaver is the lead card");
   for (const [slug, pos] of [["stripe-cleaver", 1], ["license-gate", 2]]) {
     assert.ok(html.includes(`<a class="fx-stretch" href="/apps/${slug}">`), `${slug}: card title → story`);
     assert.match(html, new RegExp(`<a class="fx-open" href="/${slug}" data-tool-slug="${slug}" data-tool-pos="${pos}" data-tool-src="feed" data-home-target="tool:${slug}" aria-label="Open [^"]+">Open</a>`), `${slug}: soft Open → tool, source feed`);
   }
-  for (const t of ["tools-pill", "digest-pill", "all-tools", "all-articles", "article:cdm-vs-llm-vs-jev", "article:match-table-layout-to-table-shape", "article:check-confidence-before-routing-on-it"]) {
+  for (const t of ["tools-pill", "digest-pill", "all-tools", "all-articles", "article:layered-agent-code-review-round-cap", "article:cdm-vs-llm-vs-jev", "article:match-table-layout-to-table-shape"]) {
     assert.ok(html.includes(`data-home-target="${t}"`), `home_click target ${t}`);
     assert.ok(validateSiteEvent(env("home_click", { target: t })).ok, `${t} validates`);
   }
-  assert.ok(html.includes('<p class="fx-eyebrow">Daily Digest · Deep dive</p>'), "the Oct 22 deep dive is on home");
+  assert.ok(html.includes('<p class="fx-eyebrow">Daily Digest · Deep dive</p>'), "the Oct 23 deep dive is on home");
   assert.ok(!html.includes('<p class="fx-eyebrow">Daily Digest · Essay</p>'), "the Oct 17 essay moved off home (newer posts)");
-  assert.ok(html.includes('<p class="fx-eyebrow">Daily Digest · Technique</p>'), "the Oct 21 + Oct 20 techniques are on home");
+  assert.ok(html.includes('<p class="fx-eyebrow">Daily Digest · Technique</p>'), "the Oct 21 technique is on home");
   assert.equal((html.match(/class="fx-pill"/g) || []).length, 1, "one black pill (Tools)");
   assert.ok(!html.includes("fx-primary"), "feed Opens are soft");
   assert.ok(!html.includes("deploy-decision"), "Deploy Decision never in the feed");
@@ -601,7 +602,7 @@ test("art: tool stickers + icons with FINAL alt, every file a real WebP of the r
   }
   const files = readdirSync("public/art", { recursive: true }).map(String).filter((f) => /\.[a-z]+$/.test(f) && !f.startsWith("_r/"));
   for (const f of files) assert.match(f, /^(digest\/)?[a-z0-9-]+-sticker(-icon)?\.webp$/, `public/art/${f} is sticker art (no clay, no fallback tile)`);
-  assert.equal(files.length, 37 + 9 + 10 + 1 + 3, "37 Digest heroes + 9 tool heroes + 10 icons + the About hero + 3 page heroes (restyle C)");
+  assert.equal(files.length, 38 + 9 + 10 + 1 + 3, "38 Digest heroes + 9 tool heroes + 10 icons + the About hero + 3 page heroes (restyle C)");
   assert.ok(files.includes("about-sticker.webp"), "About hero (company pages, Oct 3)");
   assert.deepEqual(await webpSize("public/art/about-sticker.webp"), [1920, 1080], "About hero: one 16:9 file");
   for (const f of CLAY_FILES) assert.ok(!existsSync(f), `${f} is gone`);
@@ -819,7 +820,7 @@ test("sitemap: adds exactly the tool stories (no Deploy Decision story); everyth
   assert.deepEqual(urls.filter((u) => !stories.includes(u) && !guides.includes(u) && !company.includes(u)), before, "the 37 existing URLs, same order");
   assert.deepEqual(urls.filter((u) => company.includes(u)), company, "company pages (About, Privacy) after the Digest, before the guides");
   assert.ok(!urls.includes(`${S}/terms`), "Terms is held: not in the sitemap");
-  assert.equal(urls.length, 63);
+  assert.equal(urls.length, 64);
   assert.equal(new Set(urls).size, urls.length);
   const robots = (await import("../app/robots.ts")).default();
   assert.deepEqual(robots, { rules: { userAgent: "*", allow: "/" }, sitemap: "https://alignata.com/sitemap.xml" }, "robots unchanged");
@@ -1313,7 +1314,7 @@ test("Env Diff route: zero links to /env-diff on /, /apps, every tool story and 
   const pages = [["/", renderToStaticMarkup(createElement(Home))], ["/apps", renderToStaticMarkup(createElement(ToolsList, { apps: toolsOrder(getApps()) }))], ["/daily-digest", renderToStaticMarkup(createElement(Digest))]];
   for (const { slug } of story.generateStaticParams()) pages.push([`/apps/${slug}`, renderToStaticMarkup(await story.default({ params: Promise.resolve({ slug }) }))]);
   for (const p of posts) pages.push([`/daily-digest/${p.slug}`, renderToStaticMarkup(await Article({ params: Promise.resolve({ slug: p.slug }) }))]);
-  assert.equal(pages.length, 3 + 9 + 37);
+  assert.equal(pages.length, 3 + 9 + 38);
   for (const [path, html] of pages) {
     assert.ok(!/href="[^"]*\/env-diff/.test(html), `${path}: no link to the Env Diff route`);
     assert.ok(!/env-diff|Env Diff/i.test(html), `${path}: no Env Diff mention or art`);
@@ -1382,7 +1383,7 @@ test("alt text: no <img> anywhere on the site has an empty or missing alt (every
   assert.deepEqual(imgsWithoutAlt('<img src="a.webp">'), ['<img src="a.webp">'], "self-check: missing alt is caught");
 });
 
-test("alt text: every listed tool hero + icon and all 37 Digest heroes carry their FINAL (non-empty) alt", async () => {
+test("alt text: every listed tool hero + icon and all 38 Digest heroes carry their FINAL (non-empty) alt", async () => {
   const { getApps, toolsOrder, toolArt } = await import("../lib/apps.ts");
   const { posts } = await import("../content/posts.ts");
   let heroes = 0, icons = 0;
@@ -1395,11 +1396,11 @@ test("alt text: every listed tool hero + icon and all 37 Digest heroes carry the
   }
   assert.deepEqual([heroes, icons], [9, 10]);
   assert.equal(toolArt("agent-eval-go-no-go").alt, "A person gives a thumbs up with a checklist next to a waving robot on a stand.", "Agent Eval: 'checkered'");
-  assert.equal(posts.length, 37);
+  assert.equal(posts.length, 38);
   for (const p of posts) assert.ok(p.hero.alt.trim(), `${p.slug}: hero alt`);
 });
 
-test("Digest heroes #3, #4, #8, #21 + the Oct 11 essay + Oct 12/13/15/19/20/21 techniques + Oct 16/17 essays + Oct 22 deep dive: the restyle C sticker files (not .v2), 1920×1080, pad = art off-white", async () => {
+test("Digest heroes #3, #4, #8, #21 + the Oct 11 essay + Oct 12/13/15/19/20/21 techniques + Oct 16/17 essays + Oct 22/23 deep dives: the restyle C sticker files (not .v2), 1920×1080, pad = art off-white", async () => {
   const { createHash } = await import("node:crypto");
   const { readFileSync, existsSync } = await import("node:fs");
   const { getPost } = await import("../content/posts.ts");
@@ -1419,6 +1420,7 @@ test("Digest heroes #3, #4, #8, #21 + the Oct 11 essay + Oct 12/13/15/19/20/21 t
     "check-confidence-before-routing-on-it": ["35e2db4e2849945b14e58da284e7f34035ff35e0e946877aeb97f895d4cda37d", "#FDFAF5"],
     "match-table-layout-to-table-shape": ["e2cb3389d4dd35b09af38682405e10a70b78b889695a8d59736869eafcae8316", "#FDFAF5"],
     "cdm-vs-llm-vs-jev": ["2f15660b087d29d0a4aa7220d7202fd8ffb37bffeaaca4e27e411f079a66b413", "#FDFAF5"],
+    "layered-agent-code-review-round-cap": ["361eb59a6c7be4155f5a381bf602c528412e2176a9990b1d882c8e99588af272", "#FDFAF5"],
   };
   for (const [slug, [sha, pad]] of Object.entries(want)) {
     const f = `public/art/digest/${slug}-sticker.webp`;
@@ -1820,21 +1822,21 @@ test("posts.ts updated field: validator catches missing/long/unpunctuated note a
 test("Release B outputs for an updated post (temp fixture post, never in posts.ts): article line, RSS atom:updated, sitemap lastModified", async () => {
   const mod = await import("../content/posts.ts");
   const p = mod.posts.find((x) => !x.updated);
-  // fixture update dated after the newest post (Oct 22 deep dive), so it drives lastBuildDate
+  // fixture update dated after the newest post (Oct 23 deep dive), so it drives lastBuildDate
   const orig = p.updated;
-  p.updated = { date: "2026-10-23", note: "Added a second test result." };
+  p.updated = { date: "2026-10-24", note: "Added a second test result." };
   try {
     const xml = await (await import("../app/daily-digest/rss.xml/route.ts")).GET().text();
     const item = xml.split("<item>").find((i) => i.includes(`/daily-digest/${p.slug}<`));
-    assert.ok(item.includes("<atom:updated>2026-10-23T12:00:00Z</atom:updated>"), "RSS item updated");
-    assert.ok(xml.includes("<lastBuildDate>Fri, 23 Oct 2026 12:00:00 GMT</lastBuildDate>"), "channel lastBuildDate follows the update");
+    assert.ok(item.includes("<atom:updated>2026-10-24T12:00:00Z</atom:updated>"), "RSS item updated");
+    assert.ok(xml.includes("<lastBuildDate>Sat, 24 Oct 2026 12:00:00 GMT</lastBuildDate>"), "channel lastBuildDate follows the update");
     const sm = (await import("../app/sitemap.ts")).default();
-    assert.equal(sm.find((e) => e.url.endsWith(`/daily-digest/${p.slug}`)).lastModified, "2026-10-23");
+    assert.equal(sm.find((e) => e.url.endsWith(`/daily-digest/${p.slug}`)).lastModified, "2026-10-24");
     assert.equal(sm.filter((e) => e.url.includes("/daily-digest/") && e.lastModified).length, mod.posts.filter((x) => x.updated).length, "only updated posts");
     const { renderToStaticMarkup } = await import("react-dom/server");
     const { default: Page } = await import("../app/daily-digest/[slug]/page.tsx");
     const html = renderToStaticMarkup(await Page({ params: Promise.resolve({ slug: p.slug }) }));
-    assert.ok(html.includes('<p class="fx-meta fx-story-updated" data-updated="true"><span>Updated <time dateTime="2026-10-23">Oct 23</time>: Added a second test result.</span></p>'), "article update line");
+    assert.ok(html.includes('<p class="fx-meta fx-story-updated" data-updated="true"><span>Updated <time dateTime="2026-10-24">Oct 24</time>: Added a second test result.</span></p>'), "article update line");
     assert.ok(html.indexOf("fx-story-updated") > html.indexOf("fx-story-meta"), "under the byline meta line");
     assert.ok(html.includes(`<time dateTime="${p.date}">`), "publish date kept");
   } finally {
@@ -2072,6 +2074,72 @@ test("Oct 22 deep dive cdm-vs-llm-vs-jev: exact body, inline emphasis, table, so
   assert.ok(html.includes("Deep dive · <time"));
   assert.ok(html.includes('href="/daily-digest/system-one-and-jev-deep-dive"'), "relative link resolves to the existing article route");
   assert.ok(readFileSync("app/fantasy.css", "utf8").includes(".fx-prose .fx-table-wrap { overflow-x: auto; max-width: 100%;"), "table scroll stays inside the column");
+});
+
+test("Oct 23 deep dive layered-agent-code-review-round-cap: exact body, headings, fences, lists, emphasis, source URLs", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { getPost } = await import("../content/posts.ts");
+  const { parseArticle } = await import("../lib/daily-digest/blocks.ts");
+  const { default: Article, generateMetadata } = await import("../app/daily-digest/[slug]/page.tsx");
+  const review = [
+    "# REVIEW.md: payments-service",
+    "Failure here means: money moves wrong (double charge, lost refund).",
+    "Report: correctness bugs, missing idempotency, unhandled currency/rounding.",
+    "Max 3 nits per review. Skip: /generated/, /fixtures/, *.snap",
+    "Every finding needs file:line evidence, not a guess from a name.",
+    'Start the summary with a count: "N findings (X Important)". If none, say "Nothing to fix."',
+  ].join("\n");
+  const verify = [
+    "Run the test suite, build and linter. Paste the exact commands and their output.",
+    'Do not say "done" without output. Then spawn a subagent with fresh context to',
+    "review only `git diff main` against CLAUDE.md and REVIEW.md.",
+  ].join("\n");
+  const p = getPost("layered-agent-code-review-round-cap");
+  assert.equal(p.date, "2026-10-23");
+  assert.equal(p.tag, "Deep dive");
+  assert.equal(p.kind, undefined, "technique byline");
+  assert.equal(p.dek, "Move most code reading to verified AI review, scale human approval by risk, and stop agent review loops from running forever.");
+  assert.equal(p.cardDek, "Verified AI review, risk-scaled approval, and a cap on review rounds.");
+  assert.equal(p.cardDek.length, 69);
+  assert.ok(!JSON.stringify(p).includes("word_count") && !JSON.stringify(p).includes("DRAFT"), "front matter status and word_count stay unpublished");
+  const blocks = parseArticle(p.paragraphs);
+  assert.deepEqual(blocks.filter((b) => b.kind === "heading" && b.level === 2).map((b) => b.text), ["The problem", "The technique", "What we saw", "Limits", "Try it", "Sources"]);
+  assert.deepEqual(blocks.filter((b) => b.kind === "heading" && b.level === 3).map((b) => b.text), ["1. Prompts and instruction files", "2. Setup", "3. The review loop", "4. Verification", "5. Failure modes"]);
+  assert.deepEqual(blocks.filter((b) => b.kind === "code").map((b) => b.text), [review, verify]);
+  const ol = blocks.filter((b) => b.kind === "ol");
+  assert.equal(ol.length, 1);
+  assert.equal(ol[0].start, 1);
+  assert.equal(ol[0].items.length, 5);
+  assert.equal(ol[0].items[0], "This week, write a 6-line REVIEW.md and a short CLAUDE.md for one repo.");
+  const meta = await generateMetadata({ params: Promise.resolve({ slug: p.slug }) });
+  assert.equal(meta.description, p.dek, "document description is the full Outcome line");
+  const html = renderToStaticMarkup(await Article({ params: Promise.resolve({ slug: p.slug }) }));
+  const body = html.slice(html.indexOf('<div class="fx-prose">'), html.indexOf('<div class="fx-share-end">'));
+  assert.ok(html.includes(`<p class="fx-story-dek">${p.cardDek}</p>`), "story page shows the card dek under the H1");
+  assert.ok(!body.includes(p.dek), "the full Outcome line is not repeated in the article column");
+  assert.ok(!body.includes("**") && !body.includes("*class*"), "no raw markdown markers");
+  assert.ok(body.includes("<em>class</em>"));
+  assert.ok(body.includes("<strong>CLAUDE.md</strong>") && body.includes("<strong>not</strong>") && body.includes("<strong>OUR INFERENCE: example REVIEW.md</strong>"));
+  assert.equal((body.match(/<h3>/g) || []).length, 5);
+  assert.equal((body.match(/<pre><code>/g) || []).length, 2);
+  assert.ok(body.includes("review only `git diff main` against CLAUDE.md and REVIEW.md."));
+  assert.ok(body.includes("*.snap"));
+  assert.ok(body.includes('<ol start="1"'));
+  for (const url of [
+    "https://claude.dev/blog/solving-code-review-at-anthropic/",
+    "https://code.claude.com/docs/en/code-review",
+    "https://code.claude.com/docs/en/best-practices",
+    "https://github.com/anthropics/claude-code-action",
+    "https://github.com/anthropics/claude-code-security-review",
+    "https://support.claude.com/en/articles/11932705-automated-security-reviews-in-claude-code",
+  ]) {
+    assert.ok(body.includes(`<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`), url);
+  }
+  assert.ok(html.includes('data-byline="technique"><p class="fx-author-name">Daily Digest · Edited by Osbel Morell</p>'));
+  assert.ok(html.includes('Deep dive · <time dateTime="2026-10-23">Oct 23</time>'));
+  assert.ok(readFileSync("app/appstore.css", "utf8").includes(".fx-prose pre { margin: 0; padding: 12px 14px; overflow-x: auto; max-width: 100%;"), "fenced code scrolls inside its box");
+  assert.ok(readFileSync("app/appstore.css", "utf8").includes(".fx-prose pre code { padding: 0; background: none; border-radius: 0; font-size: 14px; white-space: pre; overflow-wrap: normal; word-break: normal; }"));
 });
 
 test("bare URLs: never autolink inside inline code or code blocks, and skip localhost, 127.0.0.1, and private hosts", async () => {
