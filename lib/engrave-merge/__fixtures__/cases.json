@@ -22,6 +22,11 @@
     {"name": "fx10_zero_ready_listing__listing_b_include_flagged", "fixture": "fx10_zero_ready_listing.csv", "config": {"listing": "3000000011", "include_flagged": true}},
     {"name": "fx11_shipped_listing_pick", "fixture": "fx11_shipped_listing_pick.csv"},
     {"name": "fx11_shipped_listing_pick__shipped_listing", "fixture": "fx11_shipped_listing_pick.csv", "config": {"listing": "3000000012"}},
-    {"name": "fx11_shipped_listing_pick__shipped_listing_include_shipped", "fixture": "fx11_shipped_listing_pick.csv", "config": {"listing": "3000000012", "include_shipped": true}}
+    {"name": "fx11_shipped_listing_pick__shipped_listing_include_shipped", "fixture": "fx11_shipped_listing_pick.csv", "config": {"listing": "3000000012", "include_shipped": true}},
+    {"name": "fx12_custom_fields", "fixture": "fx12_custom_fields.csv"},
+    {"name": "fx13_one_name", "fixture": "fx13_one_name.csv"},
+    {"name": "fx13_one_name__off", "fixture": "fx13_one_name.csv", "config": {"one_name_per_copy": false}},
+    {"name": "fx14_fields_unchecked", "fixture": "fx14_fields_unchecked.csv"},
+    {"name": "fx14_fields_checklist", "fixture": "fx14_fields_unchecked.csv", "recipe": "recipe_fx14.json"}
   ]
 }

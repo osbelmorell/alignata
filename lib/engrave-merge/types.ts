@@ -5,6 +5,8 @@ export interface Settings {
   lineColumns: number;
   charLimit: number;
   stripNumbers: boolean;
+  /** Put one name on each copy when Quantity matches a clear name list. On by default; the seller can turn it off. */
+  oneNamePerCopy: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -14,6 +16,7 @@ export const DEFAULT_SETTINGS: Settings = {
   lineColumns: 6,
   charLimit: 40,
   stripNumbers: true,
+  oneNamePerCopy: true,
 };
 
 export interface ListingRecipe {
@@ -40,6 +43,9 @@ export type ProblemCode =
   | "BAD_QUANTITY"
   | "DUPLICATE"
   | "BLANK_TEXT"
+  | "EMPTY_FIELD"
+  | "AMBIGUOUS_NAMES"
+  | "NAME_SPLIT"
   | "TOO_LONG"
   | "TOO_MANY_LINES"
   | "EMOJI"
@@ -74,6 +80,12 @@ export interface Stats {
   held_items: number;
   /** Physical items that have problems but are in the merge file ("include anyway" on). */
   flagged_in_merge_items: number;
+  /** Distinct engraving-text field titles in the file (file-level; no label text is sent). */
+  text_field_count: number;
+  /** 1 when a clear name list was split across copies in this file, else 0. */
+  name_split: number;
+  /** 1 when an ambiguous name list was held in this file, else 0. */
+  name_ambiguous: number;
 }
 
 /** One on-screen problem-list row per source row that has problems. */
@@ -109,6 +121,11 @@ export interface ProcessOk {
   orderIds: string[];
   /** Listing ID → { itemName, labels seen } for the Item settings UI. */
   listings: { lid: string; itemName: string; labels: string[] }[];
+  /**
+   * Free-text fields auto-checked for listings the seller has not set.
+   * Display labels only. Empty when the checklist (`textFields`) is explicit.
+   */
+  autoText: { lid: string; labels: string[] }[];
   garbled: boolean;
 }
 

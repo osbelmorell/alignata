@@ -15,7 +15,7 @@
 
 **WHY.** Laser-engraving Etsy sellers hand-copy personalization text from orders into LightBurn one at a time. That's slow, and typos mean remakes. Etsy's export holds all the text, but it's buried inside one `Variations` cell ("Size:8 x 10 inches,Style:Style 6,Personalization:…"). Turning that cell into clean columns is the whole job.
 
-**HOW.** Everything happens in the browser: FileReader, then the parser, then Blob downloads. **The file content and buyer data never leave the device.** No upload, no server parsing, no localStorage except one random install id (§8). The only network calls the tool makes are anonymous count events whose fields are fixed by an allow-list (§8). Prefetch GETs that Next.js makes for links in the shared site header (e.g. `/apps`) are fine: they carry no file data.
+**HOW.** Everything happens in the browser: FileReader, then the parser, then Blob downloads. **The file content and buyer data never leave the device.** No upload, no server parsing. localStorage holds a random install id, the price-card state, and `em_prefs` (a boolean plus engraving-text field titles — never buyer text) (§8). The only network calls the tool makes are anonymous count events whose fields are fixed by an allow-list (§8). Prefetch GETs that Next.js makes for links in the shared site header (e.g. `/apps`) are fine: they carry no file data.
 
 ## 2. Route, page shell, privacy posture
 
@@ -152,7 +152,7 @@ Copy marked `[COPY: …]` is a placeholder for **Product Copy**. The draft wordi
    • ▸ [COPY: How to use this in LightBurn] (§7.4 guide, collapsed)
    • [Start over]: outlined 44px button (not a pill). Tap → inline "This clears your file and all settings."
      [Yes, start over] [Cancel] (no modal; 44px each, 8px apart; focus starts on Cancel). Yes clears the
-     file, results, all settings, the font file and the picker; keeps localStorage em_iid; sends no event; scrolls to the
+     file, results, all settings, the font file and the picker; removes localStorage em_prefs; keeps em_iid and em_price; sends no event; scrolls to the
      top and focuses the drop zone.
    • quiet text button: [COPY: I'd pay for unlimited batches]  → on tap: [COPY: Thanks, noted. No sign-up needed.]
    • [COPY: Try it with a sample file] text link (loads a bundled synthetic fixture; excluded from metrics)
@@ -202,7 +202,7 @@ Variations is `Label:value` pairs joined by commas. Values can contain commas, c
    - the **current pair is a normal option** and the candidate label is one of: a KNOWN label (list in `parse_reference.py`, case-insensitive, whitespace-collapsed), a recipe label, a text label, **or** a *likely label* (starts with an uppercase letter, 1–5 words, ≤ 40 characters). Example: `Size:8 x 10 inches, framed,Style:Style 6` splits only at `,Style:`.
    - the **current pair is personalization text**: then the candidate must be another *text* label (`Personalization 2`, a recipe text field) or a recipe `extraLabels`/option label. Everything else stays inside the text. Example: `Personalization:Ace,Color:Blue please` gives text `Ace,Color:Blue please` (locked by fx03). Reason: in a 205-row public sample, Personalization was **the last pair 204/204 times**, and buyer text often contains "Word:".
 5. Value = text between the label's colon and the next accepted boundary, trimmed (inner newlines kept). Display label = flattened label.
-6. **Text labels** match `/^personali[sz]ation(\s*#?\s*\d+)?$/i`, plus any label the seller marks as engraving text in the recipe (`textFields`).
+6. **Text labels** match `/^personali[sz]ation(\s*#?\s*\d+)?$/i`, plus any label the seller marks as engraving text in the recipe (`textFields`) or in the in-tool checklist (saved as `textFields` and in `em_prefs`). A listing with no `textFields` key may also auto-treat a label as text when that file has at least two non-blank values for it, all distinct, not all short single words (≤ 12 characters, no space), and at least one value has a space or is longer than 15 characters. One row is never enough. A recipe that sets `textFields` (even to `[]`) turns auto off for that listing. Short single-word sets (a color, or a one-word name) are not guessed.
 7. The value `Not requested on this item.` (any case, optional period) is Etsy's placeholder. Treat it as **blank**.
 
 ### 5.5 Personalization text and lines
@@ -216,7 +216,15 @@ Variations is `Label:value` pairs joined by commas. Values can contain commas, c
 - *Split* off → Line columns are present but blank (column positions never move).
 
 ### 5.6 Quantity
-`Quantity` must be an integer ≥ 1. A row with Quantity N becomes **N merge rows**, `Copy` = `k of N`, all with the same text. Anything else (blank, 0, text) → **BAD_QUANTITY**, treated as 1 copy, held. (Future: "one name per copy" when Quantity = number of numbered lines. Out of scope for v1, see §12.)
+`Quantity` must be an integer ≥ 1. A row with Quantity N becomes **N merge rows**, `Copy` = `k of N`, all with the same text. Anything else (blank, 0, text) → **BAD_QUANTITY**, treated as 1 copy, held.
+
+**One name on each copy** (default on; settings `oneNamePerCopy`; turn it off in Settings or in the settings file). Only when the row has exactly one text field and Quantity is N ≥ 2:
+
+- The text is exactly N names, separated by newlines, by `1.` / `1)` numbering, or by commas, and each part is 1–3 name-words (letters, apostrophes, hyphens) → one name per copy. The check `Check: split N names, one per copy` is added. The rows **stay in the merge file**. Numbering is removed on that split even if *Remove numbering* is off. Each copy's Personalization column and Line 1 (when split lines is on) are that one name. The problem list still shows the full original text.
+- No separators, and the flattened text is exactly N words of at least two letters each (`Emma Grace Olivia`, `Mary Ann`) → **held**, `Check: is this one name or several?`. Never auto-split. A one-letter initial (`Giftee R.`) is one name, not a list.
+- A count that does not match (3 names, quantity 6, or separators that don't yield N name-shaped parts) is not split and not held: every copy keeps the full text.
+
+The toggle off restores the old behavior: the whole text on every copy.
 
 ### 5.7 First name
 `Buyer` with a trailing `(username)` removed, then the first word. If `Buyer` is blank, use the first word of `Ship Name`. **Only the first name ever appears in any output.** Surnames, addresses and usernames are never written.
@@ -247,8 +255,9 @@ Fixed column positions, so a LightBurn template keeps working batch after batch.
 | %10 | Other options | the rest, `Label: value; Label: value` |
 | %11 | Personalization | §5.5, single line |
 | %12…%(11+N) | Line 1 … Line N | §5.5, default N = 6 → %12–%17 |
+| after Line N | one column per engraving-text field that is not bare Personalization / Personalisation | that field's value on this row (blank if the order didn't have it). The header is the field title (`Front text`, `Personalization 1`, `Baby name`). Appended **after** the line columns, so `%0`–`%11` and Line 1…N stay put. The joined Personalization column (%11) stays for old templates. Bare Personalization is not repeated as an extra column. |
 
-- Rows with any problem are **held out** by default (they still show on the cut sheet marked "held" and in the problem list). Toggle *Put items that need a look in the merge file anyway* includes them (DUPLICATE rows are always dropped).
+- Rows with any problem are **held out** by default (except **NAME_SPLIT**, which stays in the file with a check note) (they still show on the cut sheet marked "held" and in the problem list). Toggle *Put items that need a look in the merge file anyway* includes them (DUPLICATE rows are always dropped).
 - "Which items" = one listing → the same rules, but only that listing's rows, renumbered from 1 (golden case `fx01_simple__one_listing`).
 
 ### 6.3 Problem list `engrave-merge-exceptions-YYYY-MM-DD.csv`
@@ -260,6 +269,9 @@ Header: `Order ID, Transaction ID, Listing ID, Item, First name, Quantity, Probl
 | BAD_QUANTITY | Quantity looks wrong | §5.6 | Quantity is "0" |
 | DUPLICATE | Same item appears twice in the file | same non-blank Transaction ID again (2nd+ copy dropped) | Transaction ID … appears more than once; kept the first |
 | BLANK_TEXT | No personalization text | text is blank **and** (a text label exists with an empty value or the Etsy placeholder, **or** recipe `requiresPersonalization: true`, **or** the listing has ≥ 2 readable rows in the file and ≥ 50 % of them have text). Recipe `requiresPersonalization: false` turns this off. | Etsy says personalization was not requested / Personalization box was empty / Your settings say this item needs text / Most orders for this item have text; this one has none |
+| EMPTY_FIELD | Check: {field} empty | the row already has text, and a text field on that row is blank or the placeholder. Also when the checklist names 2+ fields, this row has at least one of them, and a sibling field is missing or blank. A label that is simply absent, with no checklist, is not guessed from other rows. | Back text is empty |
+| AMBIGUOUS_NAMES | Check: is this one name or several? | §5.6, unseparated words. Held. | No separators, so this was not split |
+| NAME_SPLIT | Check: split N names, one per copy | §5.6 confident split. Does **not** hold the row out of the merge file. | 3 names, one on each copy |
 | TOO_LONG | Text is longer than your limit | any line (split on) or the whole text (split off) is longer than the limit (default 40; recipe per-listing `charLimit` overrides; 0 = off). Count = Unicode code points after NFC (`[...s.normalize('NFC')].length`) | Line 1 is 59 characters (limit 40) |
 | TOO_MANY_LINES | More lines than your merge file has | lines > N | 8 lines; your merge file has 6 |
 | EMOJI | Has an emoji your laser may not engrave | any char matching `/\p{Extended_Pictographic}/u` except © ® ™ | Emoji found: ❤ |
@@ -275,12 +287,12 @@ Rows that are unreadable or duplicated skip the later checks. Blank-text rows sk
 ### 6.5 Fonts
 TTF/OTF read with `opentype.js` `parse(arrayBuffer)`, entirely in memory, never uploaded or stored. Show the font name and how many letters are missing.
 
-### 6.6 Settings file ("recipe"), downloaded and re-uploaded, never localStorage
+### 6.6 Settings file ("recipe"), downloaded and re-uploaded
 `engrave-merge-settings.json`, schema (see `fixtures/recipe_fx06.json`):
 ```json
 { "tool": "engrave-merge", "recipeVersion": 1, "savedAt": "YYYY-MM-DD",
   "settings": { "includeShipped": false, "includeFlagged": false, "splitLines": true,
-                "lineColumns": 6, "charLimit": 40, "stripNumbers": true },
+                "lineColumns": 6, "charLimit": 40, "stripNumbers": true, "oneNamePerCopy": true },
   "extraLabels": ["Wood type"],
   "listings": { "<Listing ID>": { "itemName": "seller's listing title (display only)",
       "option1": "Color", "option2": null, "option3": null,
@@ -320,7 +332,7 @@ How multi-line quoted cells render (we avoid them), and whether a BOM would leak
 - Only the fields below are ever sent. **Never** file names, text, names, order/listing/transaction IDs, SKUs, item names, font names, or settings content.
 - The client builds each payload from an allow-list. The server **re-validates** it and drops unknown keys and bad types: integers 0–100000, fingerprint `^[0-9a-f]{64}$`, iid `^(dog-)?[0-9a-f-]{36}$`. Body ≤ 1 KB. No IP or user-agent is stored by our code.
 - Send with `navigator.sendBeacon('/api/engrave-merge/e', blob)` (same-origin, fire-and-forget). Failures are silent and never block the tool.
-- localStorage holds exactly **two** keys: `em_iid` = `crypto.randomUUID()`, created on first visit, and `em_price` (Oct 3 2026, the price card, §8.7): `{"v":1,"files":0-4,"fps":[≤3 × 16 hex, only until files reaches 4],"seenDays":[≤3 device-local days],"answer":null|"pay"|"no"}`. `em_price` is never sent. The tool READS sessionStorage `site_dogfood` (written by the site for a `?dogfood=1` session) but writes no cookies, sessionStorage or IndexedDB.
+- localStorage holds **three** keys: `em_iid` = `crypto.randomUUID()`, created on first visit; `em_price` (Oct 3 2026, the price card, §8.7): `{"v":1,"files":0-4,"fps":[≤3 × 16 hex, only until files reaches 4],"seenDays":[≤3 device-local days],"answer":null|"pay"|"no"}`; and `em_prefs` (Oct 26 2026): `{"v":1,"oneNamePerCopy":true|false,"fields":{"<Listing ID>":["Front text"]}}`. `em_prefs` stores the one-name toggle and the checklist field titles only — never buyer text, order ids, or file contents. Start over removes `em_prefs` and leaves `em_iid` and `em_price`. `em_price` and `em_prefs` are never sent. The tool READS sessionStorage `site_dogfood` (written by the site for a `?dogfood=1` session) but writes no cookies, sessionStorage or IndexedDB.
 - `dogfood` on every event = the iid starts with `dog-` OR sessionStorage `site_dogfood === "1"` (Product yes, 9:43 AM ET Oct 3), the same rule the price card uses.
 - sessionStorage holds at most **one** key the tool writes: `em_ref` (Oct 3 2026, HANDOFF-PRICE-CARD §2.2), set only when the tool is opened with `?ref=guide-lightburn` or `?ref=guide-etsy-export` (exact, case-sensitive). Any other value is ignored: nothing stored, nothing sent (no "other"); an allowed ref already stored in this tab stays; a stored value outside the allow-list is ignored on read; storage blocked → nothing stored and no ref sent (no URL fallback). Any `ref` param (allowed or not) is removed from the address bar with `history.replaceState` (only `ref`; path, hash, other params and `history.state` kept; no new entry). `merge_downloaded` and the 3 card events carry it as the optional prop `ref` (server allow-list, `bad_ref` otherwise; every other event rejects it). Never localStorage; the referrer (`document.referrer`, the referring host) is never read. See `lib/engrave-merge/ref.ts`.
 
@@ -328,7 +340,7 @@ How multi-line quoted cells render (we avoid them), and whether a BOM would leak
 
 | event | props | fired when |
 |---|---|---|
-| `file_processed` | `row_count` (data rows in file), `item_count` (physical items after the shipped filter, held ones included, duplicates dropped), `exception_count` (problem-list rows), `file_fingerprint` or `small_file` | a new file is parsed (not on settings changes) |
+| `file_processed` | `row_count` (data rows in file), `item_count` (physical items after the shipped filter, held ones included, duplicates dropped), `exception_count` (problem-list rows), `file_fingerprint` or `small_file`, and optional integers `text_field_count` (distinct text labels, including bare Personalization), `name_split` (0/1, a split happened in this file), `name_ambiguous` (0/1). Counts only — never a field title or buyer text. | a new file is parsed (not on settings changes) |
 | `merge_downloaded` | `file_fingerprint` or `small_file`, `merge_row_count` | primary button download |
 | `exceptions_downloaded` | `file_fingerprint` or `small_file`, `exception_count` | problem list download |
 | `cutsheet_printed` | `file_fingerprint` or `small_file` | Print cut sheet tapped |
@@ -419,7 +431,7 @@ Recipe Box / Recipe Box include-anyway, and fx11 all / Slate Coaster pick / Slat
 
 **Privacy and tracking**
 - AT-20: Playwright records **every** request after page load while processing fx05, downloading all 3 outputs and answering the price card. Assert: (a) no request URL or body contains any of `Fakename`, `Placeholder`, `Buyerson`, `Nowhereville`, `Grandpa`, `Zoë`, `1000000501`, `2000000501`, `3000000005`, `EM-TEST`, `fx05`; (b) the only non-static request is `POST /api/engrave-merge/e` (prefetch GETs from the shared header are fine); (c) every body's keys ⊆ the §8.2 allow-list; (d) `file_processed.props.file_fingerprint` = the fx05 value.
-- AT-21: localStorage holds only `em_iid` and `em_price` (§8.7); sessionStorage: the tool writes only `em_ref` (allow-listed guide value only) and reads `site_dogfood`. No cookies or IndexedDB are written by the tool.
+- AT-21: localStorage holds `em_iid`, `em_price` (§8.7), and `em_prefs` (toggle + field titles only); sessionStorage: the tool writes only `em_ref` (allow-listed guide value only) and reads `site_dogfood`. No cookies or IndexedDB are written by the tool.
 - AT-22: `?dogfood=1` → iid starts `dog-` and events carry `dogfood:true`. The server/KPI script excludes them. Fixture fingerprints are dropped.
 - AT-23: The API rejects (400) unknown keys, strings in count fields, and bodies > 1 KB.
 - AT-24: `scripts/engrave-merge-kpis.mjs` on a synthetic event log prints T0, the 3 kill-bar numbers and the weekly metric correctly (include the synthetic log as a test fixture).
@@ -428,7 +440,7 @@ Recipe Box / Recipe Box include-anyway, and fx11 all / Slate Coaster pick / Slat
 - AT-30: Load `expected/fx03_multiline_commas/expected_merge.csv` in LightBurn with text `%12` / `%13` / `%14`, Start 1, End 5. Rows 2 and 3 show three separate lines. `Ima & Testy's Kitchen` renders correctly (ampersand and apostrophe decoded). Record the LightBurn version.
 
 ## 10. Out of scope (v1 dogfood)
-Payments, checkout, accounts, email capture · Etsy API/OAuth connection · Amazon Custom, Shopify or other marketplaces · public launch, SEO, listing on the hub index · server-side processing or storage of files · auto-generating LightBurn `.lbrn` files · "one name per copy" splitting (Quantity N + N numbered lines) · images/photo personalization · non-UTF-8 (Windows-1252) imports beyond the garbled-text warning.
+Payments, checkout, accounts, email capture · Etsy API/OAuth connection · Amazon Custom, Shopify or other marketplaces · public launch, SEO, listing on the hub index · server-side processing or storage of files · auto-generating LightBurn `.lbrn` files · images/photo personalization · non-UTF-8 (Windows-1252) imports beyond the garbled-text warning.
 
 ## 11. Format facts: what's verified and what isn't
 
@@ -451,7 +463,7 @@ Payments, checkout, accounts, email capture · Etsy API/OAuth connection · Amaz
 - How LightBurn handles multi-line cells and a BOM (§7.2).
 
 ## 12. Open risks
-1. **Multi-field personalization shape unknown (highest risk).** Mitigations: the generic `Label:value` parser, text labels by regex plus seller-marked `textFields`, and the BLANK_TEXT majority rule, which catches "text went into options" (fx06 without a recipe flags that row). **Action:** the first dogfood seller using multi-field listings sends one redacted Variations cell, and we add it as fixture fx08.
+1. **Multi-field personalization shape unknown (highest risk).** Still open. fx06 is a **GUESS**. fx12 is a synthetic `Label:value` file, not a redacted production cell. Do not treat either as the Etsy Custom-options CSV shape. Mitigations: the generic `Label:value` parser, text labels by regex plus the seller checklist (`textFields`), auto-detect only when the file itself shows varied multi-word values, and a `Check: <field> empty` note when one side of a multi-field row is blank. Anything uncertain is held with a Check note, never guessed. Named text columns are appended after Line N so `%0`–`%11` stay put, and the joined Personalization column stays. **Action:** the first dogfood seller using multi-field listings sends one redacted Variations cell, and we add it as a fixture (the old note said fx08; that name is now the all-shipped fixture, so use the next free number).
 2. **Delimiter ambiguity.** Buyer text containing `,Word:` after Personalization stays text (by design). An option value containing `, Capitalized words:` could split wrongly through the likely-label heuristic. Recipe `extraLabels` and the problem list are the safety net.
 3. **Options after Personalization** would be swallowed into the text unless the label is in the recipe. That's covered by risk 1's action.
 4. **Fingerprint privacy.** A file with a single order has a fingerprint that's SHA-256 of one 10-digit Order ID, which can be brute-forced back to that Order ID (not buyer identity, but still a file-derived value). Accept it for private dogfood, or have Eng Ops send only the first 32 hex characters. **Board/Osbel to confirm.**

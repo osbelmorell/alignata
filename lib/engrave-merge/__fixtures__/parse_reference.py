@@ -30,6 +30,9 @@ PROBLEMS = {
     "BAD_QUANTITY": "Quantity looks wrong",
     "DUPLICATE": "Same item appears twice in the file",
     "BLANK_TEXT": "No personalization text",
+    "EMPTY_FIELD": "A text field is empty",
+    "AMBIGUOUS_NAMES": "Check: is this one name or several?",
+    "NAME_SPLIT": "Check: split N names, one per copy",
     "TOO_LONG": "Text is longer than your limit",
     "TOO_MANY_LINES": "More lines than your merge file has",
     "EMOJI": "Has an emoji your laser may not engrave",
@@ -61,7 +64,8 @@ EMOJI_EXEMPT = {0x00A9, 0x00AE, 0x2122}
 IGNORABLE = {0xFE0E, 0xFE0F, 0x200D, 0x20E3}
 
 DEFAULTS = dict(include_shipped=False, include_flagged=False, split_lines=True,
-                line_columns=6, char_limit=40, strip_numbers=True)
+                line_columns=6, char_limit=40, strip_numbers=True, one_name_per_copy=True)
+BARE_PERS_RE = re.compile(r"^personali[sz]ation$", re.I)
 
 
 def is_emoji_cp(cp):
@@ -158,6 +162,146 @@ def split_lines(text_fields, strip_numbers):
     return [flat(t)]
 
 
+def is_name_word(w):
+    if not w or len(w) > 30:
+        return False
+    core = w[:-1] if w.endswith(".") else w
+    if not core or not core[0].isalpha():
+        return False
+    return all(ch.isalpha() or ch in "'’-" for ch in core)
+
+
+def is_name_part(part):
+    words = flat(part).split()
+    return 1 <= len(words) <= 3 and all(is_name_word(w) for w in words)
+
+
+def detect_copy_names(raw, qty):
+    """Returns ('split', [names]) | ('ambiguous', []) | ('none', []). Mirrors names.ts."""
+    if qty < 2:
+        return "none", []
+    text = (raw or "").strip()
+    if not text:
+        return "none", []
+    if "\n" in text:
+        lines = [ln.strip() for ln in text.split("\n") if ln.strip()]
+        nums = [LINE_NUM_RE.match(ln) for ln in lines]
+        if len(lines) >= 2 and all(nums) and [int(x.group(1)) for x in nums] == list(range(1, len(lines) + 1)):
+            lines = [LINE_NUM_RE.sub("", ln, count=1).strip() for ln in lines]
+        if len(lines) == qty and all(is_name_part(ln) for ln in lines):
+            return "split", [flat(ln) for ln in lines]
+        return "none", []
+    marks = list(NUM_MARK_RE.finditer(text))
+    if len(marks) >= 2 and marks[0].start() == 0 and [int(x.group(1)) for x in marks] == list(range(1, len(marks) + 1)):
+        parts = []
+        for i, mk in enumerate(marks):
+            end = marks[i + 1].start() if i + 1 < len(marks) else len(text)
+            parts.append(flat(text[mk.end():end]))
+        if len(parts) == qty and all(is_name_part(p) for p in parts):
+            return "split", parts
+        return "none", []
+    if "," in text:
+        parts = [flat(p) for p in text.split(",") if flat(p)]
+        if len(parts) == qty and all(is_name_part(p) for p in parts):
+            return "split", parts
+        return "none", []
+    words = flat(text).split()
+    # A one-letter initial ("Giftee R.") is one name, not a list.
+    if len(words) == qty and all(is_list_name_word(w) for w in words):
+        return "ambiguous", []
+    return "none", []
+
+
+def is_list_name_word(w):
+    if not is_name_word(w):
+        return False
+    core = w[:-1] if w.endswith(".") else w
+    return len(core) >= 2
+
+
+def is_confident_free_text(values):
+    nonempty = [flat(v) for v in values if flat(v)]
+    if len(nonempty) < 2:
+        return False
+    distinct = list(dict.fromkeys(nonempty))
+    if len(distinct) != len(nonempty):
+        return False
+    single_short = all((" " not in v) and len(v) <= 12 for v in distinct)
+    if single_short:
+        return False
+    return any((" " in v) or len(v) > 15 for v in distinct)
+
+
+def problem_words(code, details):
+    if code == "EMPTY_FIELD":
+        return f"Check: {details} empty"
+    if code == "NAME_SPLIT":
+        return f"Check: split {details} names, one per copy"
+    if code == "AMBIGUOUS_NAMES":
+        return "Check: is this one name or several?"
+    return PROBLEMS[code]
+
+
+def detail_words(code, details):
+    if code == "EMPTY_FIELD":
+        return f"{details} is empty"
+    if code == "NAME_SPLIT":
+        return f"{details} names, one on each copy"
+    return details
+
+
+def blank_field_labels(text_pairs, recipe_fields):
+    """text_pairs are (label, value, is_text). Mirrors blankFieldLabels in fields.ts."""
+    def is_blank(v):
+        return not (v or "").strip() or bool(PLACEHOLDER_RE.match(v or ""))
+
+    out, seen = [], set()
+
+    def push(label):
+        n = norm_label(label)
+        if not n or n in seen:
+            return
+        seen.add(n)
+        out.append(label)
+
+    if len(text_pairs) >= 2:
+        for label, value, _is in text_pairs:
+            if is_blank(value):
+                push(label)
+    wanted = [f for f in (recipe_fields or []) if f and not BARE_PERS_RE.match(norm_label(f))]
+    if len(wanted) >= 2:
+        present = {norm_label(p[0]) for p in text_pairs}
+        if any(norm_label(f) in present for f in wanted):
+            for f in wanted:
+                pair = next((p for p in text_pairs if norm_label(p[0]) == norm_label(f)), None)
+                if pair is None or is_blank(pair[1]):
+                    push(pair[0] if pair else f)
+    return out
+
+
+def field_columns(items):
+    cols, seen = [], set()
+
+    def add(label):
+        n = norm_label(label)
+        if not n or BARE_PERS_RE.match(n) or n in seen:
+            return
+        seen.add(n)
+        cols.append(flat(label))
+
+    for it in items:
+        if it["dup"]:
+            continue
+        for p in it["text_pairs"]:
+            add(p[0])
+    for it in items:
+        if it["dup"]:
+            continue
+        for f in (it["lr"].get("textFields") or []):
+            add(f)
+    return cols
+
+
 def first_name(buyer, ship_name):
     b = re.sub(r"\s*\([^)]*\)\s*$", "", buyer or "").strip()
     src = b or (ship_name or "").strip()
@@ -197,7 +341,8 @@ def process(text, cfg=None, recipe=None, charset=None):
     rsettings = recipe.get("settings") or {}
     for k_json, k in [("includeShipped", "include_shipped"), ("includeFlagged", "include_flagged"),
                       ("splitLines", "split_lines"), ("lineColumns", "line_columns"),
-                      ("charLimit", "char_limit"), ("stripNumbers", "strip_numbers")]:
+                      ("charLimit", "char_limit"), ("stripNumbers", "strip_numbers"),
+                      ("oneNamePerCopy", "one_name_per_copy")]:
         if k_json in rsettings and k not in (cfg.get("_explicit") or ()):
             cfg[k] = rsettings[k_json]
     rlist = recipe.get("listings") or {}
@@ -212,14 +357,40 @@ def process(text, cfg=None, recipe=None, charset=None):
     total_rows = len(rows)
     kept = [r for r in rows if cfg["include_shipped"] or not (r.get("Date Shipped") or "").strip()]
 
+    def listing_extra(lr):
+        return frozenset(extra_global | {norm_label(x) for x in
+                         [lr.get("option1"), lr.get("option2"), lr.get("option3")] if x})
+
+    # Pass 1: recipe text fields only, so free-text detection sees the other labels.
+    buckets = {}
+    for r in kept:
+        lid = (r.get("Listing ID") or "").strip()
+        lr = rlist.get(lid) or {}
+        if "textFields" in lr:
+            continue
+        pairs, _ok = parse_variations(r.get("Variations") or "", frozenset(), listing_extra(lr))
+        per = buckets.setdefault(lid, {})
+        for label, value, is_text in pairs:
+            n = norm_label(label)
+            if not n or is_text or PERS_LABEL_RE.match(n) or n in KNOWN_LABELS:
+                continue
+            b = per.setdefault(n, {"display": label, "values": []})
+            b["values"].append(value)
+    auto = {}
+    for lid, per in buckets.items():
+        labels = [b["display"] for b in per.values() if is_confident_free_text(b["values"])]
+        if labels:
+            auto[lid] = labels
+
     items = []
     seen_txn = set()
     for idx, r in enumerate(kept):
         lid = (r.get("Listing ID") or "").strip()
         lr = rlist.get(lid) or {}
-        text_labels = frozenset(norm_label(x) for x in lr.get("textFields") or [])
-        extra = frozenset(extra_global | {norm_label(x) for x in
-                          [lr.get("option1"), lr.get("option2"), lr.get("option3")] if x})
+        explicit = "textFields" in lr
+        chosen = list(lr.get("textFields") or []) if explicit else list(auto.get(lid) or [])
+        text_labels = frozenset(norm_label(x) for x in chosen)
+        extra = listing_extra(lr)
         raw_var = r.get("Variations") or ""
         pairs, ok = parse_variations(raw_var, text_labels, extra)
         text_pairs = [p for p in pairs if p[2]]
@@ -239,7 +410,7 @@ def process(text, cfg=None, recipe=None, charset=None):
         items.append(dict(idx=idx, r=r, lid=lid, lr=lr, ok=ok, pairs=pairs, text_pairs=text_pairs,
                           opt_pairs=opt_pairs, values=values, pers=pers_flat,
                           has_text_label=bool(text_pairs), placeholder=placeholder,
-                          dup=dup, q_raw=q_raw, qty=qty, codes=[]))
+                          dup=dup, q_raw=q_raw, qty=qty, codes=[], per_copy=None))
 
     # listing personalization rate (parseable, non-duplicate rows)
     rate = {}
@@ -262,8 +433,18 @@ def process(text, cfg=None, recipe=None, charset=None):
             continue
         if not it["ok"]:
             continue
-        lines = split_lines(it["values"], cfg["strip_numbers"]) if cfg["split_lines"] else []
-        it["lines"] = lines
+        if cfg.get("one_name_per_copy", True) and it["qty"] is not None and it["qty"] >= 2 and len(it["text_pairs"]) == 1:
+            raw = it["text_pairs"][0][1]
+            if raw.strip() and not PLACEHOLDER_RE.match(raw):
+                kind, names = detect_copy_names(raw, it["qty"])
+                if kind == "split":
+                    it["per_copy"] = names
+                    codes.append(("NAME_SPLIT", str(it["qty"])))
+                elif kind == "ambiguous":
+                    codes.append(("AMBIGUOUS_NAMES", "No separators, so this was not split"))
+        per = it["per_copy"]
+        lines = per if per is not None else (split_lines(it["values"], cfg["strip_numbers"]) if cfg["split_lines"] else [])
+        it["lines"] = ([per[0]] if cfg["split_lines"] else []) if per is not None else lines
         if not it["pers"]:
             req = lr.get("requiresPersonalization")
             n_text, n_all = rate.get(it["lid"], [0, 0])
@@ -278,8 +459,17 @@ def process(text, cfg=None, recipe=None, charset=None):
             elif n_all >= 2 and n_text * 2 >= n_all:
                 codes.append(("BLANK_TEXT", "Most orders for this item have text; this one has none"))
             continue
+        recipe_fields = lr.get("textFields") if "textFields" in lr else None
+        for label in blank_field_labels(it["text_pairs"], recipe_fields):
+            codes.append(("EMPTY_FIELD", label))
         if limit:
-            if cfg["split_lines"]:
+            if per is not None:
+                for name in per:
+                    n = len(unicodedata.normalize("NFC", name))
+                    if n > limit:
+                        codes.append(("TOO_LONG", f"Line 1 is {n} characters (limit {limit})"))
+                        break
+            elif cfg["split_lines"]:
                 for i, ln in enumerate(lines, 1):
                     n = len(unicodedata.normalize("NFC", ln))
                     if n > limit:
@@ -289,7 +479,7 @@ def process(text, cfg=None, recipe=None, charset=None):
                 n = len(unicodedata.normalize("NFC", it["pers"]))
                 if n > limit:
                     codes.append(("TOO_LONG", f"Text is {n} characters (limit {limit})"))
-        if cfg["split_lines"] and len(lines) > cfg["line_columns"]:
+        if per is None and cfg["split_lines"] and len(lines) > cfg["line_columns"]:
             codes.append(("TOO_MANY_LINES", f'{len(lines)} lines; your merge file has {cfg["line_columns"]}'))
         alltext = "".join(it["values"])
         emo = []
@@ -315,19 +505,32 @@ def process(text, cfg=None, recipe=None, charset=None):
 
     items.sort(key=sort_key)
     ncols = cfg["line_columns"]
-    merge_header = MERGE_FIXED + [f"Line {i}" for i in range(1, ncols + 1)]
+    fcols = field_columns(items)
+    merge_header = MERGE_FIXED + [f"Line {i}" for i in range(1, ncols + 1)] + fcols
+
+    def field_cell(it, col, copy_name):
+        p = next((x for x in it["text_pairs"] if norm_label(x[0]) == norm_label(col)), None)
+        if p is None:
+            return ""
+        if copy_name is not None and len(it["text_pairs"]) == 1 and norm_label(it["text_pairs"][0][0]) == norm_label(col):
+            return copy_name
+        if not (p[1] or "").strip() or PLACEHOLDER_RE.match(p[1] or ""):
+            return ""
+        return flat(p[1])
     merge_rows, exc_rows, cut = [], [], []
     for it in items:
         r = it["r"]
         item_name = flat(decode_entities(r.get("Item Name")))
         fn = first_name(r.get("Buyer"), r.get("Ship Name"))
-        for code in sorted(it["codes"], key=lambda c: CODE_ORDER.index(c[0])):
+        sorted_codes = sorted(it["codes"], key=lambda c: CODE_ORDER.index(c[0]))
+        for code in sorted_codes:
             exc_rows.append([r.get("Order ID", "").strip(), r.get("Transaction ID", "").strip(), it["lid"],
-                             item_name, fn, it["q_raw"], PROBLEMS[code[0]], code[0], code[1], it["pers"],
+                             item_name, fn, it["q_raw"], problem_words(code[0], code[1]), code[0],
+                             detail_words(code[0], code[1]), it["pers"],
                              decode_entities(r.get("Variations")).strip().replace("\n", " / ")])
+        holding = any(c[0] != "NAME_SPLIT" for c in sorted_codes)
         if it["dup"]:
             continue
-        flagged = bool(it["codes"])
         # option slots
         lr = it["lr"]
         slots = ["", "", ""]
@@ -345,12 +548,13 @@ def process(text, cfg=None, recipe=None, charset=None):
                 slots[pi] = flat(p[1]); used.add(pi)
         other = "; ".join(f"{p[0]}: {flat(p[1])}" for pi, p in enumerate(it["opt_pairs"]) if pi not in used)
         copies = it["qty"] or 1
-        lines = (it.get("lines") or [])[:ncols]
+        per = it.get("per_copy")
+        lines = [] if per else (it.get("lines") or [])[:ncols]
         cut.append(dict(item=item_name, lid=it["lid"], order=r.get("Order ID", "").strip(), fn=fn,
                         qty=copies, pairs=it["pairs"], raw=decode_entities(r.get("Variations")).strip(),
-                        ok=it["ok"], flags=[PROBLEMS[c[0]] for c in it["codes"]],
-                        text="\n".join(v for v in it["values"] if v.strip()), rows="held"))
-        if flagged and not cfg["include_flagged"]:
+                        ok=it["ok"], flags=[problem_words(c[0], c[1]) for c in sorted_codes],
+                        text="\n".join(per) if per else "\n".join(v for v in it["values"] if v.strip()), rows="held"))
+        if holding and not cfg["include_flagged"]:
             continue
         if cfg.get("listing") and it["lid"] != cfg["listing"]:
             cut[-1]["rows"] = "other file"
@@ -358,9 +562,16 @@ def process(text, cfg=None, recipe=None, charset=None):
         first_row = len(merge_rows) + 1
         cut[-1]["rows"] = f"{first_row}" if copies == 1 else f"{first_row}-{first_row + copies - 1}"
         for k in range(1, copies + 1):
+            copy_name = per[k - 1] if per else None
+            pers = copy_name if copy_name is not None else it["pers"]
+            if copy_name is not None:
+                line_vals = ([copy_name] + [""] * (ncols - 1)) if cfg["split_lines"] else [""] * ncols
+            else:
+                line_vals = lines + [""] * (ncols - len(lines))
+            cells = [field_cell(it, col, copy_name) for col in fcols]
             merge_rows.append([str(len(merge_rows) + 1), r.get("Order ID", "").strip(), fn, it["lid"], item_name,
-                               (r.get("SKU") or "").strip(), f"{k} of {copies}", *slots, other, it["pers"],
-                               *(lines + [""] * (ncols - len(lines)))])
+                               (r.get("SKU") or "").strip(), f"{k} of {copies}", *slots, other, pers,
+                               *line_vals, *cells])
     physical = sum((it["qty"] or 1) for it in items if not it["dup"])
     return dict(merge_header=merge_header, merge_rows=merge_rows, exc_rows=exc_rows, cut=cut,
                 stats=dict(row_count=total_rows, item_count=physical, exception_count=len(exc_rows),
@@ -394,7 +605,8 @@ def cutsheet_html(res, title="Cut sheet"):
         out.append("<table><tr><th>Done</th><th>Merge row</th><th>Order</th><th>Name</th><th>Qty</th><th>Options</th><th>Text</th></tr>")
         for c in cs:
             opts = "<br>".join(f"{e(p[0])}: {e(flat(p[1]))}" for p in c["pairs"] if not p[2]) if c["ok"] else e(c["raw"])
-            flag = "".join(f"<div class='f'>Check: {e(f)}</div>" for f in c["flags"])
+            flag = "".join(
+                f"<div class='f'>{e(f if str(f).startswith('Check:') else 'Check: ' + f)}</div>" for f in c["flags"])
             out.append(f"<tr><td>&#9744;</td><td>{e(c['rows'])}</td><td>{e(c['order'])}</td><td>{e(c['fn'])}</td><td>{c['qty']}</td>"
                        f"<td>{opts}</td><td><div class='t'>{e(c['text'])}</div>{flag}</td></tr>")
         out.append("</table>")

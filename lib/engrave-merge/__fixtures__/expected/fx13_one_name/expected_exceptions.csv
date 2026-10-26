@@ -1,0 +1,6 @@
+Order ID,Transaction ID,Listing ID,Item,First name,Quantity,Problem,Problem code,Details,Personalization,Variations
+1000001301,2000001301,3000000016,Family Ornament,Ima,3,"Check: split 3 names, one per copy",NAME_SPLIT,"3 names, one on each copy",Emma Grace Olivia,"Style:Round,Personalization:Emma / Grace / Olivia"
+1000001302,2000001302,3000000016,Family Ornament,Testy,3,"Check: split 3 names, one per copy",NAME_SPLIT,"3 names, one on each copy",1. Noah 2. Liam 3. Ava,"Style:Star,Personalization:1. Noah 2. Liam 3. Ava"
+1000001303,2000001303,3000000016,Family Ornament,Sample,2,"Check: split 2 names, one per copy",NAME_SPLIT,"2 names, one on each copy","Mia, Leo","Style:Round,Personalization:Mia, Leo"
+1000001304,2000001304,3000000016,Family Ornament,Faux,3,Check: is this one name or several?,AMBIGUOUS_NAMES,"No separators, so this was not split",Emma Grace Olivia,"Style:Bell,Personalization:Emma Grace Olivia"
+1000001305,2000001305,3000000016,Family Ornament,Dummy,2,Check: is this one name or several?,AMBIGUOUS_NAMES,"No separators, so this was not split",Mary Ann,"Style:Star,Personalization:Mary Ann"

@@ -4,7 +4,17 @@
  * never file names, text, names, IDs, SKUs, item names, font names or settings.
  */
 export const EVENT_PROPS = {
-  file_processed: ["row_count", "item_count", "exception_count", "file_fingerprint", "small_file"],
+  file_processed: [
+    "row_count",
+    "item_count",
+    "exception_count",
+    "file_fingerprint",
+    "small_file",
+    // File-level counts only. Never a field title, name, or other buyer text.
+    "text_field_count",
+    "name_split",
+    "name_ambiguous",
+  ],
   /** ref (optional on this + the 3 card events): the guide that sent this tab (lib/engrave-merge/ref.ts). */
   merge_downloaded: ["file_fingerprint", "small_file", "merge_row_count", "ref"],
   exceptions_downloaded: ["file_fingerprint", "small_file", "exception_count"],
@@ -25,7 +35,15 @@ export const REF_VALUES = ["guide-lightburn", "guide-etsy-export"] as const;
 /** Events that may carry `ref` (exactly those whose EVENT_PROPS list it). */
 export const carriesRef = (event: EventName): boolean => (EVENT_PROPS[event] as readonly string[]).includes("ref");
 export const FILE_EVENTS: EventName[] = ["file_processed", "merge_downloaded", "exceptions_downloaded", "cutsheet_printed"];
-const COUNT_KEYS = new Set(["row_count", "item_count", "exception_count", "merge_row_count"]);
+const COUNT_KEYS = new Set([
+  "row_count",
+  "item_count",
+  "exception_count",
+  "merge_row_count",
+  "text_field_count",
+  "name_split",
+  "name_ambiguous",
+]);
 const ENVELOPE_KEYS = new Set(["v", "event", "iid", "dogfood", "props"]);
 
 export const MAX_BODY_BYTES = 1024;

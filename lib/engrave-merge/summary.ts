@@ -95,6 +95,7 @@ export function summaryView(ok: Pick<ProcessOk, "stats" | "problems">, includeFl
     // this pick is clean; other items need a look (or, if the rest are only duplicates, say that)
     note = otherItems > 0 ? COPY.summaryPickReadyOthers(otherItems) : COPY.summaryDuplicatesOnly(otherDupLines);
   else if (duplicatesOnly) note = COPY.summaryDuplicatesOnly(dupLines);
+  else if (!warning && s.held_items === 0 && s.flagged_in_merge_items === 0) note = COPY.summaryChecks;
   else if (!warning) note = COPY.summaryHeldNote;
   // Nothing to engrave: never "Everything is ready."; if the shipped-orders setting hid rows, say so.
   if (nothing) note = s.hidden_shipped > 0 ? COPY.countShippedHidden : note === COPY.summaryAllReady ? null : note;

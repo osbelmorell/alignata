@@ -112,6 +112,17 @@ export function computeKpis(events, now = Date.now(), excludedIids = EXCLUDED_II
     [...wk.entries()].sort(([a], [b]) => (a < b ? -1 : 1)).map(([w, m]) => [w, [...m.values()].filter((s) => s.size >= 2).length]),
   );
 
+  // This ship's file-level counts (all real file_processed events, not only the original
+  // 14-day window). Counts and price_intent only — never buyer text or field titles.
+  const allFiles = real.filter((e) => e.event === "file_processed");
+  const numProp = (e, key) => (e.props && typeof e.props[key] === "number" ? e.props[key] : null);
+  const ship = {
+    multifieldFiles: allFiles.filter((e) => (numProp(e, "text_field_count") ?? 0) >= 2).length,
+    nameSplitFiles: allFiles.filter((e) => numProp(e, "name_split") === 1).length,
+    nameAmbiguousFiles: allFiles.filter((e) => numProp(e, "name_ambiguous") === 1).length,
+    priceIntents: real.filter((e) => e.event === "price_intent").length,
+  };
+
   const kill = [];
   if (t0 !== null) {
     if (fps.size < BAR.distinctRealFiles) kill.push(`distinct real files ${fps.size} < ${BAR.distinctRealFiles}`);
@@ -133,6 +144,7 @@ export function computeKpis(events, now = Date.now(), excludedIids = EXCLUDED_II
     smallFiles,
     installsBackOnAnotherDay,
     weeklyEngaged,
+    ship,
     excluded,
     totalEvents: events.length,
     realEvents: real.length,
@@ -197,6 +209,13 @@ function print(k) {
   );
   console.log(`  Installs back on another day:  ${k.installsBackOnAnotherDay}`);
   console.log(`  Small files (<3 orders, no fingerprint): ${k.smallFiles}`);
+  if (k.ship) {
+    console.log("  Custom options + one name per copy (all real files, counts only):");
+    console.log(`    files with 2+ text fields:  ${k.ship.multifieldFiles}`);
+    console.log(`    files where a name list was split: ${k.ship.nameSplitFiles}`);
+    console.log(`    files held as ambiguous names:    ${k.ship.nameAmbiguousFiles}`);
+    console.log(`    price_intent taps (all real):    ${k.ship.priceIntents}`);
+  }
   console.log("  Weekly engaged sellers (merge downloads on ≥2 days in a Mon–Sun week):");
   const weeks = Object.entries(k.weeklyEngaged);
   if (!weeks.length) console.log("    (none yet)");

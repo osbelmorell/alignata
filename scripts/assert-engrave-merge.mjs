@@ -38,6 +38,7 @@ const CFG_MAP = {
   line_columns: "lineColumns",
   char_limit: "charLimit",
   strip_numbers: "stripNumbers",
+  one_name_per_copy: "oneNamePerCopy",
 };
 
 function runCase(c, text = read(c.fixture)) {
@@ -372,7 +373,7 @@ test("Sweep: no count line reads 0 while the on-screen table has rows (all cases
         assert.ok(!zero.test(v.countLine), `${name} incl=${incl} pick=${listing}: "${v.countLine}" has a 0 count`);
         shapes.add(v.countLine.replace(/\d+/g, "N"));
         if (v.problems.length > 0) {
-          assert.ok(v.countLine.includes(" · ") || /need a look|with problems|left out/.test(v.countLine), `${name}: problem count shown next to rows`);
+          assert.ok(v.countLine.includes(" · ") || /needs? a look|with problems|left out/.test(v.countLine), `${name}: problem count shown next to rows`);
           assert.notEqual(v.note, "Everything is ready.");
         } else {
           assert.equal(v.showProblems, false);
@@ -985,7 +986,8 @@ test("0 ready rows for a pick while problems remain: no Make merge file / hint /
   for (const c of cases) {
     const res = runCase(c);
     if (!res.listings) continue; // fx07 wrong file
-    assert.equal(summaryView(res, !!caseInput(c).settings.includeFlagged).noReady, c.name === "fx10_zero_ready_listing__listing_b", c.name);
+    const noReadyCase = c.name === "fx10_zero_ready_listing__listing_b" || c.name === "fx14_fields_checklist";
+    assert.equal(summaryView(res, !!caseInput(c).settings.includeFlagged).noReady, noReadyCase, c.name);
   }
   // desk: hidden primary + hint, and Make merge file never makes a 0-row file
   assert.match(deskSrc, /\{!nothingToMake && \(\s*<button type="button" data-primary/);
@@ -1761,4 +1763,121 @@ test("guide ref: address bar loses ONLY ?ref= (any value; after an allowed one i
   assert.equal((tracker.match(/beforeSend/g) || []).length >= 2 && (tracker.match(/const beforeSend =/g) || []).length, 1, "one beforeSend");
   assert.match(tracker, /const beforeSend = \(event: BeforeSendEvent\) => vaBeforeSend\(event, excluded\(\)\);/);
   assert.match(tracker, /<Analytics beforeSend=\{beforeSend\} \/>/);
+});
+
+test("custom-option columns and one name per copy", async () => {
+  const { MERGE_FIXED, problemWords } = await import("../lib/engrave-merge/process.ts");
+  const { COPY } = await import("../lib/engrave-merge/copy.ts");
+  const { parseCsv, toCsv } = await import("../lib/engrave-merge/csv.ts");
+  const { detectCopyNames } = await import("../lib/engrave-merge/names.ts");
+  const { PREFS_KEY, readEngravePrefs, writeEngravePrefs } = await import("../lib/engrave-merge/prefs.ts");
+  const byName = (n) => cases.find((c) => c.name === n);
+
+  const fx06 = runCase(byName("fx06_multifield_GUESS"));
+  assert.deepEqual(fx06.mergeHeader.slice(0, MERGE_FIXED.length), [...MERGE_FIXED], "%0–%11 stay put");
+  assert.deepEqual(fx06.mergeHeader.slice(12, 18), ["Line 1", "Line 2", "Line 3", "Line 4", "Line 5", "Line 6"]);
+  assert.deepEqual(fx06.mergeHeader.slice(18), ["Personalization 1", "Personalization 2", "Personalization 3"]);
+  assert.deepEqual(fx06.mergeRows[0].slice(0, 12), [
+    "1", "1000000601", "Testy", "3000000008", "Engraved Birth Announcement Plaque", "EM-TEST-PLAQUE",
+    "1 of 1", "Natural", "", "", "", "Emma Fakename 03.14.2026 7 lb 2 oz, 20 in",
+  ], "joined Personalization and the fixed columns are unchanged");
+  assert.deepEqual(fx06.mergeRows[1].slice(18), ["", "", ""], "a one-box Personalization is not guessed into the numbered columns");
+
+  const recipe = runCase(byName("fx06_multifield_GUESS__recipe"));
+  assert.deepEqual(recipe.mergeHeader.slice(18), ["Personalization 1", "Personalization 2", "Personalization 3", "Baby name", "Birth date", "Weight"]);
+
+  const fx12 = runCase(byName("fx12_custom_fields"));
+  assert.deepEqual(fx12.mergeHeader.slice(-2), ["Front text", "Back text"]);
+  assert.equal(fx12.mergeHeader.indexOf("Personalization"), 11);
+  assert.ok(fx12.excRows.some((r) => r[6] === problemWords("EMPTY_FIELD", "Back text") && r[7] === "EMPTY_FIELD"));
+  assert.equal(fx12.mergeRows.find((r) => r[1] === "1000001204")?.at(-2), "Ana, Grace", "a comma inside one field stays in that column");
+
+  const fx13 = runCase(byName("fx13_one_name"));
+  const inFile = new Set(fx13.mergeRows.map((r) => r[1]));
+  assert.equal(inFile.has("1000001304"), false, "Emma Grace Olivia is held");
+  assert.equal(inFile.has("1000001305"), false, "Mary Ann is held");
+  assert.deepEqual(fx13.mergeRows.filter((r) => r[1] === "1000001301").map((r) => r[11]), ["Emma", "Grace", "Olivia"]);
+  assert.ok(fx13.excRows.some((r) => r[6] === "Check: split 3 names, one per copy" && r[7] === "NAME_SPLIT"));
+  assert.ok(fx13.excRows.some((r) => r[6] === "Check: is this one name or several?" && r[7] === "AMBIGUOUS_NAMES"));
+  for (const p of fx13.problems) {
+    if (p.problems.some((x) => x.startsWith("Check: split"))) assert.equal(p.held, false, p.order);
+    if (p.problems.some((x) => x === "Check: is this one name or several?")) assert.equal(p.held, true, p.order);
+  }
+  assert.ok(fx13.mergeRows.filter((r) => r[1] === "1000001306").every((r) => r[11] === "Bridesmaid Ima"));
+
+  const off = runCase(byName("fx13_one_name__off"));
+  assert.equal(off.problems.length, 0);
+  assert.ok(off.mergeRows.filter((r) => r[1] === "1000001301").every((r) => r[11] === "Emma Grace Olivia"));
+
+  const checked = runCase(byName("fx14_fields_checklist"));
+  assert.equal(checked.mergeRows.length, 0);
+  assert.ok(checked.mergeHeader.includes("Front text") && checked.mergeHeader.includes("Back text"));
+  assert.equal(summaryView(checked, false).noReady, true);
+  assert.equal(summaryView(checked, false).shippedPick, false);
+  assert.ok(checked.excRows.some((r) => r[6] === "Check: Back text empty"));
+
+  const unchecked = runCase(byName("fx14_fields_unchecked"));
+  assert.equal(unchecked.mergeHeader.length, MERGE_FIXED.length + 6, "one row is not guessed into extra columns");
+  assert.equal(unchecked.problems.length, 0);
+  assert.equal(unchecked.mergeRows[0][7], "Walnut");
+  assert.equal(unchecked.mergeRows[0][8], "Emma");
+  assert.equal(unchecked.mergeRows[0][11], "");
+
+  const table = parseCsv(read("fx13_one_name.csv"));
+  const oi = table[0].indexOf("Order ID");
+  const only = table.slice(1).filter((r) => r[oi] === "1000001301");
+  const splitOnly = emProcess(toCsv(table[0], only));
+  assert.equal(splitOnly.error, undefined);
+  assert.equal(summaryView(splitOnly, false).note, COPY.summaryChecks, "a split-only file asks you to read the check notes");
+  assert.equal(splitOnly.stats.held_items, 0);
+  assert.ok(splitOnly.stats.name_split === 1 && splitOnly.stats.name_ambiguous === 0);
+
+  assert.deepEqual(detectCopyNames("Giftee R.", 2), { kind: "none" });
+  assert.equal(detectCopyNames("Emma Grace Olivia", 3).kind, "ambiguous");
+  assert.equal(detectCopyNames("Emma\nGrace\nOlivia", 3).kind, "split");
+
+  const mem = new Map();
+  const storage = {
+    getItem: (k) => mem.get(k) ?? null,
+    setItem: (k, v) => mem.set(k, v),
+    removeItem: (k) => mem.delete(k),
+  };
+  writeEngravePrefs(storage, {
+    oneNamePerCopy: false,
+    fields: { "3000000017": ["Front text", "x".repeat(41), "bad\nlabel"], "not-an-id": ["Front text"], "12": ["Back text"] },
+  });
+  assert.deepEqual(readEngravePrefs(storage), { oneNamePerCopy: false, fields: { "3000000017": ["Front text"], "12": ["Back text"] } });
+  assert.equal(PREFS_KEY, "em_prefs");
+  assert.equal(mem.has("em_iid"), false);
+  assert.equal(readEngravePrefs({ getItem() { return "{"; }, setItem() {} }).oneNamePerCopy, undefined);
+
+  const counted = {
+    v: 1, event: "file_processed", iid, dogfood: false,
+    props: { row_count: 4, item_count: 4, exception_count: 1, file_fingerprint: fp, text_field_count: 2, name_split: 1, name_ambiguous: 0 },
+  };
+  assert.equal(validateEvent(counted).ok, true);
+  assert.equal(validateEvent({ ...counted, props: { ...counted.props, text_field_count: "2" } }).ok, false, "string count");
+  assert.equal(validateEvent({ ...counted, props: { ...counted.props, field_title: "Front text" } }).ok, false, "no field title");
+
+  const html = renderToStaticMarkup(createElement(EngraveMergeDesk));
+  const settingsAt = html.indexOf("data-settings");
+  const primaryAt = html.indexOf("data-primary");
+  for (const label of ["Which fields are engraving text?", "One name on each copy"]) {
+    const at = html.indexOf(label);
+    assert.ok(at > settingsAt && at < primaryAt, `${label} is inside Settings`);
+  }
+  assert.ok(handlerBody("onStartOver").includes("clearEngravePrefs(browserPrefsStorage())"));
+
+  const t0 = Date.parse("2026-10-05T14:00:00Z");
+  const ev = (props) => ({
+    v: 1, event: "file_processed", iid, dogfood: false,
+    props: { row_count: 9, item_count: 9, exception_count: 0, file_fingerprint: "f".repeat(64), ...props },
+    ts: t0, day: "2026-10-05", host: "alignata.com", prod: true,
+  });
+  const k = computeKpis([
+    ev({ text_field_count: 3, name_split: 1, name_ambiguous: 0 }),
+    ev({ text_field_count: 1, name_split: 0, name_ambiguous: 1 }),
+    { v: 1, event: "price_intent", iid, dogfood: false, props: {}, ts: t0, day: "2026-10-05", host: "alignata.com", prod: true },
+  ], t0 + 1000);
+  assert.deepEqual(k.ship, { multifieldFiles: 1, nameSplitFiles: 1, nameAmbiguousFiles: 1, priceIntents: 1 });
 });

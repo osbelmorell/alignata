@@ -31,6 +31,8 @@ export const COPY = {
   garbled: "Some letters look garbled. Download the file again from Etsy and don't open it in Excel first.",
 
   summaryHeldNote: "Items that need a look are left out of the merge file. The problem list says why.",
+  /** A check was added and the rows stayed in the merge file (a name list was split). */
+  summaryChecks: "Read the check notes before you engrave.",
   summaryAllReady: "Everything is ready.",
   /** One listing picked, it has 0 problems, but other items in the file need a look. n = items (same counting as "need a look"). */
   summaryPickReadyOthers: (n: number) =>
@@ -105,6 +107,8 @@ export const COPY = {
   splitLines: "Split text into lines",
   lineColumns: "Number of line columns (1–10)",
   stripNumbers: 'Remove "1. 2. 3." numbering',
+  oneNamePerCopy: "One name on each copy",
+  oneNameHelp: "When the buyer typed one name per item, each copy gets one name. A list we can't split is held.",
   includeFlagged: "Put items that need a look in the merge file anyway",
   fontCheck: "Check my font (optional)",
   fontLoaded: (name: string, missing: number) =>
@@ -114,6 +118,9 @@ export const COPY = {
 
   itemSettings: "Item settings",
   itemSettingsEmpty: "Load a file to set up each item.",
+  fieldChecklist: "Which fields are engraving text?",
+  fieldChecklistHelp: "Checked fields each get a column after the lines. The Personalization column stays.",
+  fieldChecklistEmpty: "Load a file to choose fields.",
   labelKind: (label: string) => `What is "${label}"?`,
   kindOption: "Option",
   kindText: "Engraving text",
@@ -145,6 +152,7 @@ export const COPY = {
     'Tick items off on the printed cut sheet. The "Merge row" number matches LightBurn\'s Current value.',
   ],
   cheatSheet: "%11 whole text · %12 line 1 · %13 line 2 · … · %2 first name · %7 option 1",
+  fieldColumnsHint: "Each engraving-text field also has its own column after the line columns, named after that field.",
 
   /**
    * "I'd pay" price card (COPY-PRICE-CARD.md FINAL: Brand Creator 8:28, Voice Gate 8:29 AM ET Oct 3). A Phase 1 interest

@@ -13,6 +13,9 @@ export const FIXTURE_FINGERPRINTS: readonly string[] = [
   "a8bb31f0366cb5b3e7c4cf68e40f24ad25c194882838b0c54c08ef69a3e312ac", // fx09-no-engravable.csv
   "7e337edf2a9e05e06eda323d29a34c0ad248ac781baca0e13a83b9fb27ba8e9d", // fx10_zero_ready_listing.csv
   "7f1397c393cc1cb9cfa275b6727eae077b84e7ec466508c7a5ba6be63775ba0c", // fx11_shipped_listing_pick.csv
+  "caeb50ccc7993790b59014581e84cf464da531263e7f9a4ab5ef513e0f199108", // fx12_custom_fields.csv
+  "f60309c675240bc8f57d20669b055bbbb70e23791ec2740a1461349e564db024", // fx13_one_name.csv
+  "3fb42d660b51aa16237ed8813cf0f2d04854663c52e937a881eae84de2026dae", // fx14_fields_unchecked.csv
 ];
 
 export function isFixtureFingerprint(fp: string | undefined | null): boolean {
