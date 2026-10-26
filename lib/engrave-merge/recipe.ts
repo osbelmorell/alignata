@@ -47,7 +47,7 @@ export function parseRecipe(text: string, byteSize: number): { recipe?: Recipe; 
   if (s && typeof s === "object" && !Array.isArray(s)) {
     const so = s as Record<string, unknown>;
     const settings: Partial<Settings> = {};
-    for (const k of ["includeShipped", "includeFlagged", "splitLines", "stripNumbers"] as const) {
+    for (const k of ["includeShipped", "includeFlagged", "splitLines", "stripNumbers", "oneNamePerCopy"] as const) {
       if (typeof so[k] === "boolean") settings[k] = so[k] as boolean;
     }
     const lc = int(so.lineColumns, 1, 10);
@@ -105,6 +105,7 @@ export function buildRecipe(
       lineColumns: s.lineColumns,
       charLimit: s.charLimit,
       stripNumbers: s.stripNumbers,
+      oneNamePerCopy: s.oneNamePerCopy,
     },
     extraLabels,
     listings: clean,

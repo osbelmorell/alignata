@@ -43,7 +43,9 @@ export function cutsheetHtml(cut: CutItem[], title = "Cut sheet"): string {
             .map((p) => `${esc(p.label)}: ${esc(flat(p.value))}`)
             .join("<br>")
         : esc(c.raw);
-      const flag = c.flags.map((f) => `<div class='f'>Check: ${esc(f)}</div>`).join("");
+      const flag = c.flags
+        .map((f) => `<div class='f'>${esc(f.startsWith("Check:") ? f : `Check: ${f}`)}</div>`)
+        .join("");
       out.push(
         `<tr><td>&#9744;</td><td>${esc(c.rows)}</td><td>${esc(c.order)}</td><td>${esc(c.fn)}</td><td>${c.qty}</td>` +
           `<td>${opts}</td><td><div class='t'>${esc(c.text)}</div>${flag}</td></tr>`,

@@ -1,0 +1,25 @@
+{
+  "tool": "engrave-merge",
+  "recipeVersion": 1,
+  "savedAt": "2026-10-26",
+  "settings": {
+    "includeShipped": false,
+    "includeFlagged": false,
+    "splitLines": true,
+    "lineColumns": 6,
+    "charLimit": 40,
+    "stripNumbers": true,
+    "oneNamePerCopy": true
+  },
+  "extraLabels": [],
+  "listings": {
+    "3000000017": {
+      "itemName": "Checklist Sign",
+      "option1": "Finish",
+      "option2": null,
+      "option3": null,
+      "textFields": ["Front text", "Back text"],
+      "requiresPersonalization": true
+    }
+  }
+}

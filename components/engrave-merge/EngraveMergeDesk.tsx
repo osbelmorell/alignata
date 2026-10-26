@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useHydrated } from "@/lib/useHydrated";
 import { COPY } from "@/lib/engrave-merge/copy";
 import { cutsheetHtml, printCutsheet } from "@/lib/engrave-merge/cutsheet";
 import { fingerprintOf } from "@/lib/engrave-merge/fingerprint";
@@ -34,6 +35,12 @@ import {
   shouldShowCard,
   tabSession,
 } from "@/lib/engrave-merge/price";
+import {
+  browserPrefsStorage,
+  clearEngravePrefs,
+  readEngravePrefs,
+  writeEngravePrefs,
+} from "@/lib/engrave-merge/prefs";
 import { RECIPE_FILE_NAME, buildRecipe, parseRecipe } from "@/lib/engrave-merge/recipe";
 import { fileRef, initGuideRef, initInstallId, sendEvent } from "@/lib/engrave-merge/track";
 import {
@@ -106,6 +113,9 @@ export function EngraveMergeDesk() {
   const [confirmReset, setConfirmReset] = useState(false);
   /** Bumped by Start over: remounts the Settings drawer (collapsed, fresh number fields). */
   const [epoch, setEpoch] = useState(0);
+  /** False until saved checklist / toggle have been read, so we don't overwrite them with defaults. */
+  const [prefsReady, setPrefsReady] = useState(false);
+  const hydrated = useHydrated();
   const updatedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** Stable callback ref: focus starts on Cancel when the Start over confirm appears (not on every re-render). */
   const focusOnMount = useCallback((el: HTMLButtonElement | null) => el?.focus(), []);
@@ -115,6 +125,31 @@ export function EngraveMergeDesk() {
     initGuideRef(window.location.search);
     sendEvent(iidRef.current, "page_open");
   }, []);
+  // After hydration, copy saved prefs into state once. Done during render (not in an effect)
+  // so the server HTML stays the defaults and we don't clobber em_prefs before this read.
+  if (hydrated && !prefsReady) {
+    const saved = readEngravePrefs(browserPrefsStorage());
+    setPrefsReady(true);
+    if (typeof saved.oneNamePerCopy === "boolean") {
+      setSettings((s) => ({ ...s, oneNamePerCopy: saved.oneNamePerCopy as boolean }));
+    }
+    const ids = Object.keys(saved.fields);
+    if (ids.length) {
+      setListingCfg((m) => {
+        const next = { ...m };
+        for (const lid of ids) next[lid] = { ...(next[lid] || {}), textFields: saved.fields[lid] };
+        return next;
+      });
+    }
+  }
+  useEffect(() => {
+    if (!prefsReady) return;
+    const fields: Record<string, string[]> = {};
+    for (const [lid, l] of Object.entries(listingCfg)) {
+      if (Array.isArray(l.textFields)) fields[lid] = l.textFields;
+    }
+    writeEngravePrefs(browserPrefsStorage(), { oneNamePerCopy: settings.oneNamePerCopy, fields });
+  }, [prefsReady, settings.oneNamePerCopy, listingCfg]);
   useEffect(
     () => () => {
       if (updatedTimer.current) clearTimeout(updatedTimer.current);
@@ -186,6 +221,9 @@ export function EngraveMergeDesk() {
         row_count: res.stats.row_count,
         item_count: res.stats.item_count,
         exception_count: res.stats.exception_count,
+        text_field_count: res.stats.text_field_count,
+        name_split: res.stats.name_split,
+        name_ambiguous: res.stats.name_ambiguous,
         ...fileRef(fingerprint, res.stats.order_count),
       });
     },
@@ -344,6 +382,18 @@ export function EngraveMergeDesk() {
     const names = Object.fromEntries((ok?.listings || []).map((l) => [l.lid, l.itemName]));
     const withNames: Record<string, ListingRecipe> = {};
     for (const [lid, l] of Object.entries(listingCfg)) withNames[lid] = { ...l, itemName: l.itemName || names[lid] || "" };
+    // Freeze the on-screen checklist. An explicit textFields array is the seller's choice.
+    // Otherwise write the auto-detected labels, so reloading the file does not turn auto off
+    // (an empty textFields array means "I decided: none of these").
+    for (const l of ok?.listings || []) {
+      const cfg: ListingRecipe = withNames[l.lid] || { itemName: names[l.lid] || "" };
+      if (!Array.isArray(cfg.textFields)) {
+        cfg.textFields = (ok?.autoText.find((a) => a.lid === l.lid)?.labels || []).filter(
+          (x) => !PERS_LABEL_RE.test(normLabel(x)),
+        );
+      }
+      withNames[l.lid] = { ...cfg, itemName: cfg.itemName || names[l.lid] || "" };
+    }
     const body = JSON.stringify(buildRecipe(settings, withNames, extraLabels), null, 2) + "\n";
     downloadText(RECIPE_FILE_NAME, body, "application/json;charset=utf-8");
   };
@@ -357,12 +407,11 @@ export function EngraveMergeDesk() {
     markUpdated();
   };
 
-  const toggleText = (lid: string, labels: string[], label: string, isText: boolean) => {
-    const cur = listingCfg[lid]?.textFields || [];
-    const set = new Set(cur.map(normLabel));
+  const toggleText = (lid: string, labels: string[], label: string, isText: boolean, base: string[]) => {
+    const set = new Set(base.map(normLabel));
     if (isText) set.add(normLabel(label));
     else set.delete(normLabel(label));
-    // keep the order the labels appear in the file
+    // keep the order the labels appear in the file; personalization is always text and isn't stored
     const next = labels.filter((l) => set.has(normLabel(l)) && !PERS_LABEL_RE.test(normLabel(l)));
     setL(lid, { textFields: next });
   };
@@ -377,6 +426,7 @@ export function EngraveMergeDesk() {
     setStatus({ kind: "idle", text: COPY.statusIdle });
     setSettings(DEFAULT_SETTINGS);
     setListingCfg({});
+    clearEngravePrefs(browserPrefsStorage());
     setExtraLabels([]);
     setListing("");
     setFont(null);
@@ -480,6 +530,14 @@ export function EngraveMergeDesk() {
             onCommit={(raw) => setS("lineColumns", clamp(Number(raw) || 1, 1, 10))}
           />
           <Check label={COPY.stripNumbers} checked={settings.stripNumbers} onChange={(v) => setS("stripNumbers", v)} />
+          <div data-one-name>
+            <Check
+              label={COPY.oneNamePerCopy}
+              checked={settings.oneNamePerCopy}
+              onChange={(v) => setS("oneNamePerCopy", v)}
+            />
+            <p className={`text-base leading-6 ${muted}`}>{COPY.oneNameHelp}</p>
+          </div>
           <Check label={COPY.includeFlagged} checked={settings.includeFlagged} onChange={(v) => setS("includeFlagged", v)} />
 
           <div className="space-y-1">
@@ -523,28 +581,41 @@ export function EngraveMergeDesk() {
               {COPY.itemSettings}
             </summary>
             <div className="space-y-3 pb-3">
-              {!ok && <p className={`text-base ${muted}`}>{COPY.itemSettingsEmpty}</p>}
+              <div data-field-checklist className="space-y-1">
+                <p className="text-base font-semibold">{COPY.fieldChecklist}</p>
+                <p className={`text-base leading-6 ${muted}`}>{COPY.fieldChecklistHelp}</p>
+              </div>
+              {!ok && <p className={`text-base ${muted}`}>{COPY.fieldChecklistEmpty}</p>}
               {ok?.listings.map((l) => {
                 const cfg = listingCfg[l.lid] || {};
+                const explicit = Array.isArray(cfg.textFields);
                 const textSet = new Set((cfg.textFields || []).map(normLabel));
-                const optionLabels = l.labels.filter((x) => !PERS_LABEL_RE.test(normLabel(x)) && !textSet.has(normLabel(x)));
+                const autoLabels = (ok.autoText.find((a) => a.lid === l.lid)?.labels || []).filter(
+                  (x) => !PERS_LABEL_RE.test(normLabel(x)),
+                );
+                const autoSet = new Set(autoLabels.map(normLabel));
+                const isEngraving = (label: string) => {
+                  const n = normLabel(label);
+                  if (PERS_LABEL_RE.test(n)) return true;
+                  return explicit ? textSet.has(n) : autoSet.has(n);
+                };
+                const optionLabels = l.labels.filter((x) => !isEngraving(x));
+                const base = explicit ? cfg.textFields || [] : autoLabels;
                 return (
                   <fieldset key={l.lid} className="space-y-2 rounded-xl border border-[var(--cb-line)] p-3">
                     <legend className="px-1 text-base font-semibold">{COPY.whichOne(l.itemName, l.lid)}</legend>
                     {l.labels.map((label) => {
                       const always = PERS_LABEL_RE.test(normLabel(label));
                       return (
-                        <label key={label} className="flex flex-col gap-1">
-                          <span className="text-base">{COPY.labelKind(label)}</span>
-                          <select
-                            className={fieldClass}
+                        <label key={label} className="flex min-h-[44px] cursor-pointer items-center gap-3 text-base">
+                          <input
+                            type="checkbox"
+                            className="h-5 w-5 shrink-0 accent-[var(--cb-ink)]"
+                            checked={isEngraving(label)}
                             disabled={always}
-                            value={always || textSet.has(normLabel(label)) ? "text" : "option"}
-                            onChange={(e) => toggleText(l.lid, l.labels, label, e.target.value === "text")}
-                          >
-                            <option value="option">{COPY.kindOption}</option>
-                            <option value="text">{always ? COPY.kindAlwaysText : COPY.kindText}</option>
-                          </select>
+                            onChange={(e) => toggleText(l.lid, l.labels, label, e.target.checked, base)}
+                          />
+                          <span>{label}</span>
                         </label>
                       );
                     })}
@@ -647,7 +718,8 @@ export function EngraveMergeDesk() {
             <li key={s}>{s}</li>
           ))}
         </ol>
-        <p className={`pb-4 text-base ${muted}`}>{COPY.cheatSheet}</p>
+        <p className={`text-base ${muted}`}>{COPY.cheatSheet}</p>
+        <p className={`pb-4 text-base ${muted}`}>{COPY.fieldColumnsHint}</p>
       </details>
 
       <div data-start-over-area className="mt-6 space-y-2">

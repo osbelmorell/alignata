@@ -64,6 +64,9 @@ RECIPE = ("3000000011", "Personalized Engraved Wooden Recipe Box with Family Nam
 SLATE = ("3000000012", "Engraved Slate Coaster", "EM-TEST-SLATE")
 STAND = ("3000000013", "Engraved Bamboo Phone Stand", "EM-TEST-STAND")
 PEN = ("3000000014", "Custom Engraved Pen", "EM-TEST-PEN")
+SIDED = ("3000000015", "Two-sided Ornament", "EM-TEST-SIDED")
+FAMILY = ("3000000016", "Family Ornament", "EM-TEST-FAMILY")
+CHECK = ("3000000017", "Checklist Sign", "EM-TEST-CHECK")
 
 def L(x):  # listing tuple -> kwargs
     return dict(listing=x[0], item=x[1], sku=x[2])
@@ -166,6 +169,32 @@ FIXTURES = {
         row("1000001105", "2000001105", variations="Color:Natural,Personalization:Dummy Desk", buyer="dummy", qty="0", price="22.00", **L(STAND)),
         row("1000001106", "2000001106", variations="Ink color:Black,Personalization:Giftee R.", buyer="gift", qty="2", price="9.00", **L(PEN)),
         row("1000001103", "2000001107", variations="Ink color:Blue,Personalization:Sample B.", buyer="sample", price="9.00", **L(PEN)),
+    ],
+    # 12. CUSTOM OPTIONS via the generic Label:value parser. NOT a verified Etsy Custom-options
+    #     export (that shape is still unknown). Multi-word values vary, so Front text / Back text
+    #     are auto-treated as engraving text. Row 3 has an empty Back text → Check, held.
+    "fx12_custom_fields.csv": [
+        row("1000001201", "2000001201", variations="Finish:Matte,Front text:Emma Rose,Back text:The Fakenames", buyer="testy", price="24.00", **L(SIDED)),
+        row("1000001202", "2000001202", variations="Finish:Matte,Front text:Noah James,Back text:Class of 2026", buyer="ima", price="24.00", **L(SIDED)),
+        row("1000001203", "2000001203", variations="Finish:Gloss,Front text:Olivia Mae,Back text:", buyer="sample", price="24.00", **L(SIDED)),
+        row("1000001204", "2000001204", variations="Finish:Matte,Front text:Ana, Grace,Back text:Studio night", buyer="faux", price="24.00", **L(SIDED)),
+    ],
+    # 13. ONE NAME PER COPY. Clear lists (newline, numbered, comma) split. "Emma Grace Olivia"
+    #     and "Mary Ann" have no separators → held, not split. "Bridesmaid Ima" is 2 words with
+    #     Quantity 3 → left as-is. Quantity 1 is never split.
+    "fx13_one_name.csv": [
+        row("1000001301", "2000001301", variations="Style:Round,Personalization:Emma\nGrace\nOlivia", buyer="ima", qty="3", price="18.00", **L(FAMILY)),
+        row("1000001302", "2000001302", variations="Style:Star,Personalization:1. Noah 2. Liam 3. Ava", buyer="testy", qty="3", price="18.00", **L(FAMILY)),
+        row("1000001303", "2000001303", variations="Style:Round,Personalization:Mia, Leo", buyer="sample", qty="2", price="18.00", **L(FAMILY)),
+        row("1000001304", "2000001304", variations="Style:Bell,Personalization:Emma Grace Olivia", buyer="faux", qty="3", price="18.00", **L(FAMILY)),
+        row("1000001305", "2000001305", variations="Style:Star,Personalization:Mary Ann", buyer="dummy", qty="2", price="18.00", **L(FAMILY)),
+        row("1000001306", "2000001306", variations="Style:Round,Personalization:Bridesmaid Ima", buyer="gift", qty="3", price="18.00", **L(FAMILY)),
+        row("1000001307", "2000001307", variations="Style:Bell,Personalization:Emma Grace Olivia", buyer="zoe", qty="1", price="18.00", **L(FAMILY)),
+    ],
+    # 14. ONE ROW, so free-text auto-detect must NOT guess. Without a checklist the labels stay
+    #     options. With recipe_fx14.json they are engraving text and the empty Back text is held.
+    "fx14_fields_unchecked.csv": [
+        row("1000001401", "2000001401", variations="Finish:Walnut,Front text:Emma,Back text:", buyer="testy", price="22.00", **L(CHECK)),
     ],
 }
 

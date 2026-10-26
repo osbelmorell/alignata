@@ -1,7 +1,9 @@
 import { readCsv } from "./csv";
 import { decodeEntities } from "./entities";
+import { blankFieldLabels, confidentTextLabels, fieldColumns } from "./fields";
 import { type GlyphCheck, IGNORABLE, isEmojiChar } from "./glyphs";
 import { splitLines } from "./lines";
+import { detectCopyNames } from "./names";
 import {
   casefold,
   cmpCodePoints,
@@ -44,12 +46,32 @@ export const PROBLEMS: Record<ProblemCode, string> = {
   BAD_QUANTITY: "Quantity looks wrong",
   DUPLICATE: "Same item appears twice in the file",
   BLANK_TEXT: "No personalization text",
+  EMPTY_FIELD: "A text field is empty",
+  AMBIGUOUS_NAMES: "Check: is this one name or several?",
+  NAME_SPLIT: "Check: split N names, one per copy",
   TOO_LONG: "Text is longer than your limit",
   TOO_MANY_LINES: "More lines than your merge file has",
   EMOJI: "Has an emoji your laser may not engrave",
   MISSING_GLYPH: "Your font is missing some letters",
 };
 const CODE_ORDER = Object.keys(PROBLEMS) as ProblemCode[];
+
+/** On-screen words and the cut-sheet note. New checks already include "Check:". */
+export function problemWords(code: ProblemCode, details: string): string {
+  if (code === "EMPTY_FIELD") return `Check: ${details} empty`;
+  if (code === "NAME_SPLIT") return `Check: split ${details} names, one per copy`;
+  if (code === "AMBIGUOUS_NAMES") return "Check: is this one name or several?";
+  return PROBLEMS[code];
+}
+
+/** Problem-list Details column. */
+export function detailWords(code: ProblemCode, details: string): string {
+  if (code === "EMPTY_FIELD") return `${details} is empty`;
+  if (code === "NAME_SPLIT") return `${details} names, one on each copy`;
+  return details;
+}
+
+const HOLDS = (code: ProblemCode) => code !== "NAME_SPLIT";
 
 const PLACEHOLDER_RE = /^\s*not requested on this item\.?\s*$/i;
 const TRAILING_USERNAME_RE = /\s*\([^)]*\)\s*$/;
@@ -99,6 +121,8 @@ interface Item {
   qty: number | null;
   codes: [ProblemCode, string][];
   lines?: string[];
+  /** One engraved name per copy, when a clear list matched Quantity. */
+  perCopy: string[] | null;
 }
 
 export function process(text: string, opts: ProcessOptions = {}): ProcessResult {
@@ -128,16 +152,32 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
   const totalRows = rows.length;
   const kept = rows.filter((r) => cfg.includeShipped || !pyStrip(r["Date Shipped"] || ""));
 
+  const listingRecipe = (lid: string): ListingRecipe =>
+    Object.prototype.hasOwnProperty.call(rlist, lid) ? rlist[lid] || {} : {};
+  const extraFor = (lr: ListingRecipe) =>
+    new Set([
+      ...extraGlobal,
+      ...[lr.option1, lr.option2, lr.option3].filter((x): x is string => !!x).map(normLabel),
+    ]);
+  // Pass 1: recipe text fields only, so free-text detection can see the other labels.
+  const sniffed = kept.map((r) => {
+    const lid = pyStrip(r["Listing ID"] || "");
+    const lr = listingRecipe(lid);
+    const explicit = Array.isArray(lr.textFields);
+    const textLabels = new Set((explicit ? lr.textFields! : []).map(normLabel));
+    return { lid, explicit, pairs: parseVariations(r["Variations"] || "", textLabels, extraFor(lr)).pairs };
+  });
+  const autoMap = confidentTextLabels(sniffed.filter((s) => !s.explicit).map((s) => ({ lid: s.lid, pairs: s.pairs })));
+  const autoText = [...autoMap.entries()].map(([lid, labels]) => ({ lid, labels }));
+
   const items: Item[] = [];
   const seenTxn = new Set<string>();
   kept.forEach((r, idx) => {
     const lid = pyStrip(r["Listing ID"] || "");
-    const lr: ListingRecipe = Object.prototype.hasOwnProperty.call(rlist, lid) ? rlist[lid] || {} : {};
-    const textLabels = new Set((lr.textFields || []).map(normLabel));
-    const extra = new Set([
-      ...extraGlobal,
-      ...[lr.option1, lr.option2, lr.option3].filter((x): x is string => !!x).map(normLabel),
-    ]);
+    const lr = listingRecipe(lid);
+    const explicit = Array.isArray(lr.textFields);
+    const textLabels = new Set((explicit ? lr.textFields! : autoMap.get(lid) || []).map(normLabel));
+    const extra = extraFor(lr);
     const { pairs, ok } = parseVariations(r["Variations"] || "", textLabels, extra);
     let textPairs = pairs.filter((p) => p.isText);
     const optPairs = pairs.filter((p) => !p.isText);
@@ -159,7 +199,7 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
     const qty = isAsciiDigits(qRaw) && parseInt(qRaw, 10) >= 1 ? parseInt(qRaw, 10) : null;
     items.push({
       idx, r, lid, lr, ok, pairs, textPairs, optPairs, values, pers,
-      hasTextLabel: textPairs.length > 0, placeholder, dup, qRaw, qty, codes: [],
+      hasTextLabel: textPairs.length > 0, placeholder, dup, qRaw, qty, codes: [], perCopy: null,
     });
   });
 
@@ -188,8 +228,25 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
       continue;
     }
     if (!it.ok) continue;
-    const lines = cfg.splitLines ? splitLines(it.values, cfg.stripNumbers) : [];
-    it.lines = lines;
+    // One name per copy only for a single text field. Multi-field rows keep each field whole.
+    if (cfg.oneNamePerCopy && it.qty !== null && it.qty >= 2 && it.textPairs.length === 1) {
+      const raw = it.textPairs[0].value;
+      if (pyStrip(raw) && !PLACEHOLDER_RE.test(raw)) {
+        const decision = detectCopyNames(raw, it.qty);
+        if (decision.kind === "split") {
+          it.perCopy = decision.names;
+          codes.push(["NAME_SPLIT", String(it.qty)]);
+        } else if (decision.kind === "ambiguous") {
+          codes.push(["AMBIGUOUS_NAMES", "No separators, so this was not split"]);
+        }
+      }
+    }
+    const lines = it.perCopy
+      ? it.perCopy
+      : cfg.splitLines
+        ? splitLines(it.values, cfg.stripNumbers)
+        : [];
+    it.lines = it.perCopy ? (cfg.splitLines ? [it.perCopy[0]] : []) : lines;
     if (!it.pers) {
       const req = lr.requiresPersonalization;
       const [nText, nAll] = rate.get(it.lid) || [0, 0];
@@ -202,8 +259,20 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
         codes.push(["BLANK_TEXT", "Most orders for this item have text; this one has none"]);
       continue;
     }
+    const isBlank = (v: string) => !pyStrip(v) || PLACEHOLDER_RE.test(v);
+    for (const label of blankFieldLabels(it.textPairs, lr.textFields, isBlank)) {
+      codes.push(["EMPTY_FIELD", label]);
+    }
     if (limit) {
-      if (cfg.splitLines) {
+      if (it.perCopy) {
+        for (const name of it.perCopy) {
+          const n = cpLength(name.normalize("NFC"));
+          if (n > limit) {
+            codes.push(["TOO_LONG", `Line 1 is ${n} characters (limit ${limit})`]);
+            break;
+          }
+        }
+      } else if (cfg.splitLines) {
         for (let i = 0; i < lines.length; i++) {
           const n = cpLength(lines[i].normalize("NFC"));
           if (n > limit) {
@@ -216,7 +285,7 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
         if (n > limit) codes.push(["TOO_LONG", `Text is ${n} characters (limit ${limit})`]);
       }
     }
-    if (cfg.splitLines && lines.length > cfg.lineColumns) {
+    if (!it.perCopy && cfg.splitLines && lines.length > cfg.lineColumns) {
       codes.push(["TOO_MANY_LINES", `${lines.length} lines; your merge file has ${cfg.lineColumns}`]);
     }
     const alltext = it.values.join("");
@@ -246,7 +315,15 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
   );
 
   const ncols = cfg.lineColumns;
-  const mergeHeader = [...MERGE_FIXED, ...Array.from({ length: ncols }, (_, i) => `Line ${i + 1}`)];
+  const fieldCols = fieldColumns(items.map((it) => ({ dup: it.dup, textPairs: it.textPairs, recipeFields: it.lr.textFields })));
+  const mergeHeader = [...MERGE_FIXED, ...Array.from({ length: ncols }, (_, i) => `Line ${i + 1}`), ...fieldCols];
+  const fieldCell = (it: Item, col: string, copyName: string | null): string => {
+    const p = it.textPairs.find((x) => normLabel(x.label) === normLabel(col));
+    if (!p) return "";
+    if (copyName && it.textPairs.length === 1 && normLabel(it.textPairs[0].label) === normLabel(col)) return copyName;
+    if (!pyStrip(p.value) || PLACEHOLDER_RE.test(p.value)) return "";
+    return flat(p.value);
+  };
   const mergeRows: string[][] = [];
   const excRows: string[][] = [];
   const problems: ProblemItem[] = [];
@@ -263,25 +340,27 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
     for (const [code, details] of sortedCodes) {
       excRows.push([
         orderId, pyStrip(r["Transaction ID"] || ""), it.lid, itemName, fn, it.qRaw,
-        PROBLEMS[code], code, details, it.pers,
+        problemWords(code, details), code, detailWords(code, details), it.pers,
         pyStrip(decodeEntities(r["Variations"])).replace(/\n/g, " / "),
       ]);
     }
-    const flagged = it.codes.length > 0;
-    const held = it.dup || (flagged && !cfg.includeFlagged);
+    // NAME_SPLIT is a check on rows that stay in the merge file. Every other code holds the row.
+    const holding = sortedCodes.some(([code]) => HOLDS(code));
+    const held = it.dup || (holding && !cfg.includeFlagged);
     const copies = it.qty || 1;
     const inScope = !opts.listing || it.lid === opts.listing;
-    if (flagged) {
+    if (sortedCodes.length) {
       problems.push({
-        order: orderId, item: itemName, fn, qty: it.qRaw, problems: sortedCodes.map(([c]) => PROBLEMS[c]), held,
-        dup: it.dup, badQty: it.qty === null, counted: it.dup ? 0 : copies, inScope,
+        order: orderId, item: itemName, fn, qty: it.qRaw,
+        problems: sortedCodes.map(([code, details]) => problemWords(code, details)), held,
+        dup: it.dup, badQty: it.qty === null, counted: it.dup || !holding ? 0 : copies, inScope,
       });
     }
     if (it.dup) continue;
     if (inScope) {
       totalItems += copies;
       if (held) heldItems += copies;
-      else if (flagged) flaggedInMerge += copies;
+      else if (holding) flaggedInMerge += copies;
     }
     const lr = it.lr;
     const slots = ["", "", ""];
@@ -308,15 +387,15 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
       .map((p, pi) => (used.has(pi) ? null : `${p.label}: ${flat(p.value)}`))
       .filter((x): x is string => x !== null)
       .join("; ");
-    const lines = (it.lines || []).slice(0, ncols);
+    const lines = (it.perCopy ? [] : it.lines || []).slice(0, ncols);
     const c: CutItem = {
       item: itemName, lid: it.lid, order: orderId, fn, qty: copies, pairs: it.pairs,
       raw: pyStrip(decodeEntities(r["Variations"])), ok: it.ok,
-      flags: it.codes.map(([code]) => PROBLEMS[code]),
-      text: it.values.filter((v) => pyStrip(v)).join("\n"), rows: "held",
+      flags: sortedCodes.map(([code, details]) => problemWords(code, details)),
+      text: it.perCopy ? it.perCopy.join("\n") : it.values.filter((v) => pyStrip(v)).join("\n"), rows: "held",
     };
     cut.push(c);
-    if (flagged && !cfg.includeFlagged) continue;
+    if (holding && !cfg.includeFlagged) continue;
     if (opts.listing && it.lid !== opts.listing) {
       c.rows = "other file";
       continue;
@@ -324,10 +403,18 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
     const firstRow = mergeRows.length + 1;
     c.rows = copies === 1 ? `${firstRow}` : `${firstRow}-${firstRow + copies - 1}`;
     for (let k = 1; k <= copies; k++) {
+      const copyName = it.perCopy ? it.perCopy[k - 1] : null;
+      const pers = copyName ?? it.pers;
+      const lineVals = copyName
+        ? cfg.splitLines
+          ? [copyName, ...Array<string>(ncols - 1).fill("")]
+          : Array<string>(ncols).fill("")
+        : [...lines, ...Array<string>(ncols - lines.length).fill("")];
       mergeRows.push([
         String(mergeRows.length + 1), orderId, fn, it.lid, itemName, pyStrip(r["SKU"] || ""),
-        `${k} of ${copies}`, ...slots, other, it.pers,
-        ...lines, ...Array<string>(ncols - lines.length).fill(""),
+        `${k} of ${copies}`, ...slots, other, pers,
+        ...lineVals,
+        ...fieldCols.map((col) => fieldCell(it, col, copyName)),
       ]);
     }
   }
@@ -349,9 +436,19 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
     }
   }
 
+  const textFieldLabels = new Set<string>();
+  let nameSplit = 0;
+  let nameAmbiguous = 0;
+  for (const it of items) {
+    if (!it.dup && it.ok) for (const p of it.textPairs) textFieldLabels.add(normLabel(p.label));
+    if (it.codes.some(([c]) => c === "NAME_SPLIT")) nameSplit = 1;
+    if (it.codes.some(([c]) => c === "AMBIGUOUS_NAMES")) nameAmbiguous = 1;
+  }
+
   return {
     mergeHeader, mergeRows, excRows, problems, cut, orderIds,
     listings: [...lmap.values()],
+    autoText,
     garbled: text.includes("\ufffd"),
     stats: {
       row_count: totalRows,
@@ -364,6 +461,9 @@ export function process(text: string, opts: ProcessOptions = {}): ProcessResult 
       ready_items: mergeRows.length,
       held_items: heldItems,
       flagged_in_merge_items: flaggedInMerge,
+      text_field_count: textFieldLabels.size,
+      name_split: nameSplit,
+      name_ambiguous: nameAmbiguous,
     },
   };
 }
