@@ -31,7 +31,7 @@ let pw = null;
 if (BASE) { try { pw = await import("playwright"); } catch { pw = null; } }
 
 test("art fill (rendered): no letterbox gap over 2px", { skip: !BASE ? "set ART_FILL_URL to run" : !pw ? "playwright not installed" : false, timeout: 600000 }, async () => {
-  const pages = ["/", "/daily-digest", "/daily-digest/stop-picking-tools-that-are-down", "/daily-digest/approve-button-human-name", "/daily-digest/muse-grok-bots-chatgpt-dots", "/daily-digest/check-for-cut-off-answers", "/daily-digest/dont-keep-only-the-shortest-answer", "/daily-digest/test-review-against-the-better-model", "/daily-digest/check-confidence-before-routing-on-it", "/daily-digest/match-table-layout-to-table-shape", "/daily-digest/cdm-vs-llm-vs-jev", "/daily-digest/layered-agent-code-review-round-cap", "/daily-digest/ask-multi-step-questions-on-their-own", "/apps/license-gate"];
+  const pages = ["/", "/daily-digest", "/daily-digest/stop-picking-tools-that-are-down", "/daily-digest/approve-button-human-name", "/daily-digest/muse-grok-bots-chatgpt-dots", "/daily-digest/check-for-cut-off-answers", "/daily-digest/dont-keep-only-the-shortest-answer", "/daily-digest/test-review-against-the-better-model", "/daily-digest/check-confidence-before-routing-on-it", "/daily-digest/match-table-layout-to-table-shape", "/daily-digest/cdm-vs-llm-vs-jev", "/daily-digest/layered-agent-code-review-round-cap", "/daily-digest/ask-multi-step-questions-on-their-own", "/daily-digest/make-tools-say-what-they-skipped", "/apps/license-gate"];
   const bad = [];
   for (const engine of [pw.chromium, pw.webkit]) {
     const browser = await engine.launch();

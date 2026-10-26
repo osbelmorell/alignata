@@ -313,8 +313,9 @@ test("/apps (v2 §5): 10 app rows in /apps order (Env Diff retired); row body �
 const SLUG_RE_OK = (s) => validateSiteEvent({ v: 1, event: "tool_open", sid: SID, vid: VID, dogfood: false, props: { slug: s, position: 1 } }).ok;
 
 /* ---------- Art (SPEC v2 sticker batch v3.1): final alt text, copied verbatim from ART-ALT-DRAFT.md ---------- */
-/** "Digest: FINAL alt text" (Product Copy, Oct 2 11:15 PM ET), all 24 lines, + Oct 9 show-fixes (25), + Oct 10 google-ai-search essay (26, Product Copy FINAL Oct 10), + Oct 11 ai-agents-reverse-engineering essay (27, Product Copy FINAL Oct 10), + Oct 12 stop-picking-tools technique (28), + Oct 13 ai-harnesses-explained deep dive (29), + Oct 13 check-for-cut-off-answers technique (30), + Oct 15 dont-keep-only-the-shortest-answer technique (31), + Oct 16 muse-grok-bots-chatgpt-dots essay (32), + Oct 17 approve-button-human-name essay (33), + Oct 19 test-review-against-the-better-model technique (34), + Oct 20 check-confidence-before-routing-on-it technique (35), + Oct 21 match-table-layout-to-table-shape technique (36), + Oct 22 cdm-vs-llm-vs-jev deep dive (37), + Oct 23 layered-agent-code-review-round-cap deep dive (38), + Oct 26 ask-multi-step-questions-on-their-own technique (39). */
+/** "Digest: FINAL alt text" (Product Copy, Oct 2 11:15 PM ET), all 24 lines, + Oct 9 show-fixes (25), + Oct 10 google-ai-search essay (26, Product Copy FINAL Oct 10), + Oct 11 ai-agents-reverse-engineering essay (27, Product Copy FINAL Oct 10), + Oct 12 stop-picking-tools technique (28), + Oct 13 ai-harnesses-explained deep dive (29), + Oct 13 check-for-cut-off-answers technique (30), + Oct 15 dont-keep-only-the-shortest-answer technique (31), + Oct 16 muse-grok-bots-chatgpt-dots essay (32), + Oct 17 approve-button-human-name essay (33), + Oct 19 test-review-against-the-better-model technique (34), + Oct 20 check-confidence-before-routing-on-it technique (35), + Oct 21 match-table-layout-to-table-shape technique (36), + Oct 22 cdm-vs-llm-vs-jev deep dive (37), + Oct 23 layered-agent-code-review-round-cap deep dive (38), + Oct 26 ask-multi-step-questions-on-their-own technique (39), + Oct 26 make-tools-say-what-they-skipped technique (40). */
 const DIGEST_FINAL_ALT = new Map([
+  ["make-tools-say-what-they-skipped", "Line drawing of a person reading a short printout while a second figure holds up a longer list, in soft lavender and mint."],
   ["ask-multi-step-questions-on-their-own", "Line drawing of a person at a desk lifting one large card away from a neat stack of small cards, in soft lavender and mint."],
   ["layered-agent-code-review-round-cap", "A person at a desk checks code on a screen through stacked review layers, beside a small round counter and a stop sign."],
   ["cdm-vs-llm-vs-jev", "A person at a workbench looks over a pen, a sorting tray and a magnifying glass on a scroll, deciding which tool to use."],
@@ -370,7 +371,7 @@ const TOOL_FINAL_ALT = [
 ];
 /** Clay files replaced by the sticker batch (alignata-art/clay-replacement-list.md): none may come back. */
 const CLAY_FILES = [
-  ...[...DIGEST_FINAL_ALT.keys()].filter((s) => s !== "the-ai-safety-paradox" && s !== "show-fixes-only-when-things-break" && s !== "google-ai-search-eating-its-own-traffic" && s !== "ai-agents-reverse-engineering-games-software" && s !== "stop-picking-tools-that-are-down" && s !== "ai-harnesses-explained" && s !== "check-for-cut-off-answers" && s !== "dont-keep-only-the-shortest-answer" && s !== "muse-grok-bots-chatgpt-dots" && s !== "approve-button-human-name" && s !== "test-review-against-the-better-model" && s !== "check-confidence-before-routing-on-it" && s !== "match-table-layout-to-table-shape" && s !== "cdm-vs-llm-vs-jev" && s !== "layered-agent-code-review-round-cap" && s !== "ask-multi-step-questions-on-their-own").flatMap((s) => [`public/art/digest/${s}.webp`, `public/art/digest/${s}-card.webp`]),
+  ...[...DIGEST_FINAL_ALT.keys()].filter((s) => s !== "the-ai-safety-paradox" && s !== "show-fixes-only-when-things-break" && s !== "google-ai-search-eating-its-own-traffic" && s !== "ai-agents-reverse-engineering-games-software" && s !== "stop-picking-tools-that-are-down" && s !== "ai-harnesses-explained" && s !== "check-for-cut-off-answers" && s !== "dont-keep-only-the-shortest-answer" && s !== "muse-grok-bots-chatgpt-dots" && s !== "approve-button-human-name" && s !== "test-review-against-the-better-model" && s !== "check-confidence-before-routing-on-it" && s !== "match-table-layout-to-table-shape" && s !== "cdm-vs-llm-vs-jev" && s !== "layered-agent-code-review-round-cap" && s !== "ask-multi-step-questions-on-their-own" && s !== "make-tools-say-what-they-skipped").flatMap((s) => [`public/art/digest/${s}.webp`, `public/art/digest/${s}-card.webp`]),
   ...["fallback-tile", "license-gate", "stripe-cleaver", "the-ai-safety-paradox"].flatMap((b) => [`public/art/${b}-640.webp`, `public/art/${b}-1280.webp`]),
 ];
 /** Width × height of a WebP file (VP8, VP8L or VP8X), read from its header. */
@@ -391,7 +392,7 @@ test("Daily Digest: tags, real read time, sticker hero art + FINAL alt, verbatim
   const { posts, getPostsNewestFirst } = await import("../content/posts.ts");
   const meta = await import("../lib/daily-digest/meta.ts");
   const { toPlainText } = await import("../lib/daily-digest/blocks.ts");
-  assert.equal(posts.length, 39);
+  assert.equal(posts.length, 40);
   assert.equal(new Set(posts.map((p) => p.slug)).size, posts.length, "unique slugs");
   const byTag = (t) => posts.filter((p) => meta.postTag(p) === t).map((p) => p.slug).sort();
   assert.deepEqual(byTag("Essay"), ["ai-agents-reverse-engineering-games-software", "approve-button-human-name", "google-ai-search-eating-its-own-traffic", "muse-grok-bots-chatgpt-dots", "the-ai-safety-paradox"]);
@@ -440,8 +441,8 @@ test("Daily Digest pages render: story cards (eyebrow = tag, title is the link, 
   const { default: Index } = await import("../app/daily-digest/page.tsx");
   const list = getPostsNewestFirst();
   const cards = renderToStaticMarkup(createElement(Index));
-  assert.equal((cards.match(/data-post-card=/g) || []).length, 39);
-  assert.equal((cards.match(/fx-scard fx-lead/g) || []).length, 8, "a lead row every 5 cards (39 cards → 8) (§3 desktop layout repeated)");
+  assert.equal((cards.match(/data-post-card=/g) || []).length, 40);
+  assert.equal((cards.match(/fx-scard fx-lead/g) || []).length, 8, "a lead row every 5 cards (40 cards → 8) (§3 desktop layout repeated)");
   assert.ok(!/>Open</.test(cards), "no Open pill on the digest");
   const esc = (t) => t.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
   for (const p of list) {
@@ -478,13 +479,13 @@ test("homepage (v2 §2): feed order, one black pill, Open → tool with home_cli
   const { default: Home } = await import("../app/page.tsx");
   const html = renderToStaticMarkup(createElement(Home));
   const feed = [...html.matchAll(/<article class="fx-scard[^"]*" data-kind="(tool|article)" data-(?:slug|post-card)="([^"]+)"/g)].map((m) => `${m[1]}:${m[2]}`);
-  assert.deepEqual(feed, ["tool:stripe-cleaver", "article:ask-multi-step-questions-on-their-own", "tool:license-gate", "article:layered-agent-code-review-round-cap", "article:cdm-vs-llm-vs-jev"]);
+  assert.deepEqual(feed, ["tool:stripe-cleaver", "article:ask-multi-step-questions-on-their-own", "tool:license-gate", "article:make-tools-say-what-they-skipped", "article:layered-agent-code-review-round-cap"]);
   assert.ok(html.includes('class="fx-scard fx-lead" data-kind="tool" data-slug="stripe-cleaver"'), "Cleaver is the lead card");
   for (const [slug, pos] of [["stripe-cleaver", 1], ["license-gate", 2]]) {
     assert.ok(html.includes(`<a class="fx-stretch" href="/apps/${slug}">`), `${slug}: card title → story`);
     assert.match(html, new RegExp(`<a class="fx-open" href="/${slug}" data-tool-slug="${slug}" data-tool-pos="${pos}" data-tool-src="feed" data-home-target="tool:${slug}" aria-label="Open [^"]+">Open</a>`), `${slug}: soft Open → tool, source feed`);
   }
-  for (const t of ["tools-pill", "digest-pill", "all-tools", "all-articles", "article:ask-multi-step-questions-on-their-own", "article:layered-agent-code-review-round-cap", "article:cdm-vs-llm-vs-jev"]) {
+  for (const t of ["tools-pill", "digest-pill", "all-tools", "all-articles", "article:ask-multi-step-questions-on-their-own", "article:make-tools-say-what-they-skipped", "article:layered-agent-code-review-round-cap"]) {
     assert.ok(html.includes(`data-home-target="${t}"`), `home_click target ${t}`);
     assert.ok(validateSiteEvent(env("home_click", { target: t })).ok, `${t} validates`);
   }
@@ -603,7 +604,7 @@ test("art: tool stickers + icons with FINAL alt, every file a real WebP of the r
   }
   const files = readdirSync("public/art", { recursive: true }).map(String).filter((f) => /\.[a-z]+$/.test(f) && !f.startsWith("_r/"));
   for (const f of files) assert.match(f, /^(digest\/)?[a-z0-9-]+-sticker(-icon)?\.webp$/, `public/art/${f} is sticker art (no clay, no fallback tile)`);
-  assert.equal(files.length, 39 + 9 + 10 + 1 + 3, "39 Digest heroes + 9 tool heroes + 10 icons + the About hero + 3 page heroes (restyle C)");
+  assert.equal(files.length, 40 + 9 + 10 + 1 + 3, "40 Digest heroes + 9 tool heroes + 10 icons + the About hero + 3 page heroes (restyle C)");
   assert.ok(files.includes("about-sticker.webp"), "About hero (company pages, Oct 3)");
   assert.deepEqual(await webpSize("public/art/about-sticker.webp"), [1920, 1080], "About hero: one 16:9 file");
   for (const f of CLAY_FILES) assert.ok(!existsSync(f), `${f} is gone`);
@@ -821,7 +822,7 @@ test("sitemap: adds exactly the tool stories (no Deploy Decision story); everyth
   assert.deepEqual(urls.filter((u) => !stories.includes(u) && !guides.includes(u) && !company.includes(u)), before, "the 37 existing URLs, same order");
   assert.deepEqual(urls.filter((u) => company.includes(u)), company, "company pages (About, Privacy) after the Digest, before the guides");
   assert.ok(!urls.includes(`${S}/terms`), "Terms is held: not in the sitemap");
-  assert.equal(urls.length, 65);
+  assert.equal(urls.length, 66);
   assert.equal(new Set(urls).size, urls.length);
   const robots = (await import("../app/robots.ts")).default();
   assert.deepEqual(robots, { rules: { userAgent: "*", allow: "/" }, sitemap: "https://alignata.com/sitemap.xml" }, "robots unchanged");
@@ -1315,7 +1316,7 @@ test("Env Diff route: zero links to /env-diff on /, /apps, every tool story and 
   const pages = [["/", renderToStaticMarkup(createElement(Home))], ["/apps", renderToStaticMarkup(createElement(ToolsList, { apps: toolsOrder(getApps()) }))], ["/daily-digest", renderToStaticMarkup(createElement(Digest))]];
   for (const { slug } of story.generateStaticParams()) pages.push([`/apps/${slug}`, renderToStaticMarkup(await story.default({ params: Promise.resolve({ slug }) }))]);
   for (const p of posts) pages.push([`/daily-digest/${p.slug}`, renderToStaticMarkup(await Article({ params: Promise.resolve({ slug: p.slug }) }))]);
-  assert.equal(pages.length, 3 + 9 + 39);
+  assert.equal(pages.length, 3 + 9 + 40);
   for (const [path, html] of pages) {
     assert.ok(!/href="[^"]*\/env-diff/.test(html), `${path}: no link to the Env Diff route`);
     assert.ok(!/env-diff|Env Diff/i.test(html), `${path}: no Env Diff mention or art`);
@@ -1384,7 +1385,7 @@ test("alt text: no <img> anywhere on the site has an empty or missing alt (every
   assert.deepEqual(imgsWithoutAlt('<img src="a.webp">'), ['<img src="a.webp">'], "self-check: missing alt is caught");
 });
 
-test("alt text: every listed tool hero + icon and all 39 Digest heroes carry their FINAL (non-empty) alt", async () => {
+test("alt text: every listed tool hero + icon and all 40 Digest heroes carry their FINAL (non-empty) alt", async () => {
   const { getApps, toolsOrder, toolArt } = await import("../lib/apps.ts");
   const { posts } = await import("../content/posts.ts");
   let heroes = 0, icons = 0;
@@ -1397,7 +1398,7 @@ test("alt text: every listed tool hero + icon and all 39 Digest heroes carry the
   }
   assert.deepEqual([heroes, icons], [9, 10]);
   assert.equal(toolArt("agent-eval-go-no-go").alt, "A person gives a thumbs up with a checklist next to a waving robot on a stand.", "Agent Eval: 'checkered'");
-  assert.equal(posts.length, 39);
+  assert.equal(posts.length, 40);
   for (const p of posts) assert.ok(p.hero.alt.trim(), `${p.slug}: hero alt`);
 });
 
@@ -1423,6 +1424,7 @@ test("Digest heroes #3, #4, #8, #21 + the Oct 11 essay + Oct 12/13/15/19/20/21 t
     "cdm-vs-llm-vs-jev": ["2f15660b087d29d0a4aa7220d7202fd8ffb37bffeaaca4e27e411f079a66b413", "#FDFAF5"],
     "layered-agent-code-review-round-cap": ["361eb59a6c7be4155f5a381bf602c528412e2176a9990b1d882c8e99588af272", "#FDFAF5"],
     "ask-multi-step-questions-on-their-own": ["43f31772bbe8863ac3c7e254b8b74ba3afea846fed3996b53fb94eed7752a851", "#FDFAF5"],
+    "make-tools-say-what-they-skipped": ["6b07243add4ec52b44e8cf504ed66ed210e7b0ff008711f202742917dd8378e8", "#FDFAF5"],
   };
   for (const [slug, [sha, pad]] of Object.entries(want)) {
     const f = `public/art/digest/${slug}-sticker.webp`;
@@ -2206,6 +2208,72 @@ test("Oct 26 technique ask-multi-step-questions-on-their-own: exact body, headin
     ["https://github.com/chenpanli/fragility", "Paper code"],
     ["https://huggingface.co/datasets/openai/gsm8k", "GSM8K (problems used in our test)"],
     ["https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF", "Qwen2.5-3B-Instruct GGUF (model used in our test)"],
+  ];
+  for (const [url, label] of sources) {
+    assert.ok(body.includes(`<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`), url);
+  }
+  assert.ok(html.includes('href="/daily-digest/make-tools-say-what-they-skipped"'), "next article is the other Oct 26 technique");
+});
+
+test("Oct 26 technique make-tools-say-what-they-skipped: exact body, headings, source URLs", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { getPost } = await import("../content/posts.ts");
+  const { parseArticle } = await import("../lib/daily-digest/blocks.ts");
+  const { postCardDek } = await import("../lib/daily-digest/meta.ts");
+  const { articleJsonLd } = await import("../lib/daily-digest/jsonld.ts");
+  const { default: Article, generateMetadata } = await import("../app/daily-digest/[slug]/page.tsx");
+  const p = getPost("make-tools-say-what-they-skipped");
+  assert.equal(p.date, "2026-10-26");
+  assert.equal(p.tag, undefined, "defaults to Technique");
+  assert.equal(p.kind, undefined, "technique byline");
+  assert.equal(p.cardDek, undefined, "the dek is the card dek");
+  assert.equal(p.pullQuote, undefined);
+  assert.equal(p.updated, undefined);
+  assert.equal(p.dek, "If a tool hides a cap or guess, agent and checker treat it as fact.");
+  assert.equal(p.dek.length, 67);
+  assert.equal(postCardDek(p), p.dek);
+  assert.equal(p.hero.alt, "Line drawing of a person reading a short printout while a second figure holds up a longer list, in soft lavender and mint.");
+  assert.equal(p.hero.pad, "#FDFAF5");
+  assert.equal(p.hero.src, "/art/digest/make-tools-say-what-they-skipped-sticker.webp");
+  const blocks = parseArticle(p.paragraphs);
+  assert.deepEqual(blocks.filter((b) => b.kind === "heading" && b.level === 2).map((b) => b.text), ["The problem", "The technique", "What we saw", "Limits", "Try it", "Sources"]);
+  assert.equal(blocks.filter((b) => b.kind === "heading" && b.level === 3).length, 0);
+  assert.equal(blocks.filter((b) => b.kind === "ol").length, 0);
+  const ul = blocks.filter((b) => b.kind === "ul");
+  assert.equal(ul.length, 1);
+  assert.equal(ul[0].items.length, 2);
+  assert.ok(p.paragraphs[1].startsWith("An agent only knows what its tools print."));
+  assert.ok(p.paragraphs[1].includes("200,000") && p.paragraphs[1].includes("\"Found 10.\"") && p.paragraphs[1].includes("arXiv:2610.32110"));
+  assert.ok(p.paragraphs[3].includes("overclaims fell from 100% to 8% for search limits, from 62% to 0% for cut-off lists, and from 100% to 20% for estimates."));
+  assert.ok(p.paragraphs[3].includes("Reworded IDs barely helped (94% still wrong)."));
+  assert.ok(p.paragraphs[3].includes("The verifiers accepted 90 of 90 pre-written false answers under the old wording and rejected all 90 once the wording was fixed."));
+  assert.ok(p.paragraphs[3].includes("\"Do NOT report 10 as the total.\""));
+  assert.ok(p.paragraphs[5].includes("24 of 24 times") && p.paragraphs[5].includes("0 of 24 times") && p.paragraphs[5].includes("exact test p < 0.001"));
+  assert.ok(p.paragraphs[5].includes("Facts alone got it to 2 of 24."));
+  assert.ok(p.paragraphs[5].includes("accepted 24 of 24 under warped text and 0 of 24 under the full fix, but still accepted 19 of 24 with facts alone."));
+  assert.ok(p.paragraphs[5].includes("Qwen2.5-7B, 4-bit, CPU, no randomness"));
+  assert.ok(p.paragraphs[7].startsWith("The paper is one author, one production archive system and three frontier models"));
+  assert.ok(p.paragraphs[7].includes("We did not test ID labels."));
+  assert.ok(p.paragraphs[9].startsWith("Pick the three tools your agent calls most."));
+  assert.ok(p.paragraphs[9].includes("one plain \"do not claim\" sentence."));
+  const meta = await generateMetadata({ params: Promise.resolve({ slug: p.slug }) });
+  assert.equal(meta.description, p.dek, "document description is the dek");
+  assert.equal(meta.openGraph.description, p.dek);
+  assert.equal(meta.twitter.description, p.dek);
+  assert.equal(articleJsonLd(p).description, p.dek, "JSON-LD description is the card dek");
+  const xml = await (await import("../app/daily-digest/rss.xml/route.ts")).GET().text();
+  const item = xml.split("<item>").find((i) => i.includes(`/daily-digest/${p.slug}<`));
+  assert.ok(item.includes(`<description>${p.dek}</description>`), "RSS description is the dek");
+  assert.ok(item.includes("<pubDate>Mon, 26 Oct 2026 12:00:00 GMT</pubDate>"));
+  const html = renderToStaticMarkup(await Article({ params: Promise.resolve({ slug: p.slug }) }));
+  const body = html.slice(html.indexOf('<div class="fx-prose">'), html.indexOf('<div class="fx-share-end">'));
+  assert.ok(html.includes(`<p class="fx-story-dek">${p.dek}</p>`), "story page shows the dek under the H1");
+  assert.ok(html.includes('data-byline="technique"><p class="fx-author-name">Daily Digest · Edited by Osbel Morell</p>'));
+  assert.ok(html.includes('Technique · <time dateTime="2026-10-26">Oct 26</time>'));
+  assert.equal((body.match(/<h2>/g) || []).length, 6);
+  const sources = [
+    ["https://arxiv.org/abs/2610.32110", "Jeffries, Who Verifies the Tools? How Warped Formatters Mislead Agents and Their Verifiers (arXiv:2610.32110, Oct 23 2026)"],
+    ["https://github.com/williamcodes/who-verifies-the-tools", "Paper code and data"],
   ];
   for (const [url, label] of sources) {
     assert.ok(body.includes(`<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`), url);
