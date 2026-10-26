@@ -1469,6 +1469,32 @@ export const posts: Post[] = [
       "- [Qwen2.5-3B-Instruct GGUF (model used in our test)](https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF)",
     ],
   },
+  {
+    slug: "make-tools-say-what-they-skipped",
+    title: "Make tools say what they skipped",
+    dek: "If a tool hides a cap or guess, agent and checker treat it as fact.",
+    hero: {
+      src: "/art/digest/make-tools-say-what-they-skipped-sticker.webp",
+      alt: "Line drawing of a person reading a short printout while a second figure holds up a longer list, in soft lavender and mint.",
+      pad: "#FDFAF5",
+    },
+    date: "2026-10-26",
+    paragraphs: [
+      "## The problem",
+      "An agent only knows what its tools print. The tool can work and still describe its work wrong. A search that stops after the first 200,000 characters says it \"searched the FULL text.\" A list capped at 10 results says \"Found 10.\" A page number guessed from how far into the file a word sits is printed as if it were the real page. The agent repeats that text to the user as fact. The checker you added to catch mistakes reads the same text, so it approves the wrong answer too. A paper by William Jeffries (arXiv:2610.32110) calls these \"warped formatters\": the code is fine, the sentence it prints is not.",
+      "## The technique",
+      "Treat each tool's output text as part of the product and fix it, not the prompt. The paper's checklist has four lines. Say what the tool actually searched, including any limit. Say when a list was cut off, and give the true total. Mark derived values, like a page number worked out from position, as estimated rather than confirmed. Label every ID by kind, so a document number is not taken for a scan number. Then add one plain sentence telling the reader what not to claim, for example \"Do NOT report 10 as the total.\" In the paper's test of three frontier models on 960 answers, overclaims fell from 100% to 8% for search limits, from 62% to 0% for cut-off lists, and from 100% to 20% for estimates. Reworded IDs barely helped (94% still wrong). The verifiers accepted 90 of 90 pre-written false answers under the old wording and rejected all 90 once the wording was fixed. Those are their numbers.",
+      "## What we saw",
+      "Our own check was much smaller: 24 cases we wrote, 8 each for capped lists, capped document searches and estimated page numbers, on a small open model (Qwen2.5-7B, 4-bit, CPU, no randomness). Each case had three versions of the tool text: the warped one, the paper-style fix (facts plus a do-not-claim sentence), and the facts alone. With warped text the model overclaimed, saying more than the tool showed, 24 of 24 times. With the full fix it overclaimed 0 of 24 times; every one of the 24 changed cases moved the right way (exact test p < 0.001). Facts alone got it to 2 of 24. Both misses were search-limit cases where the model said the word was also missing from the part nobody searched. The checker was where the extra sentence mattered. Using the same model as a checker on a pre-written false answer, it accepted 24 of 24 under warped text and 0 of 24 under the full fix, but still accepted 19 of 24 with facts alone.",
+      "## Limits",
+      "The paper is one author, one production archive system and three frontier models, and its fix mixes facts and instructions, so it cannot say which part does the work. Our test is small, uses one 4-bit 7B model as both agent and checker, uses our own cases, and was graded by us against rules we set before the run. Our checker result may partly reflect the fix sentence spelling out the exact claim the false answer made. We did not test ID labels.",
+      "## Try it",
+      "Pick the three tools your agent calls most. Run each on an input that hits its limits: more results than the cap, a document longer than the scan, a value it has to estimate. Read the printed text as the model would. If it hides the cap, the cut or the guess, add the real number and one plain \"do not claim\" sentence. Then check the same cases again.",
+      "## Sources",
+      "- [Jeffries, Who Verifies the Tools? How Warped Formatters Mislead Agents and Their Verifiers (arXiv:2610.32110, Oct 23 2026)](https://arxiv.org/abs/2610.32110)",
+      "- [Paper code and data](https://github.com/williamcodes/who-verifies-the-tools)",
+    ],
+  },
 ];
 
 export function getPost(slug: string): Post | undefined {
