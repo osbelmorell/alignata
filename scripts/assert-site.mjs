@@ -822,7 +822,7 @@ test("sitemap: adds exactly the tool stories (no Deploy Decision story); everyth
   assert.deepEqual(urls.filter((u) => !stories.includes(u) && !guides.includes(u) && !company.includes(u)), before, "the 37 existing URLs, same order");
   assert.deepEqual(urls.filter((u) => company.includes(u)), company, "company pages (About, Privacy) after the Digest, before the guides");
   assert.ok(!urls.includes(`${S}/terms`), "Terms is held: not in the sitemap");
-  assert.equal(urls.length, 65);
+  assert.equal(urls.length, 66);
   assert.equal(new Set(urls).size, urls.length);
   const robots = (await import("../app/robots.ts")).default();
   assert.deepEqual(robots, { rules: { userAgent: "*", allow: "/" }, sitemap: "https://alignata.com/sitemap.xml" }, "robots unchanged");
