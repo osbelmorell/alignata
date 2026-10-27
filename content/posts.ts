@@ -1520,6 +1520,34 @@ export const posts: Post[] = [
       "- [Bui, Thinking-in-Bets at Test Time Reduces Sycophantic Revisions in LLM Agents (arXiv:2610.34654, Oct 26 2026)](https://arxiv.org/abs/2610.34654)",
     ],
   },
+  {
+    slug: "one-client-many-cli-auth-channels",
+    title: "One client for many providers",
+    dek: "Put a local gateway in front so one OpenAI-shaped client can reach many auth channels.",
+    cardDek: "One OpenAI-shaped client. A local gateway maps aliases to auth.",
+    hero: {
+      src: "/art/digest/one-client-many-cli-auth-channels-sticker.webp",
+      alt: "A person in a coral sweater sits at a desk where one cable splits into several sockets.",
+      pad: "#F6F7FB",
+    },
+    date: "2026-10-28",
+    paragraphs: [
+      "## The problem",
+      "An agent that uses more than one model provider soon has three SDKs, three auth schemes and three sets of response formats. Switching a model means editing code, and every vendor secret lives inside the agent process.",
+      "## The technique",
+      "Put one gateway between the agent and the providers. The agent speaks a single client shape, OpenAI-compatible chat. The gateway holds the credentials, maps a model alias to an upstream, and translates the request and response formats.",
+      "CLIProxyAPI (router-for-me/CLIProxyAPI, MIT, Go) is one open-source example: 56,617 GitHub stars and 8,666 forks as of 27 October 2026, with commits landing that same day. Those are their numbers. It exposes OpenAI-, Claude- and Gemini-compatible endpoints. Behind them it can use API keys, generic OpenAI-compatible providers, or OAuth logins from coding CLIs. It also adds round-robin across accounts, retries, and cooling for credentials that hit their quota. The translation lives in per-format translator packages, and there is a Go SDK for embedding it.",
+      "## What we saw",
+      "Our own check was offline only. On 27 October 2026 we cloned the repo onto a Linux test box and built it: go build exited 0 after 36 s and produced a 95 MB binary. We used no vendor accounts. Instead, two fake OpenAI-compatible servers ran as upstreams A and B, with the aliases alpha and beta and dummy keys.",
+      "A request without a key or with a wrong key got 401. /v1/models listed exactly alpha and beta. The same OpenAI-shaped call with model alpha returned 200 from A in 3.7 ms; with model beta it returned 200 from B in 2.8 ms. Each upstream received only its own key; the local client key was never forwarded. A Claude-shaped /v1/messages call for beta returned 200 as an Anthropic-format reply, translated from B's OpenAI reply. An unknown model got a clean 400 model_not_found. Running -codex-device-login printed an OpenAI device-code URL; we did not complete it.",
+      "## Limits",
+      "Offline only. We did not exercise any real CLI OAuth channel. Latency, streaming, tools and quota behaviour on real providers need a live retest. Sending a personal CLI subscription through a proxy, especially one that by default sends the official Codex client headers (disable-codex-cloaking: false), may break a provider's terms. Use API keys or channels you are allowed to use, and check each provider's terms. The gateway holds every credential: bind it to 127.0.0.1, set strong client keys, and lock down the management API. On startup it fetched a Grok CLI version from npm and a management-panel asset; audit that before you run it on a locked-down host. The project has 779 open issues and a v8 config layout, so pin a commit.",
+      "## Try it",
+      "Clone https://github.com/router-for-me/CLIProxyAPI, run go build -o cliproxy ./cmd/server, copy config.example.yaml to config.yaml, set access.api-keys and add your upstreams and aliases, then start ./cliproxy -config config.yaml. Point any OpenAI SDK at base_url http://127.0.0.1:8317/v1 and choose an upstream by alias. Confirm /v1/models with your local key before you wire the agent.",
+      "## Sources",
+      "- [router-for-me/CLIProxyAPI (GitHub)](https://github.com/router-for-me/CLIProxyAPI)",
+    ],
+  },
 ];
 
 export function getPost(slug: string): Post | undefined {
