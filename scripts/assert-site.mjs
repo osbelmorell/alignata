@@ -316,9 +316,9 @@ const SLUG_RE_OK = (s) => validateSiteEvent({ v: 1, event: "tool_open", sid: SID
 /** "Digest: FINAL alt text" (Product Copy, Oct 2 11:15 PM ET), all 24 lines, + Oct 9 show-fixes (25), + Oct 10 google-ai-search essay (26, Product Copy FINAL Oct 10), + Oct 11 ai-agents-reverse-engineering essay (27, Product Copy FINAL Oct 10), + Oct 12 stop-picking-tools technique (28), + Oct 13 ai-harnesses-explained deep dive (29), + Oct 13 check-for-cut-off-answers technique (30), + Oct 15 dont-keep-only-the-shortest-answer technique (31), + Oct 16 muse-grok-bots-chatgpt-dots essay (32), + Oct 17 approve-button-human-name essay (33), + Oct 19 test-review-against-the-better-model technique (34), + Oct 20 check-confidence-before-routing-on-it technique (35), + Oct 21 match-table-layout-to-table-shape technique (36), + Oct 22 cdm-vs-llm-vs-jev deep dive (37), + Oct 23 layered-agent-code-review-round-cap deep dive (38), + Oct 26 ask-multi-step-questions-on-their-own technique (39), + Oct 26 make-tools-say-what-they-skipped technique (40), + Oct 27 write-down-your-checks-before-pushback technique (41), + Oct 28 one-client-many-cli-auth-channels technique (42). */
 const DIGEST_FINAL_ALT = new Map([
   ["one-client-many-cli-auth-channels", "A person in a coral sweater sits at a desk where one cable splits into several sockets."],
-  ["write-down-your-checks-before-pushback", "Line drawing of a person writing a short checklist on a notepad before reading a complaint slip, in soft lavender and mint."],
-  ["make-tools-say-what-they-skipped", "Line drawing of a person reading a short printout while a second figure holds up a longer list, in soft lavender and mint."],
-  ["ask-multi-step-questions-on-their-own", "Line drawing of a person at a desk lifting one large card away from a neat stack of small cards, in soft lavender and mint."],
+  ["write-down-your-checks-before-pushback", "A person in a purple sweater writing a checklist on a notepad at a desk before reading a complaint slip, navy outlines."],
+  ["make-tools-say-what-they-skipped", "A person holding a short truncated printout beside another person holding a longer true scroll, coral and purple sweaters, navy outlines."],
+  ["ask-multi-step-questions-on-their-own", "A person in a coral sweater holding one large card apart from a neat stack of small cards, navy outlines."],
   ["layered-agent-code-review-round-cap", "A person at a desk checks code on a screen through stacked review layers, beside a small round counter and a stop sign."],
   ["cdm-vs-llm-vs-jev", "A person at a workbench looks over a pen, a sorting tray and a magnifying glass on a scroll, deciding which tool to use."],
   ["match-table-layout-to-table-shape", "A person at a desk turns a long paper table on its side so its rows become columns."],
@@ -1425,9 +1425,9 @@ test("Digest heroes #3, #4, #8, #21 + the Oct 11 essay + Oct 12/13/15/19/20/21 t
     "match-table-layout-to-table-shape": ["e2cb3389d4dd35b09af38682405e10a70b78b889695a8d59736869eafcae8316", "#FDFAF5"],
     "cdm-vs-llm-vs-jev": ["2f15660b087d29d0a4aa7220d7202fd8ffb37bffeaaca4e27e411f079a66b413", "#FDFAF5"],
     "layered-agent-code-review-round-cap": ["361eb59a6c7be4155f5a381bf602c528412e2176a9990b1d882c8e99588af272", "#FDFAF5"],
-    "ask-multi-step-questions-on-their-own": ["43f31772bbe8863ac3c7e254b8b74ba3afea846fed3996b53fb94eed7752a851", "#FDFAF5"],
-    "make-tools-say-what-they-skipped": ["6b07243add4ec52b44e8cf504ed66ed210e7b0ff008711f202742917dd8378e8", "#FDFAF5"],
-    "write-down-your-checks-before-pushback": ["7131a5d15ab1eec0facace74037d4923ed29fcaacf3d2be0e79fb682dbe50978", "#FDFAF5"],
+    "ask-multi-step-questions-on-their-own": ["894c4348d12b1b8a8d3238aa1e88d26a9d43fa6b8400950fcea9b3235c1d8d45", "#FDFAF5"],
+    "make-tools-say-what-they-skipped": ["89367edc4a17ab3ed74975da3172e65b0775bd10e4a217449d7bed84c06670fa", "#FDFAF5"],
+    "write-down-your-checks-before-pushback": ["059654e91c5c4677a3bdfa11795bb780a787b48645cbd1f347d70b196b94fb45", "#FDFAF5"],
     "one-client-many-cli-auth-channels": ["1fd4fbbc57544e9c43561880da043bf469feb2ce136a6ebb71cfa228a44ad08d", "#F6F7FB"],
   };
   for (const [slug, [sha, pad]] of Object.entries(want)) {
@@ -2167,7 +2167,7 @@ test("Oct 26 technique ask-multi-step-questions-on-their-own: exact body, headin
   assert.equal(p.dek, "Bundling questions saves calls, but the ones that need thinking break.");
   assert.equal(p.dek.length, 70);
   assert.equal(postCardDek(p), p.dek);
-  assert.equal(p.hero.alt, "Line drawing of a person at a desk lifting one large card away from a neat stack of small cards, in soft lavender and mint.");
+  assert.equal(p.hero.alt, "A person in a coral sweater holding one large card apart from a neat stack of small cards, navy outlines.");
   assert.equal(p.hero.pad, "#FDFAF5");
   const blocks = parseArticle(p.paragraphs);
   assert.deepEqual(blocks.filter((b) => b.kind === "heading" && b.level === 2).map((b) => b.text), ["The problem", "The technique", "What we saw", "Limits", "Try it", "Sources"]);
@@ -2236,7 +2236,7 @@ test("Oct 26 technique make-tools-say-what-they-skipped: exact body, headings, s
   assert.equal(p.dek, "If a tool hides a cap or guess, agent and checker treat it as fact.");
   assert.equal(p.dek.length, 67);
   assert.equal(postCardDek(p), p.dek);
-  assert.equal(p.hero.alt, "Line drawing of a person reading a short printout while a second figure holds up a longer list, in soft lavender and mint.");
+  assert.equal(p.hero.alt, "A person holding a short truncated printout beside another person holding a longer true scroll, coral and purple sweaters, navy outlines.");
   assert.equal(p.hero.pad, "#FDFAF5");
   assert.equal(p.hero.src, "/art/digest/make-tools-say-what-they-skipped-sticker.webp");
   const blocks = parseArticle(p.paragraphs);
@@ -2302,7 +2302,7 @@ test("Oct 27 technique write-down-your-checks-before-pushback: exact body, headi
   assert.equal(p.dek, "Write your checks before a complaint, or good work gets thrown away.");
   assert.equal(p.dek.length, 68);
   assert.equal(postCardDek(p), p.dek);
-  assert.equal(p.hero.alt, "Line drawing of a person writing a short checklist on a notepad before reading a complaint slip, in soft lavender and mint.");
+  assert.equal(p.hero.alt, "A person in a purple sweater writing a checklist on a notepad at a desk before reading a complaint slip, navy outlines.");
   assert.equal(p.hero.pad, "#FDFAF5");
   assert.equal(p.hero.src, "/art/digest/write-down-your-checks-before-pushback-sticker.webp");
   const blocks = parseArticle(p.paragraphs);
