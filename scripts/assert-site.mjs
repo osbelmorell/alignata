@@ -313,8 +313,9 @@ test("/apps (v2 §5): 10 app rows in /apps order (Env Diff retired); row body �
 const SLUG_RE_OK = (s) => validateSiteEvent({ v: 1, event: "tool_open", sid: SID, vid: VID, dogfood: false, props: { slug: s, position: 1 } }).ok;
 
 /* ---------- Art (SPEC v2 sticker batch v3.1): final alt text, copied verbatim from ART-ALT-DRAFT.md ---------- */
-/** "Digest: FINAL alt text" (Product Copy, Oct 2 11:15 PM ET), all 24 lines, + Oct 9 show-fixes (25), + Oct 10 google-ai-search essay (26, Product Copy FINAL Oct 10), + Oct 11 ai-agents-reverse-engineering essay (27, Product Copy FINAL Oct 10), + Oct 12 stop-picking-tools technique (28), + Oct 13 ai-harnesses-explained deep dive (29), + Oct 13 check-for-cut-off-answers technique (30), + Oct 15 dont-keep-only-the-shortest-answer technique (31), + Oct 16 muse-grok-bots-chatgpt-dots essay (32), + Oct 17 approve-button-human-name essay (33), + Oct 19 test-review-against-the-better-model technique (34), + Oct 20 check-confidence-before-routing-on-it technique (35), + Oct 21 match-table-layout-to-table-shape technique (36), + Oct 22 cdm-vs-llm-vs-jev deep dive (37), + Oct 23 layered-agent-code-review-round-cap deep dive (38), + Oct 26 ask-multi-step-questions-on-their-own technique (39), + Oct 26 make-tools-say-what-they-skipped technique (40), + Oct 27 write-down-your-checks-before-pushback technique (41). */
+/** "Digest: FINAL alt text" (Product Copy, Oct 2 11:15 PM ET), all 24 lines, + Oct 9 show-fixes (25), + Oct 10 google-ai-search essay (26, Product Copy FINAL Oct 10), + Oct 11 ai-agents-reverse-engineering essay (27, Product Copy FINAL Oct 10), + Oct 12 stop-picking-tools technique (28), + Oct 13 ai-harnesses-explained deep dive (29), + Oct 13 check-for-cut-off-answers technique (30), + Oct 15 dont-keep-only-the-shortest-answer technique (31), + Oct 16 muse-grok-bots-chatgpt-dots essay (32), + Oct 17 approve-button-human-name essay (33), + Oct 19 test-review-against-the-better-model technique (34), + Oct 20 check-confidence-before-routing-on-it technique (35), + Oct 21 match-table-layout-to-table-shape technique (36), + Oct 22 cdm-vs-llm-vs-jev deep dive (37), + Oct 23 layered-agent-code-review-round-cap deep dive (38), + Oct 26 ask-multi-step-questions-on-their-own technique (39), + Oct 26 make-tools-say-what-they-skipped technique (40), + Oct 27 write-down-your-checks-before-pushback technique (41), + Oct 28 one-client-many-cli-auth-channels technique (42). */
 const DIGEST_FINAL_ALT = new Map([
+  ["one-client-many-cli-auth-channels", "A person in a coral sweater sits at a desk where one cable splits into several sockets."],
   ["write-down-your-checks-before-pushback", "Line drawing of a person writing a short checklist on a notepad before reading a complaint slip, in soft lavender and mint."],
   ["make-tools-say-what-they-skipped", "Line drawing of a person reading a short printout while a second figure holds up a longer list, in soft lavender and mint."],
   ["ask-multi-step-questions-on-their-own", "Line drawing of a person at a desk lifting one large card away from a neat stack of small cards, in soft lavender and mint."],
@@ -372,7 +373,7 @@ const TOOL_FINAL_ALT = [
 ];
 /** Clay files replaced by the sticker batch (alignata-art/clay-replacement-list.md): none may come back. */
 const CLAY_FILES = [
-  ...[...DIGEST_FINAL_ALT.keys()].filter((s) => s !== "the-ai-safety-paradox" && s !== "show-fixes-only-when-things-break" && s !== "google-ai-search-eating-its-own-traffic" && s !== "ai-agents-reverse-engineering-games-software" && s !== "stop-picking-tools-that-are-down" && s !== "ai-harnesses-explained" && s !== "check-for-cut-off-answers" && s !== "dont-keep-only-the-shortest-answer" && s !== "muse-grok-bots-chatgpt-dots" && s !== "approve-button-human-name" && s !== "test-review-against-the-better-model" && s !== "check-confidence-before-routing-on-it" && s !== "match-table-layout-to-table-shape" && s !== "cdm-vs-llm-vs-jev" && s !== "layered-agent-code-review-round-cap" && s !== "ask-multi-step-questions-on-their-own" && s !== "make-tools-say-what-they-skipped" && s !== "write-down-your-checks-before-pushback").flatMap((s) => [`public/art/digest/${s}.webp`, `public/art/digest/${s}-card.webp`]),
+  ...[...DIGEST_FINAL_ALT.keys()].filter((s) => s !== "the-ai-safety-paradox" && s !== "show-fixes-only-when-things-break" && s !== "google-ai-search-eating-its-own-traffic" && s !== "ai-agents-reverse-engineering-games-software" && s !== "stop-picking-tools-that-are-down" && s !== "ai-harnesses-explained" && s !== "check-for-cut-off-answers" && s !== "dont-keep-only-the-shortest-answer" && s !== "muse-grok-bots-chatgpt-dots" && s !== "approve-button-human-name" && s !== "test-review-against-the-better-model" && s !== "check-confidence-before-routing-on-it" && s !== "match-table-layout-to-table-shape" && s !== "cdm-vs-llm-vs-jev" && s !== "layered-agent-code-review-round-cap" && s !== "ask-multi-step-questions-on-their-own" && s !== "make-tools-say-what-they-skipped" && s !== "write-down-your-checks-before-pushback" && s !== "one-client-many-cli-auth-channels").flatMap((s) => [`public/art/digest/${s}.webp`, `public/art/digest/${s}-card.webp`]),
   ...["fallback-tile", "license-gate", "stripe-cleaver", "the-ai-safety-paradox"].flatMap((b) => [`public/art/${b}-640.webp`, `public/art/${b}-1280.webp`]),
 ];
 /** Width × height of a WebP file (VP8, VP8L or VP8X), read from its header. */
@@ -393,7 +394,7 @@ test("Daily Digest: tags, real read time, sticker hero art + FINAL alt, verbatim
   const { posts, getPostsNewestFirst } = await import("../content/posts.ts");
   const meta = await import("../lib/daily-digest/meta.ts");
   const { toPlainText } = await import("../lib/daily-digest/blocks.ts");
-  assert.equal(posts.length, 41);
+  assert.equal(posts.length, 42);
   assert.equal(new Set(posts.map((p) => p.slug)).size, posts.length, "unique slugs");
   const byTag = (t) => posts.filter((p) => meta.postTag(p) === t).map((p) => p.slug).sort();
   assert.deepEqual(byTag("Essay"), ["ai-agents-reverse-engineering-games-software", "approve-button-human-name", "google-ai-search-eating-its-own-traffic", "muse-grok-bots-chatgpt-dots", "the-ai-safety-paradox"]);
@@ -442,8 +443,8 @@ test("Daily Digest pages render: story cards (eyebrow = tag, title is the link, 
   const { default: Index } = await import("../app/daily-digest/page.tsx");
   const list = getPostsNewestFirst();
   const cards = renderToStaticMarkup(createElement(Index));
-  assert.equal((cards.match(/data-post-card=/g) || []).length, 41);
-  assert.equal((cards.match(/fx-scard fx-lead/g) || []).length, 9, "a lead row every 5 cards (41 cards → 9) (§3 desktop layout repeated)");
+  assert.equal((cards.match(/data-post-card=/g) || []).length, 42);
+  assert.equal((cards.match(/fx-scard fx-lead/g) || []).length, 9, "a lead row every 5 cards (42 cards → 9) (§3 desktop layout repeated)");
   assert.ok(!/>Open</.test(cards), "no Open pill on the digest");
   const esc = (t) => t.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
   for (const p of list) {
@@ -480,19 +481,19 @@ test("homepage (v2 §2): feed order, one black pill, Open → tool with home_cli
   const { default: Home } = await import("../app/page.tsx");
   const html = renderToStaticMarkup(createElement(Home));
   const feed = [...html.matchAll(/<article class="fx-scard[^"]*" data-kind="(tool|article)" data-(?:slug|post-card)="([^"]+)"/g)].map((m) => `${m[1]}:${m[2]}`);
-  assert.deepEqual(feed, ["tool:stripe-cleaver", "article:write-down-your-checks-before-pushback", "tool:license-gate", "article:ask-multi-step-questions-on-their-own", "article:make-tools-say-what-they-skipped"]);
+  assert.deepEqual(feed, ["tool:stripe-cleaver", "article:one-client-many-cli-auth-channels", "tool:license-gate", "article:write-down-your-checks-before-pushback", "article:ask-multi-step-questions-on-their-own"]);
   assert.ok(html.includes('class="fx-scard fx-lead" data-kind="tool" data-slug="stripe-cleaver"'), "Cleaver is the lead card");
   for (const [slug, pos] of [["stripe-cleaver", 1], ["license-gate", 2]]) {
     assert.ok(html.includes(`<a class="fx-stretch" href="/apps/${slug}">`), `${slug}: card title → story`);
     assert.match(html, new RegExp(`<a class="fx-open" href="/${slug}" data-tool-slug="${slug}" data-tool-pos="${pos}" data-tool-src="feed" data-home-target="tool:${slug}" aria-label="Open [^"]+">Open</a>`), `${slug}: soft Open → tool, source feed`);
   }
-  for (const t of ["tools-pill", "digest-pill", "all-tools", "all-articles", "article:write-down-your-checks-before-pushback", "article:ask-multi-step-questions-on-their-own", "article:make-tools-say-what-they-skipped"]) {
+  for (const t of ["tools-pill", "digest-pill", "all-tools", "all-articles", "article:one-client-many-cli-auth-channels", "article:write-down-your-checks-before-pushback", "article:ask-multi-step-questions-on-their-own"]) {
     assert.ok(html.includes(`data-home-target="${t}"`), `home_click target ${t}`);
     assert.ok(validateSiteEvent(env("home_click", { target: t })).ok, `${t} validates`);
   }
   assert.ok(!html.includes('<p class="fx-eyebrow">Daily Digest · Deep dive</p>'), "the Oct 23 deep dive moved off home (newer posts)");
   assert.ok(!html.includes('<p class="fx-eyebrow">Daily Digest · Essay</p>'), "the Oct 17 essay moved off home (newer posts)");
-  assert.ok(html.includes('<p class="fx-eyebrow">Daily Digest · Technique</p>'), "the Oct 27 technique is on home");
+  assert.ok(html.includes('<p class="fx-eyebrow">Daily Digest · Technique</p>'), "the Oct 28 technique is on home");
   assert.equal((html.match(/class="fx-pill"/g) || []).length, 1, "one black pill (Tools)");
   assert.ok(!html.includes("fx-primary"), "feed Opens are soft");
   assert.ok(!html.includes("deploy-decision"), "Deploy Decision never in the feed");
@@ -605,7 +606,7 @@ test("art: tool stickers + icons with FINAL alt, every file a real WebP of the r
   }
   const files = readdirSync("public/art", { recursive: true }).map(String).filter((f) => /\.[a-z]+$/.test(f) && !f.startsWith("_r/"));
   for (const f of files) assert.match(f, /^(digest\/)?[a-z0-9-]+-sticker(-icon)?\.webp$/, `public/art/${f} is sticker art (no clay, no fallback tile)`);
-  assert.equal(files.length, 41 + 9 + 10 + 1 + 3, "41 Digest heroes + 9 tool heroes + 10 icons + the About hero + 3 page heroes (restyle C)");
+  assert.equal(files.length, 42 + 9 + 10 + 1 + 3, "42 Digest heroes + 9 tool heroes + 10 icons + the About hero + 3 page heroes (restyle C)");
   assert.ok(files.includes("about-sticker.webp"), "About hero (company pages, Oct 3)");
   assert.deepEqual(await webpSize("public/art/about-sticker.webp"), [1920, 1080], "About hero: one 16:9 file");
   for (const f of CLAY_FILES) assert.ok(!existsSync(f), `${f} is gone`);
@@ -823,7 +824,7 @@ test("sitemap: adds exactly the tool stories (no Deploy Decision story); everyth
   assert.deepEqual(urls.filter((u) => !stories.includes(u) && !guides.includes(u) && !company.includes(u)), before, "the 37 existing URLs, same order");
   assert.deepEqual(urls.filter((u) => company.includes(u)), company, "company pages (About, Privacy) after the Digest, before the guides");
   assert.ok(!urls.includes(`${S}/terms`), "Terms is held: not in the sitemap");
-  assert.equal(urls.length, 67);
+  assert.equal(urls.length, 68);
   assert.equal(new Set(urls).size, urls.length);
   const robots = (await import("../app/robots.ts")).default();
   assert.deepEqual(robots, { rules: { userAgent: "*", allow: "/" }, sitemap: "https://alignata.com/sitemap.xml" }, "robots unchanged");
@@ -1317,7 +1318,7 @@ test("Env Diff route: zero links to /env-diff on /, /apps, every tool story and 
   const pages = [["/", renderToStaticMarkup(createElement(Home))], ["/apps", renderToStaticMarkup(createElement(ToolsList, { apps: toolsOrder(getApps()) }))], ["/daily-digest", renderToStaticMarkup(createElement(Digest))]];
   for (const { slug } of story.generateStaticParams()) pages.push([`/apps/${slug}`, renderToStaticMarkup(await story.default({ params: Promise.resolve({ slug }) }))]);
   for (const p of posts) pages.push([`/daily-digest/${p.slug}`, renderToStaticMarkup(await Article({ params: Promise.resolve({ slug: p.slug }) }))]);
-  assert.equal(pages.length, 3 + 9 + 41);
+  assert.equal(pages.length, 3 + 9 + 42);
   for (const [path, html] of pages) {
     assert.ok(!/href="[^"]*\/env-diff/.test(html), `${path}: no link to the Env Diff route`);
     assert.ok(!/env-diff|Env Diff/i.test(html), `${path}: no Env Diff mention or art`);
@@ -1386,7 +1387,7 @@ test("alt text: no <img> anywhere on the site has an empty or missing alt (every
   assert.deepEqual(imgsWithoutAlt('<img src="a.webp">'), ['<img src="a.webp">'], "self-check: missing alt is caught");
 });
 
-test("alt text: every listed tool hero + icon and all 41 Digest heroes carry their FINAL (non-empty) alt", async () => {
+test("alt text: every listed tool hero + icon and all 42 Digest heroes carry their FINAL (non-empty) alt", async () => {
   const { getApps, toolsOrder, toolArt } = await import("../lib/apps.ts");
   const { posts } = await import("../content/posts.ts");
   let heroes = 0, icons = 0;
@@ -1399,7 +1400,7 @@ test("alt text: every listed tool hero + icon and all 41 Digest heroes carry the
   }
   assert.deepEqual([heroes, icons], [9, 10]);
   assert.equal(toolArt("agent-eval-go-no-go").alt, "A person gives a thumbs up with a checklist next to a waving robot on a stand.", "Agent Eval: 'checkered'");
-  assert.equal(posts.length, 41);
+  assert.equal(posts.length, 42);
   for (const p of posts) assert.ok(p.hero.alt.trim(), `${p.slug}: hero alt`);
 });
 
@@ -1427,6 +1428,7 @@ test("Digest heroes #3, #4, #8, #21 + the Oct 11 essay + Oct 12/13/15/19/20/21 t
     "ask-multi-step-questions-on-their-own": ["43f31772bbe8863ac3c7e254b8b74ba3afea846fed3996b53fb94eed7752a851", "#FDFAF5"],
     "make-tools-say-what-they-skipped": ["6b07243add4ec52b44e8cf504ed66ed210e7b0ff008711f202742917dd8378e8", "#FDFAF5"],
     "write-down-your-checks-before-pushback": ["7131a5d15ab1eec0facace74037d4923ed29fcaacf3d2be0e79fb682dbe50978", "#FDFAF5"],
+    "one-client-many-cli-auth-channels": ["1fd4fbbc57544e9c43561880da043bf469feb2ce136a6ebb71cfa228a44ad08d", "#F6F7FB"],
   };
   for (const [slug, [sha, pad]] of Object.entries(want)) {
     const f = `public/art/digest/${slug}-sticker.webp`;
@@ -1828,21 +1830,21 @@ test("posts.ts updated field: validator catches missing/long/unpunctuated note a
 test("Release B outputs for an updated post (temp fixture post, never in posts.ts): article line, RSS atom:updated, sitemap lastModified", async () => {
   const mod = await import("../content/posts.ts");
   const p = mod.posts.find((x) => !x.updated);
-  // fixture update dated after the newest post (Oct 27 technique), so it drives lastBuildDate
+  // fixture update dated after the newest post (Oct 28 technique), so it drives lastBuildDate
   const orig = p.updated;
-  p.updated = { date: "2026-10-28", note: "Added a second test result." };
+  p.updated = { date: "2026-10-29", note: "Added a second test result." };
   try {
     const xml = await (await import("../app/daily-digest/rss.xml/route.ts")).GET().text();
     const item = xml.split("<item>").find((i) => i.includes(`/daily-digest/${p.slug}<`));
-    assert.ok(item.includes("<atom:updated>2026-10-28T12:00:00Z</atom:updated>"), "RSS item updated");
-    assert.ok(xml.includes("<lastBuildDate>Wed, 28 Oct 2026 12:00:00 GMT</lastBuildDate>"), "channel lastBuildDate follows the update");
+    assert.ok(item.includes("<atom:updated>2026-10-29T12:00:00Z</atom:updated>"), "RSS item updated");
+    assert.ok(xml.includes("<lastBuildDate>Thu, 29 Oct 2026 12:00:00 GMT</lastBuildDate>"), "channel lastBuildDate follows the update");
     const sm = (await import("../app/sitemap.ts")).default();
-    assert.equal(sm.find((e) => e.url.endsWith(`/daily-digest/${p.slug}`)).lastModified, "2026-10-28");
+    assert.equal(sm.find((e) => e.url.endsWith(`/daily-digest/${p.slug}`)).lastModified, "2026-10-29");
     assert.equal(sm.filter((e) => e.url.includes("/daily-digest/") && e.lastModified).length, mod.posts.filter((x) => x.updated).length, "only updated posts");
     const { renderToStaticMarkup } = await import("react-dom/server");
     const { default: Page } = await import("../app/daily-digest/[slug]/page.tsx");
     const html = renderToStaticMarkup(await Page({ params: Promise.resolve({ slug: p.slug }) }));
-    assert.ok(html.includes('<p class="fx-meta fx-story-updated" data-updated="true"><span>Updated <time dateTime="2026-10-28">Oct 28</time>: Added a second test result.</span></p>'), "article update line");
+    assert.ok(html.includes('<p class="fx-meta fx-story-updated" data-updated="true"><span>Updated <time dateTime="2026-10-29">Oct 29</time>: Added a second test result.</span></p>'), "article update line");
     assert.ok(html.indexOf("fx-story-updated") > html.indexOf("fx-story-meta"), "under the byline meta line");
     assert.ok(html.includes(`<time dateTime="${p.date}">`), "publish date kept");
   } finally {
@@ -2338,6 +2340,78 @@ test("Oct 27 technique write-down-your-checks-before-pushback: exact body, headi
   assert.equal((body.match(/<h2>/g) || []).length, 6);
   assert.ok(body.includes('<a href="https://arxiv.org/abs/2610.34654" target="_blank" rel="noopener noreferrer">Bui, Thinking-in-Bets at Test Time Reduces Sycophantic Revisions in LLM Agents (arXiv:2610.34654, Oct 26 2026)</a>'));
   assert.ok(html.includes('href="/daily-digest/ask-multi-step-questions-on-their-own"'), "next article is the first Oct 26 technique");
+});
+
+test("Oct 28 technique one-client-many-cli-auth-channels: exact dek, outcome, body, limits, source URL", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { getPost } = await import("../content/posts.ts");
+  const { parseArticle } = await import("../lib/daily-digest/blocks.ts");
+  const { postCardDek } = await import("../lib/daily-digest/meta.ts");
+  const { articleJsonLd } = await import("../lib/daily-digest/jsonld.ts");
+  const { default: Article, generateMetadata } = await import("../app/daily-digest/[slug]/page.tsx");
+  const p = getPost("one-client-many-cli-auth-channels");
+  const outcome = "Put a local gateway in front so one OpenAI-shaped client can reach many auth channels.";
+  const dek = "One OpenAI-shaped client. A local gateway maps aliases to auth.";
+  assert.equal(p.date, "2026-10-28");
+  assert.equal(p.tag, undefined, "defaults to Technique");
+  assert.equal(p.kind, undefined, "technique byline");
+  assert.equal(p.dek, outcome, "document description is the outcome line");
+  assert.equal(p.cardDek, dek, "card and story dek is the short dek");
+  assert.equal(p.cardDek.length, 63);
+  assert.equal(p.pullQuote, undefined);
+  assert.equal(p.updated, undefined);
+  assert.equal(postCardDek(p), dek);
+  assert.equal(p.hero.alt, "A person in a coral sweater sits at a desk where one cable splits into several sockets.");
+  assert.equal(p.hero.pad, "#F6F7FB");
+  assert.equal(p.hero.src, "/art/digest/one-client-many-cli-auth-channels-sticker.webp");
+  const blocks = parseArticle(p.paragraphs);
+  assert.deepEqual(blocks.filter((b) => b.kind === "heading" && b.level === 2).map((b) => b.text), ["The problem", "The technique", "What we saw", "Limits", "Try it", "Sources"]);
+  assert.equal(blocks.filter((b) => b.kind === "heading" && b.level === 3).length, 0);
+  assert.equal(blocks.filter((b) => b.kind === "ol").length, 0);
+  const ul = blocks.filter((b) => b.kind === "ul");
+  assert.equal(ul.length, 1);
+  assert.equal(ul[0].items.length, 1);
+  assert.ok(p.paragraphs[1].startsWith("An agent that uses more than one model provider soon has three SDKs"));
+  assert.ok(p.paragraphs[3].startsWith("Put one gateway between the agent and the providers."));
+  assert.ok(p.paragraphs[4].includes("56,617 GitHub stars and 8,666 forks as of 27 October 2026"));
+  assert.ok(p.paragraphs[4].includes("Those are their numbers."));
+  assert.ok(p.paragraphs[6].startsWith("Our own check was offline only."));
+  assert.ok(p.paragraphs[6].includes("go build exited 0 after 36 s and produced a 95 MB binary."));
+  assert.ok(p.paragraphs[7].includes("got 401"));
+  assert.ok(p.paragraphs[7].includes("returned 200 from A in 3.7 ms"));
+  assert.ok(p.paragraphs[7].includes("returned 200 from B in 2.8 ms"));
+  assert.ok(p.paragraphs[7].includes("400 model_not_found"));
+  assert.ok(p.paragraphs[7].includes("we did not complete it."));
+  assert.ok(p.paragraphs[9].startsWith("Offline only. We did not exercise any real CLI OAuth channel."));
+  assert.ok(p.paragraphs[9].includes("disable-codex-cloaking: false"));
+  assert.ok(p.paragraphs[9].includes("may break a provider's terms"));
+  assert.ok(p.paragraphs[9].includes("bind it to 127.0.0.1"));
+  assert.ok(p.paragraphs[9].includes("779 open issues"));
+  assert.ok(p.paragraphs[11].includes("http://127.0.0.1:8317/v1"));
+  assert.ok(p.paragraphs[11].includes("https://github.com/router-for-me/CLIProxyAPI"));
+  const meta = await generateMetadata({ params: Promise.resolve({ slug: p.slug }) });
+  assert.equal(meta.description, outcome, "document description is the outcome");
+  assert.equal(meta.openGraph.description, outcome);
+  assert.equal(meta.twitter.description, outcome);
+  assert.equal(articleJsonLd(p).description, dek, "JSON-LD description is the card dek");
+  const xml = await (await import("../app/daily-digest/rss.xml/route.ts")).GET().text();
+  const item = xml.split("<item>").find((i) => i.includes(`/daily-digest/${p.slug}<`));
+  assert.ok(item.includes(`<description>${outcome}</description>`), "RSS description is the outcome");
+  assert.ok(item.includes("<pubDate>Wed, 28 Oct 2026 12:00:00 GMT</pubDate>"));
+  assert.ok(xml.indexOf(`/daily-digest/${p.slug}<`) < xml.indexOf("/daily-digest/write-down-your-checks-before-pushback<"), "newest item is first in the feed");
+  const html = renderToStaticMarkup(await Article({ params: Promise.resolve({ slug: p.slug }) }));
+  const body = html.slice(html.indexOf('<div class="fx-prose">'), html.indexOf('<div class="fx-share-end">'));
+  assert.ok(html.includes(`<h1 class="fx-story-title">${p.title}</h1>`));
+  assert.ok(html.includes(`<p class="fx-story-dek">${dek}</p>`), "story page shows the dek under the H1");
+  assert.ok(!body.includes(outcome), "the outcome line is the description, not a repeated body paragraph");
+  assert.ok(html.includes('data-byline="technique"><p class="fx-author-name">Daily Digest · Edited by Osbel Morell</p>'));
+  assert.ok(html.includes('Technique · <time dateTime="2026-10-28">Oct 28</time>'));
+  assert.equal((body.match(/<h2>/g) || []).length, 6);
+  assert.ok(body.includes("56,617") && body.includes("8,666") && body.includes("95 MB") && body.includes("3.7 ms") && body.includes("2.8 ms") && body.includes("779 open issues"));
+  assert.ok(body.includes("disable-codex-cloaking: false"));
+  assert.ok(!body.includes('href="http://127.0.0.1'), "loopback URL stays text");
+  assert.ok(body.includes('<a href="https://github.com/router-for-me/CLIProxyAPI" target="_blank" rel="noopener noreferrer">router-for-me/CLIProxyAPI (GitHub)</a>'));
+  assert.ok(html.includes('href="/daily-digest/write-down-your-checks-before-pushback"'), "next article is the Oct 27 technique");
 });
 
 test("bare URLs: never autolink inside inline code or code blocks, and skip localhost, 127.0.0.1, and private hosts", async () => {
