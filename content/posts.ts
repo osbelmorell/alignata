@@ -1554,7 +1554,7 @@ export const posts: Post[] = [
     dek: "Better results come from a clear outcome, not a longer prompt.",
     hero: {
       src: "/art/digest/ask-for-the-outcome-not-a-longer-prompt-sticker.webp",
-      alt: "A person in a coral sweater points at a short target card while a long scroll of text sits beside the desk.",
+      alt: "A person in a coral sweater holding a short outcome card at a desk beside a long unused scroll, navy outlines, filled navy hair.",
       pad: "#FDFAF5",
     },
     date: "2026-10-29",
