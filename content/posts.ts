@@ -1442,7 +1442,7 @@ export const posts: Post[] = [
     dek: "Bundling questions saves calls, but the ones that need thinking break.",
     hero: {
       src: "/art/digest/ask-multi-step-questions-on-their-own-sticker.webp",
-      alt: "Line drawing of a person at a desk lifting one large card away from a neat stack of small cards, in soft lavender and mint.",
+      alt: "A person in a coral sweater holding one large card apart from a neat stack of small cards, navy outlines.",
       pad: "#FDFAF5",
     },
     date: "2026-10-26",
@@ -1475,7 +1475,7 @@ export const posts: Post[] = [
     dek: "If a tool hides a cap or guess, agent and checker treat it as fact.",
     hero: {
       src: "/art/digest/make-tools-say-what-they-skipped-sticker.webp",
-      alt: "Line drawing of a person reading a short printout while a second figure holds up a longer list, in soft lavender and mint.",
+      alt: "A person holding a short truncated printout beside another person holding a longer true scroll, coral and purple sweaters, navy outlines.",
       pad: "#FDFAF5",
     },
     date: "2026-10-26",
@@ -1501,7 +1501,7 @@ export const posts: Post[] = [
     dek: "Write your checks before a complaint, or good work gets thrown away.",
     hero: {
       src: "/art/digest/write-down-your-checks-before-pushback-sticker.webp",
-      alt: "Line drawing of a person writing a short checklist on a notepad before reading a complaint slip, in soft lavender and mint.",
+      alt: "A person in a purple sweater writing a checklist on a notepad at a desk before reading a complaint slip, navy outlines.",
       pad: "#FDFAF5",
     },
     date: "2026-10-27",
