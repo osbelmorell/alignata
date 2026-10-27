@@ -315,7 +315,7 @@ const SLUG_RE_OK = (s) => validateSiteEvent({ v: 1, event: "tool_open", sid: SID
 /* ---------- Art (SPEC v2 sticker batch v3.1): final alt text, copied verbatim from ART-ALT-DRAFT.md ---------- */
 /** "Digest: FINAL alt text" (Product Copy, Oct 2 11:15 PM ET), all 24 lines, + Oct 9 show-fixes (25), + Oct 10 google-ai-search essay (26, Product Copy FINAL Oct 10), + Oct 11 ai-agents-reverse-engineering essay (27, Product Copy FINAL Oct 10), + Oct 12 stop-picking-tools technique (28), + Oct 13 ai-harnesses-explained deep dive (29), + Oct 13 check-for-cut-off-answers technique (30), + Oct 15 dont-keep-only-the-shortest-answer technique (31), + Oct 16 muse-grok-bots-chatgpt-dots essay (32), + Oct 17 approve-button-human-name essay (33), + Oct 19 test-review-against-the-better-model technique (34), + Oct 20 check-confidence-before-routing-on-it technique (35), + Oct 21 match-table-layout-to-table-shape technique (36), + Oct 22 cdm-vs-llm-vs-jev deep dive (37), + Oct 23 layered-agent-code-review-round-cap deep dive (38), + Oct 26 ask-multi-step-questions-on-their-own technique (39), + Oct 26 make-tools-say-what-they-skipped technique (40), + Oct 27 write-down-your-checks-before-pushback technique (41), + Oct 28 one-client-many-cli-auth-channels technique (42), + Oct 29 ask-for-the-outcome-not-a-longer-prompt technique (43). */
 const DIGEST_FINAL_ALT = new Map([
-  ["ask-for-the-outcome-not-a-longer-prompt", "A person in a coral sweater points at a short target card while a long scroll of text sits beside the desk."],
+  ["ask-for-the-outcome-not-a-longer-prompt", "A person in a coral sweater holding a short outcome card at a desk beside a long unused scroll, navy outlines, filled navy hair."],
   ["one-client-many-cli-auth-channels", "A person in a coral sweater sits at a desk where one cable splits into several sockets."],
   ["write-down-your-checks-before-pushback", "A person in a purple sweater writing a checklist on a notepad at a desk before reading a complaint slip, navy outlines."],
   ["make-tools-say-what-they-skipped", "A person holding a short truncated printout beside another person holding a longer true scroll, coral and purple sweaters, navy outlines."],
@@ -1430,7 +1430,7 @@ test("Digest heroes #3, #4, #8, #21 + the Oct 11 essay + Oct 12/13/15/19/20/21 t
     "make-tools-say-what-they-skipped": ["89367edc4a17ab3ed74975da3172e65b0775bd10e4a217449d7bed84c06670fa", "#FDFAF5"],
     "write-down-your-checks-before-pushback": ["059654e91c5c4677a3bdfa11795bb780a787b48645cbd1f347d70b196b94fb45", "#FDFAF5"],
     "one-client-many-cli-auth-channels": ["1fd4fbbc57544e9c43561880da043bf469feb2ce136a6ebb71cfa228a44ad08d", "#F6F7FB"],
-    "ask-for-the-outcome-not-a-longer-prompt": ["39a4c3660a038813c25fa4f570a6274aac8d5351cd70282cea933f36832f1e1a", "#FDFAF5"],
+    "ask-for-the-outcome-not-a-longer-prompt": ["e10f7151a331f06ade98b14c291e51e3759918d780169b491dc38dfa1deddc18", "#FDFAF5"],
   };
   for (const [slug, [sha, pad]] of Object.entries(want)) {
     const f = `public/art/digest/${slug}-sticker.webp`;
@@ -2436,7 +2436,7 @@ test("Oct 29 technique ask-for-the-outcome-not-a-longer-prompt: exact dek, outco
   assert.equal(p.updated, undefined);
   assert.equal("series" in p, false, "no series field on the post schema");
   assert.equal(postCardDek(p), dek);
-  assert.equal(p.hero.alt, "A person in a coral sweater points at a short target card while a long scroll of text sits beside the desk.");
+  assert.equal(p.hero.alt, "A person in a coral sweater holding a short outcome card at a desk beside a long unused scroll, navy outlines, filled navy hair.");
   assert.equal(p.hero.pad, "#FDFAF5");
   assert.equal(p.hero.src, "/art/digest/ask-for-the-outcome-not-a-longer-prompt-sticker.webp");
   assert.ok(!/blog/i.test(JSON.stringify(p)), "no blog label");
