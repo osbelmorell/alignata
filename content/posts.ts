@@ -1495,6 +1495,31 @@ export const posts: Post[] = [
       "- [Paper code and data](https://github.com/williamcodes/who-verifies-the-tools)",
     ],
   },
+  {
+    slug: "write-down-your-checks-before-pushback",
+    title: "Write down your checks before pushback",
+    dek: "Write your checks before a complaint, or good work gets thrown away.",
+    hero: {
+      src: "/art/digest/write-down-your-checks-before-pushback-sticker.webp",
+      alt: "Line drawing of a person writing a short checklist on a notepad before reading a complaint slip, in soft lavender and mint.",
+      pad: "#FDFAF5",
+    },
+    date: "2026-10-27",
+    paragraphs: [
+      "## The problem",
+      "Tell an AI agent \"that's not right\" and it will often throw away work that was fine. Once it reads a complaint, it tends to discount its own earlier checks so it can agree with you. The obvious fix, telling it to stand firm, backfires: it starts ignoring real mistakes too. A paper by Nghi D. Q. Bui (arXiv:2610.34654) measured this across five Gemini models and eight benchmarks. In a report-review test, the plain agent broke 41 of 75 passing drafts after a mistaken complaint.",
+      "## The technique",
+      "Before the agent sees any feedback, have it write a short private list: each main claim, how sure it is, and the check behind it. The paper calls this a Claim Checklist. Then give it one revision rule for when a complaint arrives. Keep claims that were checked and are still solid unless the complaint names a real reason. Re-check the uncertain ones and anything the complaint points at. Fix real errors. If the complaint is vague and the checks still hold, keep the answer and ask what looks wrong. Timing matters. Writing the same list after reading the complaint recovered little of the gain. To save tokens, write the list only when the agent is less than 90% sure.",
+      "## What we saw",
+      "The paper reports large gains. In patch review, false reversals fell from 12.2% to 0.02%. Broken passing drafts fell from 41 of 75 to 9 of 75, while valid fixes barely moved (96% to 92%). In coding, unneeded edits after a mistaken complaint fell from 56–80% to 23–50%. The on-demand version cut checklist tokens by 85%. Those are their numbers. Our own check was much smaller: 24 small money problems (order totals, overtime pay, split rent) through a small 3B open model on a plain CPU. Sixteen answers were right and got a vague complaint; eight had a planted slip. The small model barely caved. It broke only 1 of 16 right answers with no checklist, and 0 of 16 with a checklist written first. On the planted slips, the checklist didn't help. It fixed 3 of 8, against 4 of 8 with no checklist, and its list often gave the wrong step full confidence. So we did not reproduce the paper's gain: in our small test it did no harm, and it showed no benefit either.",
+      "## Limits",
+      "A checklist is only as good as its checks. If the model marks a wrong step as certain, the list protects the mistake. The paper warns about this too, and stubbornness prompts on their own trade away real fixes. Our test is tiny, uses one 4-bit model, a single fixed complaint and repeated problem types, and the differences aren't statistically meaningful. The paper's results come from one model family on one author's setup.",
+      "## Try it",
+      "Add one step before your agent shows the user its answer: \"List your main claims as claim | confidence 0–1 | how you checked it, and redo each calculation.\" Keep that list hidden and paste it back in with any user complaint, plus the revision rule above. Only write the list when confidence is below 0.9. Then test it on your own cases with both mistaken and real complaints, and count both kinds of error.",
+      "## Sources",
+      "- [Bui, Thinking-in-Bets at Test Time Reduces Sycophantic Revisions in LLM Agents (arXiv:2610.34654, Oct 26 2026)](https://arxiv.org/abs/2610.34654)",
+    ],
+  },
 ];
 
 export function getPost(slug: string): Post | undefined {
