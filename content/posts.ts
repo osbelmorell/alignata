@@ -1586,6 +1586,34 @@ export const posts: Post[] = [
       "Pick one ask you made this week that came back vague or wrong. Rewrite it with outcome, context, constraints, success, and delivery. Run both versions side by side. Keep the rewrite if the result is easier to use without a second clarification round.",
     ],
   },
+  {
+    slug: "retire-old-facts-when-they-change",
+    title: "Retire old facts when they change",
+    dek: "When a memory fact changes, retire the old note.",
+    hero: {
+      src: "/art/digest/retire-old-facts-when-they-change-sticker.webp",
+      alt: "A person in a coral sweater retiring an old sticky note into a discard tray while a fresh note stays nearby, navy outlines, filled navy hair.",
+      pad: "#FDFAF5",
+    },
+    date: "2026-10-30",
+    paragraphs: [
+      "## The problem",
+      "Agents with memory keep notes across sessions: who owns what, which price applies, where a meeting moved. When a fact changes, most memory stores just add the new note and leave the old one in place. The common belief is that if search finds the newest note, the agent will use it.",
+      "A paper by Poikarayil and colleagues (arXiv:2610.36308, 26 October 2026) shows that is not safe. Finding the right note is not enough when the outdated version still sits next to it.",
+      "## The technique",
+      "When a fact changes, retire the old version. Either drop it from what the agent gets to read, or keep it for history but tag it clearly — for example \"[SUPERSEDED by note 12]\". Do this in your memory layer, before the notes reach the model, not by hoping the model sorts it out.",
+      "A prompt line like \"later notes replace earlier ones\" helps a little, but it is the weaker fix. Retrieving fewer notes also helps, because a bigger pile is more likely to drag the old version in.",
+      "## What we saw",
+      "The paper held everything fixed and swapped one unrelated note for the outdated version of the answer. Accuracy fell from 100% to 44.6% for Qwen2.5-7B and to 87.8% for Qwen3-14B, and every one of the 50 flipped answers picked the old value. Retrieving more notes also hurt: going from 64 to 512 tokens of retrieved notes dropped accuracy from 45% to 32%, even though the newest note was found every time. Those are their numbers.",
+      "Our own check was much smaller: a plain CPU, two small open models, four dated notes per question in time order. With made-up people and teams, the smaller model never got confused — 40 of 40 right in every setup. Then we used famous facts, with the old note matching what the model already believes (for example \"The CEO of Apple is Tim Cook\") and a newer note changing it. With the old note retired, that model got 30 of 30 right. With both notes present, it got only 11 of 30 and repeated the old value 19 times. Adding a \"later notes win\" line raised that to 16. Tagging the old note as superseded raised it to 28. The larger model got 24 of 30 with both notes present, and 30 of 30 with either the rule line or the tag.",
+      "## Limits",
+      "Our test is small: 30 hand-written facts, one fixed prompt, 4-bit models and one run each. The harm showed up only when the old value matched what the model already believes, and none of our five workplace-style facts (a password, a meeting time) went wrong. The paper uses one benchmark task and two model families. Retiring a fact needs reliable detection that two notes describe the same thing. If you match them wrongly, you can hide a fact that is still true. Bigger models were more robust in both studies, but not perfect.",
+      "## Try it",
+      "When your agent saves a note, check whether it updates an existing one: same subject, same property. If it does, mark the old note superseded and point it to the new one. At read time, filter superseded notes out, or show them with the tag. Keep retrieval tight. Then test it: write 20 facts your model already knows, add changed versions, and compare answers with and without the old notes.",
+      "## Sources",
+      "- [Poikarayil, Babu, Nahhas, Mehta, Baktash, De Luca, Turowski, When Retrieval Is Not Enough: Obsolete Facts in Agent Memory (arXiv:2610.36308, Oct 26 2026)](https://arxiv.org/abs/2610.36308)",
+    ],
+  },
 ];
 
 export function getPost(slug: string): Post | undefined {
