@@ -315,7 +315,7 @@ const SLUG_RE_OK = (s) => validateSiteEvent({ v: 1, event: "tool_open", sid: SID
 /* ---------- Art (SPEC v2 sticker batch v3.1): final alt text, copied verbatim from ART-ALT-DRAFT.md ---------- */
 /** "Digest: FINAL alt text" (Product Copy, Oct 2 11:15 PM ET), all 24 lines, + Oct 9 show-fixes (25), + Oct 10 google-ai-search essay (26, Product Copy FINAL Oct 10), + Oct 11 ai-agents-reverse-engineering essay (27, Product Copy FINAL Oct 10), + Oct 12 stop-picking-tools technique (28), + Oct 13 ai-harnesses-explained deep dive (29), + Oct 13 check-for-cut-off-answers technique (30), + Oct 15 dont-keep-only-the-shortest-answer technique (31), + Oct 16 muse-grok-bots-chatgpt-dots essay (32), + Oct 17 approve-button-human-name essay (33), + Oct 19 test-review-against-the-better-model technique (34), + Oct 20 check-confidence-before-routing-on-it technique (35), + Oct 21 match-table-layout-to-table-shape technique (36), + Oct 22 cdm-vs-llm-vs-jev deep dive (37), + Oct 23 layered-agent-code-review-round-cap deep dive (38), + Oct 26 ask-multi-step-questions-on-their-own technique (39), + Oct 26 make-tools-say-what-they-skipped technique (40), + Oct 27 write-down-your-checks-before-pushback technique (41), + Oct 28 one-client-many-cli-auth-channels technique (42), + Oct 29 ask-for-the-outcome-not-a-longer-prompt technique (43), + Oct 30 retire-old-facts-when-they-change technique (44). */
 const DIGEST_FINAL_ALT = new Map([
-  ["retire-old-facts-when-they-change", "A person in a coral sweater retiring an old sticky note into a discard tray while a fresh note stays nearby, navy outlines, filled navy hair."],
+  ["retire-old-facts-when-they-change", "A person in a purple sweater pinning a fresh checkmark card to a corkboard while dropping an old sticky into a coral bin, navy outlines, filled navy hair."],
   ["ask-for-the-outcome-not-a-longer-prompt", "A person in a coral sweater holding a short outcome card at a desk beside a long unused scroll, navy outlines, filled navy hair."],
   ["one-client-many-cli-auth-channels", "A person in a coral sweater sits at a desk where one cable splits into several sockets."],
   ["write-down-your-checks-before-pushback", "A person in a purple sweater writing a checklist on a notepad at a desk before reading a complaint slip, navy outlines."],
@@ -1432,7 +1432,7 @@ test("Digest heroes #3, #4, #8, #21 + the Oct 11 essay + Oct 12/13/15/19/20/21 t
     "write-down-your-checks-before-pushback": ["059654e91c5c4677a3bdfa11795bb780a787b48645cbd1f347d70b196b94fb45", "#FDFAF5"],
     "one-client-many-cli-auth-channels": ["1fd4fbbc57544e9c43561880da043bf469feb2ce136a6ebb71cfa228a44ad08d", "#F6F7FB"],
     "ask-for-the-outcome-not-a-longer-prompt": ["e10f7151a331f06ade98b14c291e51e3759918d780169b491dc38dfa1deddc18", "#FDFAF5"],
-    "retire-old-facts-when-they-change": ["3b3d4d1df5cad9357e60b4a9d0d620673d923427105b48b5683f27a168dd376a", "#FDFAF5"],
+    "retire-old-facts-when-they-change": ["72c7d1c87f95b822e69b5347fed119545d29050ea44bd150081c84a2c12fe45b", "#FDFAF5"],
   };
   for (const [slug, [sha, pad]] of Object.entries(want)) {
     const f = `public/art/digest/${slug}-sticker.webp`;
@@ -2516,7 +2516,7 @@ test("Oct 30 technique retire-old-facts-when-they-change: exact dek, body, limit
   assert.equal(p.pullQuote, undefined);
   assert.equal(p.updated, undefined);
   assert.equal(postCardDek(p), dek);
-  assert.equal(p.hero.alt, "A person in a coral sweater retiring an old sticky note into a discard tray while a fresh note stays nearby, navy outlines, filled navy hair.");
+  assert.equal(p.hero.alt, "A person in a purple sweater pinning a fresh checkmark card to a corkboard while dropping an old sticky into a coral bin, navy outlines, filled navy hair.");
   assert.equal(p.hero.pad, "#FDFAF5");
   assert.equal(p.hero.src, "/art/digest/retire-old-facts-when-they-change-sticker.webp");
   assert.ok(!/blog/i.test(JSON.stringify(p)), "no blog label");

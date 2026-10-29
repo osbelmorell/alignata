@@ -1592,7 +1592,7 @@ export const posts: Post[] = [
     dek: "When a memory fact changes, retire the old note.",
     hero: {
       src: "/art/digest/retire-old-facts-when-they-change-sticker.webp",
-      alt: "A person in a coral sweater retiring an old sticky note into a discard tray while a fresh note stays nearby, navy outlines, filled navy hair.",
+      alt: "A person in a purple sweater pinning a fresh checkmark card to a corkboard while dropping an old sticky into a coral bin, navy outlines, filled navy hair.",
       pad: "#FDFAF5",
     },
     date: "2026-10-30",
