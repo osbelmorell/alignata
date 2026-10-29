@@ -318,7 +318,7 @@ const DIGEST_FINAL_ALT = new Map([
   ["retire-old-facts-when-they-change", "A person in a purple sweater pinning a fresh checkmark card to a corkboard while dropping an old sticky into a coral bin, navy outlines, filled navy hair."],
   ["ask-for-the-outcome-not-a-longer-prompt", "A person in a coral sweater holding a short outcome card at a desk beside a long unused scroll, navy outlines, filled navy hair."],
   ["one-client-many-cli-auth-channels", "A person in a coral sweater sits at a desk where one cable splits into several sockets."],
-  ["write-down-your-checks-before-pushback", "A person in a purple sweater writing a checklist on a notepad at a desk before reading a complaint slip, navy outlines."],
+  ["write-down-your-checks-before-pushback", "A person in a mint sweater writing a checkbox list on a whiteboard with a coral marker, yellow stickies on the board, navy outlines, filled navy hair."],
   ["make-tools-say-what-they-skipped", "A person holding a short truncated printout beside another person holding a longer true scroll, coral and purple sweaters, navy outlines."],
   ["ask-multi-step-questions-on-their-own", "A person in a coral sweater holding one large card apart from a neat stack of small cards, navy outlines."],
   ["layered-agent-code-review-round-cap", "A person at a desk checks code on a screen through stacked review layers, beside a small round counter and a stop sign."],
@@ -1429,7 +1429,7 @@ test("Digest heroes #3, #4, #8, #21 + the Oct 11 essay + Oct 12/13/15/19/20/21 t
     "layered-agent-code-review-round-cap": ["361eb59a6c7be4155f5a381bf602c528412e2176a9990b1d882c8e99588af272", "#FDFAF5"],
     "ask-multi-step-questions-on-their-own": ["894c4348d12b1b8a8d3238aa1e88d26a9d43fa6b8400950fcea9b3235c1d8d45", "#FDFAF5"],
     "make-tools-say-what-they-skipped": ["89367edc4a17ab3ed74975da3172e65b0775bd10e4a217449d7bed84c06670fa", "#FDFAF5"],
-    "write-down-your-checks-before-pushback": ["059654e91c5c4677a3bdfa11795bb780a787b48645cbd1f347d70b196b94fb45", "#FDFAF5"],
+    "write-down-your-checks-before-pushback": ["92342f78022bd2251f6c66c2266f9264d568ccae4c30dfb8f2ecc36f92a43b4c", "#FDFAF5"],
     "one-client-many-cli-auth-channels": ["1fd4fbbc57544e9c43561880da043bf469feb2ce136a6ebb71cfa228a44ad08d", "#F6F7FB"],
     "ask-for-the-outcome-not-a-longer-prompt": ["e10f7151a331f06ade98b14c291e51e3759918d780169b491dc38dfa1deddc18", "#FDFAF5"],
     "retire-old-facts-when-they-change": ["72c7d1c87f95b822e69b5347fed119545d29050ea44bd150081c84a2c12fe45b", "#FDFAF5"],
@@ -2306,7 +2306,7 @@ test("Oct 27 technique write-down-your-checks-before-pushback: exact body, headi
   assert.equal(p.dek, "Write your checks before a complaint, or good work gets thrown away.");
   assert.equal(p.dek.length, 68);
   assert.equal(postCardDek(p), p.dek);
-  assert.equal(p.hero.alt, "A person in a purple sweater writing a checklist on a notepad at a desk before reading a complaint slip, navy outlines.");
+  assert.equal(p.hero.alt, "A person in a mint sweater writing a checkbox list on a whiteboard with a coral marker, yellow stickies on the board, navy outlines, filled navy hair.");
   assert.equal(p.hero.pad, "#FDFAF5");
   assert.equal(p.hero.src, "/art/digest/write-down-your-checks-before-pushback-sticker.webp");
   const blocks = parseArticle(p.paragraphs);
