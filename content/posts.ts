@@ -1501,7 +1501,7 @@ export const posts: Post[] = [
     dek: "Write your checks before a complaint, or good work gets thrown away.",
     hero: {
       src: "/art/digest/write-down-your-checks-before-pushback-sticker.webp",
-      alt: "A person in a purple sweater writing a checklist on a notepad at a desk before reading a complaint slip, navy outlines.",
+      alt: "A person in a mint sweater writing a checkbox list on a whiteboard with a coral marker, yellow stickies on the board, navy outlines, filled navy hair.",
       pad: "#FDFAF5",
     },
     date: "2026-10-27",
