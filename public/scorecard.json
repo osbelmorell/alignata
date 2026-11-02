@@ -1,28 +1,28 @@
 {
   "title": "Bet A — Enterprise Scorecard",
-  "subtitle": "Board 1:1 snapshot · week ending Sep 20",
-  "updatedAt": "2026-09-20T21:51:00.000Z",
+  "subtitle": "Board 1:1 snapshot · week ending Nov 1",
+  "updatedAt": "2026-11-01T22:00:00.000Z",
   "pillars": [
     {
       "id": "linkedin",
       "name": "LinkedIn",
-      "status": "yellow",
-      "lastOutcome": "ADJUST — freeze / low-cadence (ban risk). No high-volume scrapes; reopen light after Mon Sep 21 ~3pm ET clear.",
-      "updatedAt": "2026-09-20T21:51:00.000Z"
+      "status": "red",
+      "lastOutcome": "RED — 748 followers (+2), 56 impressions/7d (6th miss of 800). Outside-visitor check: 0 Medium referrals, ~4 LinkedIn. Board lock: zero Alignata page posts until reopen; no Medium expansion (keep 4 essays); personal cap 1/day + Voice Gate + Osbel yes. Next measure: ?ref= tagged links.",
+      "updatedAt": "2026-11-01T22:00:00.000Z"
     },
     {
       "id": "investment",
       "name": "Investment",
-      "status": "green",
-      "lastOutcome": "ON TRACK — powder hold default; Soft risk-on recommend-only size cards reopened.",
-      "updatedAt": "2026-09-20T21:51:00.000Z"
+      "status": "yellow",
+      "lastOutcome": "HOLD — Fed cash hold ran as approved; no setup after. Fri tech rout (Nasdaq ~−3.5% / S&P ~−2.3%; Nasdaq ~−5.6% Oct). Powder ~$149k. No staged-entry. Revisit after Nov 3 midterms + Nov 6 jobs; recommend-only; no funds without board yes.",
+      "updatedAt": "2026-11-01T22:00:00.000Z"
     },
     {
       "id": "build",
       "name": "Build",
       "status": "green",
-      "lastOutcome": "ON TRACK — dogfood + monorepo migrate in flight (hub shell live; Scorecard on /scorecard).",
-      "updatedAt": "2026-09-20T21:51:00.000Z"
+      "lastOutcome": "ON TRACK — EsMiCasa soft-ship→prod: chrome #288 tip c86c9f8 + market-data #287 tip 1fadf96 LIVE on esmicasa.com with prod phone-pass PASS. Soft 1.1 parked. Kill clocks ~Nov 15. Alignata Digest resumes Mon Nov 2 / Wed Nov 4.",
+      "updatedAt": "2026-11-01T22:00:00.000Z"
     }
   ]
 }
