@@ -1614,6 +1614,34 @@ export const posts: Post[] = [
       "- [Poikarayil, Babu, Nahhas, Mehta, Baktash, De Luca, Turowski, When Retrieval Is Not Enough: Obsolete Facts in Agent Memory (arXiv:2610.36308, Oct 26 2026)](https://arxiv.org/abs/2610.36308)",
     ],
   },
+  {
+    slug: "let-code-count-the-votes",
+    title: "Let code count the votes",
+    dek: "When one tool was confidently wrong, a plain vote got 20 of 20 right while the models got 8 and 11.",
+    cardDek: "Plain vote got 20/20; models got 8 and 11.",
+    hero: {
+      src: "/art/digest/let-code-count-the-votes-sticker.webp",
+      alt: "A person in a coral sweater counts four equal checkmark cards into a tray while a loud exclamation card sits unused, navy outlines, filled navy hair.",
+      pad: "#FDFAF5",
+    },
+    date: "2026-11-02",
+    paragraphs: [
+      "## The problem",
+      "Many agents read the output of several tools before they decide: three classifiers, a few search results, a set of checkers. Each tool often reports a confidence score next to its answer. Models tend to trust the loudest voice. When one tool is wrong but sounds very sure, the model often goes with it, even when every other tool disagrees.",
+      "## The technique",
+      "Don't ask the model to weigh the tools. Count the votes in plain code first, giving every tool one equal vote and ignoring the confidence numbers it reports. If the tools agree, take the majority answer and skip the model entirely. Only when the vote is split do you hand the case to the model, together with an independent check that doesn't come from the same tools.",
+      "This comes from a new paper on AI security investigators (arXiv:2610.41191). The authors also found that a fixed rule matched or beat the model unless most of the tools were broken.",
+      "## What we saw",
+      "With four detectors, one corrupted detector cut a plain model's accuracy to between .50 and .72, and three corrupted ones cut every unchecked model to .13 or less. The equal-vote setup reached .84 to .88 even with three of four detectors corrupted, while calling the model on only 0.4% of clean traffic. Those are their numbers.",
+      "Our own check was much smaller: a plain CPU, two small open models, four simulated detectors labeling 30 network alerts. In 20 of them, one detector gave a wrong label at 97 to 99% confidence while the other three gave the right label at 55 to 80%. On those 20, the models got 8 and 11 right. Every wrong answer was the confident bad tool's label. Adding the line \"Count each tool as one vote and ignore the confidence numbers\" moved them only to 10 and 13, which is not a reliable difference. A plain majority vote in code got all 20 right, and it also got the 10 clean cases right. Telling the model to ignore confidence wasn't enough. Taking the counting away from it was.",
+      "## Limits",
+      "Our test was small and simulated, and the vote wins by design when only one tool of four is wrong. A majority vote fails when most of your tools are wrong in the same way, and a tie needs a real tiebreaker. The paper found that when its independent check was noisy, the system picked up those errors too. The paper studied security alerts on one public dataset with open models from 3B to 14B, so larger models and other domains may behave differently.",
+      "## Try it",
+      "Find a step where your agent reads several tool answers. Write a few lines of code that count the answers with equal weight. If there's a clear majority, use it and don't call the model. Only send split cases to the model, along with one check from a separate source. Then log how often the model's pick differs from the vote.",
+      "## Sources",
+      "- [arXiv:2610.41191 — AI security investigators / equal-vote (CAV) paper](https://arxiv.org/abs/2610.41191)",
+    ],
+  },
 ];
 
 export function getPost(slug: string): Post | undefined {
