@@ -25,6 +25,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { SummaryPanel } from "../components/engrave-merge/SummaryPanel.tsx";
 import { computeKpis, parseLog, readStore } from "./engrave-merge-kpis.mjs";
 import { EM_KEY_PREFIX, appendEvent, eventKey } from "../lib/engrave-merge/store.ts";
+import { STATS_CACHE_SECONDS, handleStats, toPublicStats } from "../lib/engrave-merge/stats.ts";
+import { GET as getEngraveStats } from "../app/api/engrave-merge/stats/route.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const FX = join(root, "lib/engrave-merge/__fixtures__");
@@ -636,6 +638,189 @@ test("Redis keys: every key Engrave Merge writes or reads starts with the em: pr
   };
   for (const d of ["app", "components", "lib", "scripts"]) walk(d);
   assert.deepEqual(hits, [], "no other Redis/KV client in the repo");
+});
+
+test("public stats mirror computeKpis and hide install ids and fingerprints", () => {
+  const events = parseLog(readFileSync(join(root, "scripts/fixtures/engrave-merge-events.sample.jsonl"), "utf8"));
+  const now = Date.parse("2026-10-09T15:00:00Z");
+  const k = computeKpis(events, now);
+  const s = toPublicStats(events, now);
+  assert.equal(s.windowDays, 14);
+  assert.equal(STATS_CACHE_SECONDS, 600);
+  assert.equal(s.since, k.t0);
+  assert.equal(s.until, k.windowEnd);
+  assert.equal(s.status, k.status);
+  assert.equal(s.status, "IN_WINDOW");
+  assert.deepEqual(s.killBar, k.killBar);
+  assert.equal(s.installsBackOnAnotherDay, k.installsBackOnAnotherDay);
+  assert.equal(s.killBar.priceIntents, k.killBar.priceIntents);
+  assert.deepEqual(s.excluded, k.excluded);
+  assert.deepEqual(s.ship, k.ship);
+  assert.deepEqual(s.weeklyEngaged, k.weeklyEngaged);
+  const text = JSON.stringify(s);
+  assert.equal(text.includes("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), false, "no install id");
+  assert.equal(text.includes("1111111111111111111111111111111111111111111111111111111111111111"), false, "no fingerprint");
+  assert.equal(text.includes("dog-"), false, "no dogfood id");
+  assert.equal("events" in s, false);
+  // Owner/test devices stay out of the counts and out of the body.
+  const owner = EXCLUDED_IIDS[0];
+  const t = Date.parse("2026-10-05T14:00:00Z");
+  const ev = (who, fp) => ({
+    v: 1, event: "file_processed", iid: who, dogfood: false,
+    props: { row_count: 9, item_count: 9, exception_count: 0, file_fingerprint: fp },
+    ts: t, day: "2026-10-05", host: "alignata.com", prod: true,
+  });
+  const dropped = toPublicStats([ev(owner, "d".repeat(64)), ev(iid, "e".repeat(64))], t + 3600e3);
+  assert.equal(dropped.excluded.excludedIid, 1);
+  assert.equal(dropped.killBar.distinctRealFiles, 1);
+  assert.equal(JSON.stringify(dropped).includes(owner), false);
+});
+
+test("GET /api/engrave-merge/stats is a public read of counts only", async () => {
+  const routeSrc = readFileSync(join(root, "app/api/engrave-merge/stats/route.ts"), "utf8");
+  const statsSrc = readFileSync(join(root, "lib/engrave-merge/stats.ts"), "utf8");
+  assert.match(routeSrc, /export async function GET/);
+  assert.equal(/export async function POST/.test(routeSrc), false);
+  assert.equal(/KV_REST|UPSTASH|READ_ONLY|Bearer/.test(routeSrc), false, "the route holds no store credentials");
+  assert.equal(/KV_REST|UPSTASH|READ_ONLY/.test(statsSrc), false, "stats module names no store env vars");
+  assert.match(routeSrc, /handleStats\(\)/);
+
+  const ro = "ro-token-not-a-secret";
+  const rw = "rw-token-not-a-secret";
+  const owner = EXCLUDED_IIDS[0];
+  const fp = "ab".repeat(32);
+  const person = "0b9d2c1e-1111-4222-8333-444455556677";
+  const t0 = Date.parse("2026-10-05T14:00:00Z");
+  const real = {
+    v: 1, event: "file_processed", iid: person, dogfood: false,
+    props: { row_count: 9, item_count: 9, exception_count: 0, file_fingerprint: fp },
+    ts: t0, day: "2026-10-05", host: "alignata.com", prod: true,
+  };
+  const back = { ...real, ts: t0 + 86400e3, day: "2026-10-06", event: "price_intent", props: {} };
+  const owned = { ...real, iid: owner, props: { ...real.props, file_fingerprint: "cd".repeat(32) } };
+  const lines = {
+    "em:ev:2026-10-05": [JSON.stringify(real), "not-json", JSON.stringify(owned)],
+    "em:ev:2026-10-06": [JSON.stringify(back)],
+  };
+  const sent = [];
+  const urls = [];
+  const realFetch = globalThis.fetch;
+  const realErr = console.error;
+  const errors = [];
+  globalThis.fetch = async (url, init) => {
+    urls.push(String(url));
+    const cmd = JSON.parse(init.body);
+    sent.push(cmd);
+    assert.equal(init.headers.Authorization, `Bearer ${ro}`, "read-only token, not the write token");
+    assert.equal(String(url).includes(ro) || String(url).includes(rw), false, "token stays out of the URL");
+    if (cmd[0] === "SCAN") {
+      const cursor = cmd[1];
+      if (cursor === "0") return new Response(JSON.stringify({ result: ["7", ["site:ev:2026-10-05", "em:ev:2026-10-06", "em:other"]] }), { status: 200 });
+      return new Response(JSON.stringify({ result: ["0", ["em:ev:2026-10-05"]] }), { status: 200 });
+    }
+    if (cmd[0] === "LRANGE") return new Response(JSON.stringify({ result: lines[cmd[1]] }), { status: 200 });
+    return new Response(JSON.stringify({ result: "NO" }), { status: 500 });
+  };
+  console.error = (...a) => errors.push(a.join(" "));
+  const envKeys = ["KV_REST_API_URL", "KV_REST_API_READ_ONLY_TOKEN", "KV_REST_API_TOKEN", "KV_URL", "REDIS_URL", "UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"];
+  const saved = Object.fromEntries(envKeys.map((k) => [k, process.env[k]]));
+  const restore = () => {
+    for (const k of envKeys) {
+      if (saved[k] === undefined) delete process.env[k];
+      else process.env[k] = saved[k];
+    }
+  };
+  try {
+    const now = t0 + 2 * 86400e3;
+    const res = await handleStats({
+      KV_REST_API_URL: "https://kv.invalid/",
+      KV_REST_API_READ_ONLY_TOKEN: ro,
+      KV_REST_API_TOKEN: rw,
+    }, now);
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get("Cache-Control"), `public, max-age=${STATS_CACHE_SECONDS}, s-maxage=${STATS_CACHE_SECONDS}`);
+    const body = await res.json();
+    const expected = toPublicStats([real, owned, back], now);
+    assert.deepEqual(body, expected);
+    assert.equal(body.windowDays, 14);
+    assert.equal(body.since, new Date(t0).toISOString());
+    assert.equal(body.until, new Date(t0 + 14 * 86400e3).toISOString());
+    assert.equal(body.killBar.distinctRealFiles, 1, "excluded device and the bad line do not count");
+    assert.equal(body.installsBackOnAnotherDay, 1);
+    assert.equal(body.killBar.priceIntents, 1);
+    assert.equal(body.excluded.excludedIid, 1);
+    const text = JSON.stringify(body);
+    for (const secret of [person, owner, fp, ro, rw, "kv.invalid", "not-json"]) assert.equal(text.includes(secret), false, secret);
+    assert.deepEqual(sent.map((c) => c[0]), ["SCAN", "SCAN", "LRANGE", "LRANGE"]);
+    assert.deepEqual(sent.filter((c) => c[0] === "LRANGE").map((c) => c[1]), ["em:ev:2026-10-05", "em:ev:2026-10-06"]);
+    assert.equal(urls.every((u) => u === "https://kv.invalid"), true);
+    assert.equal(sent.some((c) => ["RPUSH", "SET", "DEL", "EXPIRE", "INCR"].includes(c[0])), false);
+
+    const down = await handleStats({});
+    assert.equal(down.status, 503);
+    assert.equal(down.headers.get("Cache-Control"), "no-store");
+    assert.deepEqual(await down.json(), { error: "stats_unavailable" });
+    const bare = await handleStats({ KV_URL: "https://kv.invalid", REDIS_URL: "redis://nope" });
+    assert.equal(bare.status, 503, "REST URL and token names only; KV_URL and REDIS_URL are not a store");
+    assert.equal(JSON.stringify(errors).includes(ro), false);
+
+    globalThis.fetch = async () => new Response("nope", { status: 500 });
+    errors.length = 0;
+    const failed = await handleStats({ KV_REST_API_URL: "https://kv.invalid", KV_REST_API_READ_ONLY_TOKEN: ro });
+    assert.equal(failed.status, 503);
+    assert.deepEqual(await failed.json(), { error: "stats_unavailable" });
+    assert.equal(errors.some((l) => l.includes(ro) || l.includes("kv.invalid")), false);
+
+    globalThis.fetch = async () => {
+      throw new Error(`connect https://kv.invalid/secret Bearer ${ro}`);
+    };
+    errors.length = 0;
+    const leaked = await handleStats({ KV_REST_API_URL: "https://kv.invalid", KV_REST_API_READ_ONLY_TOKEN: ro });
+    assert.equal(leaked.status, 503);
+    assert.deepEqual(await leaked.json(), { error: "stats_unavailable" });
+    assert.equal(errors.some((l) => l.includes(ro) || l.includes("kv.invalid")), false);
+    assert.match(errors[0], /\[url\]/);
+    assert.match(errors[0], /Bearer \[redacted\]/);
+
+    for (const k of envKeys) delete process.env[k];
+    process.env.KV_REST_API_URL = "https://kv.invalid";
+    process.env.KV_REST_API_READ_ONLY_TOKEN = ro;
+    process.env.KV_REST_API_TOKEN = rw;
+    const pages = [];
+    let auth = "";
+    globalThis.fetch = async (url, init) => {
+      auth = init.headers.Authorization;
+      const cmd = JSON.parse(init.body);
+      if (cmd[0] === "SCAN") return new Response(JSON.stringify({ result: ["0", []] }), { status: 200 });
+      pages.push(cmd);
+      return new Response(JSON.stringify({ result: [] }), { status: 200 });
+    };
+    const live = await getEngraveStats();
+    assert.equal(live.status, 200);
+    const empty = await live.json();
+    assert.equal(empty.status, "NOT_STARTED");
+    assert.equal(empty.since, null);
+    assert.equal(empty.until, null);
+    assert.equal(empty.windowDays, 14);
+    assert.deepEqual(empty.killBar, { distinctRealFiles: 0, returningInstalls: 0, priceIntents: 0 });
+    assert.equal(pages.length, 0, "an empty scan does not read other keys");
+    assert.equal(auth, `Bearer ${ro}`);
+
+    let fallbackAuth = "";
+    globalThis.fetch = async (url, init) => {
+      fallbackAuth = init.headers.Authorization;
+      const cmd = JSON.parse(init.body);
+      if (cmd[0] === "SCAN") return new Response(JSON.stringify({ result: ["0", []] }), { status: 200 });
+      return new Response(JSON.stringify({ result: [] }), { status: 200 });
+    };
+    const fallback = await handleStats({ KV_REST_API_URL: "https://kv.invalid", KV_REST_API_TOKEN: rw });
+    assert.equal(fallback.status, 200);
+    assert.equal(fallbackAuth, `Bearer ${rw}`, "write token is only the fallback when no read-only token is set");
+  } finally {
+    globalThis.fetch = realFetch;
+    console.error = realErr;
+    restore();
+  }
 });
 
 test("Event endpoint: x-em-store header for every path (status 204, empty body), one safe log line", async () => {
