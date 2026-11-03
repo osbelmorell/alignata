@@ -1436,9 +1436,9 @@ test("Digest heroes #3, #4, #8, #21 + the Oct 11 essay + Oct 12/13/15/19/20/21 t
     "one-client-many-cli-auth-channels": ["1fd4fbbc57544e9c43561880da043bf469feb2ce136a6ebb71cfa228a44ad08d", "#F6F7FB"],
     "ask-for-the-outcome-not-a-longer-prompt": ["e10f7151a331f06ade98b14c291e51e3759918d780169b491dc38dfa1deddc18", "#FDFAF5"],
     "retire-old-facts-when-they-change": ["72c7d1c87f95b822e69b5347fed119545d29050ea44bd150081c84a2c12fe45b", "#FDFAF5"],
-    "let-code-count-the-votes": ["e6ac45276d3c3b01813c0286ca8a81f4b2c5f56228221f55272c86d4c05f0618", "#FDFAF5"],
-    "filter-tool-results-in-code": ["3b0248aef9bffd98dffac6ecde625a67e71d8d1b5f711f3d9699e028c6aadaff", "#FDFAF5"],
-    "give-the-brief-not-the-dump": ["f695c5f5b4c4c0d15640e1499cceb0649d8dbd530c44f8afa303b3cab40391f1", "#FDFAF5"],
+    "let-code-count-the-votes": ["4bf9338c5b2b2e9b9fed5bf58b87fb126dd28787676114110c4dbb6dd11af73f", "#FDFAF5"],
+    "filter-tool-results-in-code": ["0264748c715e9ca6ca46257008994aa42f83c4b5b3016daa4299ccba0f984635", "#FDFAF5"],
+    "give-the-brief-not-the-dump": ["f9258f3fff1c8950e04f4afc36e119b84eadcfc5c862fed20a8dc72825bee41e", "#FDFAF5"],
   };
   for (const [slug, [sha, pad]] of Object.entries(want)) {
     const f = `public/art/digest/${slug}-sticker.webp`;
