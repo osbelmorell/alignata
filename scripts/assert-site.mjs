@@ -480,6 +480,63 @@ test("Daily Digest pages render: story cards (eyebrow = tag, title is the link, 
   assert.match(eb, /<p class="fx-byline">— Osbel Morell<\/p><\/div>$/);
 });
 
+test("Daily Digest listing: positioning, start here, flagship strip, top RSS, cluster on every post", async () => {
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { posts, POST_CLUSTERS } = await import("../content/posts.ts");
+  const { DIGEST_POSITIONING, postTag } = await import("../lib/daily-digest/meta.ts");
+  const { default: Index } = await import("../app/daily-digest/page.tsx");
+  const html = renderToStaticMarkup(createElement(Index));
+  assert.ok(html.includes(DIGEST_POSITIONING), "positioning line");
+  assert.equal((html.match(/data-post-card=/g) || []).length, 47, "flagship and start-here do not add story cards");
+  const follow = html.indexOf('href="/daily-digest/rss.xml" type="application/rss+xml">Follow via RSS');
+  const start = html.indexOf('id="digest-start"');
+  const flag = html.indexOf('id="digest-flagship"');
+  const feed = html.indexOf('<section class="fx-feed"');
+  assert.ok(follow > -1 && follow < start && start < flag && flag < feed, "follow link, then start here, then flagship, then the dated feed");
+  assert.ok(html.includes('<p class="fx-rss"><a class="fx-text-link" href="/daily-digest/rss.xml">RSS feed</a></p>'), "footer RSS link kept");
+  assert.ok(!/<(form|input|textarea)\b/i.test(html), "no email capture");
+  const startOrder = ["cdm-vs-llm-vs-jev", "ai-harnesses-explained", "the-ai-safety-paradox"];
+  let at = start;
+  for (const slug of startOrder) {
+    const i = html.indexOf(`href="/daily-digest/${slug}"`, at);
+    assert.ok(i > at, `start here link ${slug}`);
+    at = i;
+  }
+  assert.ok(html.includes("Three model types do different jobs."));
+  assert.ok(html.includes("The model is half the system."));
+  assert.ok(html.includes("asking the model to police itself"));
+  const flagship = posts.filter((p) => postTag(p) === "Deep dive" || postTag(p) === "Essay").map((p) => p.slug);
+  assert.equal(flagship.length, 11);
+  const flagHtml = html.slice(flag, feed);
+  for (const slug of flagship) assert.ok(flagHtml.includes(`href="/daily-digest/${slug}"`), `flagship ${slug}`);
+  for (const p of posts) {
+    if (postTag(p) === "Technique") assert.ok(!flagHtml.includes(`href="/daily-digest/${p.slug}"`), `${p.slug} stays out of the flagship strip`);
+  }
+  const allowed = new Set(POST_CLUSTERS);
+  assert.equal(allowed.size, 7);
+  const by = {};
+  for (const p of posts) {
+    assert.ok(allowed.has(p.cluster), `${p.slug}: cluster ${p.cluster}`);
+    (by[p.cluster] ??= []).push(p.slug);
+  }
+  const expect = {
+    prompting: ["ask-for-the-outcome-not-a-longer-prompt", "ask-multi-step-questions-on-their-own", "give-the-brief-not-the-dump", "keep-hard-rules-sticky", "match-table-layout-to-table-shape"],
+    "tool-reliability": ["do-not-swap-tools-on-a-hunch", "dont-blind-retry-sends-or-charges", "make-tools-say-what-they-skipped", "reuse-the-same-key-when-a-tool-retries", "stop-picking-tools-that-are-down", "tell-failed-tools-what-to-try-next", "test-search-before-saying-none", "trim-long-logs-from-both-ends"],
+    verification: ["bind-every-claim-to-a-real-citation", "block-done-if-code-changed-after-tests", "check-confidence-before-routing-on-it", "check-each-tool-step-before-next", "check-for-cut-off-answers", "dont-keep-only-the-shortest-answer", "layered-agent-code-review-round-cap", "let-code-count-the-votes", "refuse-answers-sources-do-not-support", "refuse-answers-that-dont-match-tool-results", "require-held-out-lift-before-shipping-harness-edits", "write-down-your-checks-before-pushback"],
+    "agent-architecture": ["ai-harnesses-explained", "break-loops-when-progress-stalls", "filter-tool-results-in-code", "load-only-the-tools-this-turn-needs", "make-routers-pick-from-a-fixed-list", "one-client-many-cli-auth-channels", "paperclip-deep-dive", "retire-old-facts-when-they-change", "show-fixes-only-when-things-break"],
+    "model-selection": ["cdm-vs-llm-vs-jev", "compare-models-only-under-a-locked-setup", "laya-ai-deep-dive", "system-one-and-jev-deep-dive", "test-review-against-the-better-model"],
+    safety: ["ask-before-doing-what-wasnt-asked", "dont-follow-orders-in-tool-text", "prove-it-before-irreversible-actions", "the-ai-safety-paradox"],
+    essays: ["ai-agents-reverse-engineering-games-software", "approve-button-human-name", "google-ai-search-eating-its-own-traffic", "muse-grok-bots-chatgpt-dots"],
+  };
+  for (const [k, slugs] of Object.entries(expect)) assert.deepEqual(by[k].slice().sort(), slugs, k);
+  assert.equal(Object.values(by).reduce((n, a) => n + a.length, 0), 47);
+  const xml = await (await import("../app/daily-digest/rss.xml/route.ts")).GET().text();
+  assert.ok(xml.includes("<rss version=\"2.0\""), "RSS still a feed");
+  assert.ok(xml.includes(DIGEST_POSITIONING.replace(/&/g, "&amp;")), "RSS description matches the listing line");
+  assert.equal((xml.match(/<item>/g) || []).length, 47);
+});
+
 test("homepage (v2 §2): feed order, one black pill, Open → tool with home_click + tool_open attrs, story link, no Deploy Decision", async () => {
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
