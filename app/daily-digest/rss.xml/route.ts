@@ -1,5 +1,6 @@
 import { getPostsNewestFirst } from "@/content/posts";
 import { toPlainText } from "@/lib/daily-digest/blocks";
+import { DIGEST_POSITIONING } from "@/lib/daily-digest/meta";
 
 export const dynamic = "force-static";
 
@@ -45,7 +46,7 @@ export function GET() {
   <channel>
     <title>${FEED_TITLE}</title>
     <link>${SITE}/daily-digest</link>
-    <description>Proven AI techniques, deep dives, and the occasional essay, tested and written in plain English.</description>
+    <description>${esc(DIGEST_POSITIONING)}</description>
     <language>en</language>
     <lastBuildDate>${lastBuild}</lastBuildDate>
     <atom:link href="${SITE}/daily-digest/rss.xml" rel="self" type="application/rss+xml" />

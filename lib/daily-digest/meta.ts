@@ -2,6 +2,10 @@ import type { Post, PostHero, PostKind, PostTag } from "@/content/posts";
 import { getPostsNewestFirst } from "@/content/posts";
 import { parseArticle, parseSections, toPlainText, type ArticleBlock } from "@/lib/daily-digest/blocks";
 
+/** Listing tagline, page meta, and RSS channel description. One sentence: who, and why the scores exist. */
+export const DIGEST_POSITIONING =
+  "For builders shipping with AI agents: small experiments you can falsify, and the scores that show what held.";
+
 export const READ_WPM = 230;
 
 export function postTag(post: Post): PostTag {

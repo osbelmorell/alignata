@@ -12,6 +12,20 @@
 export type PostTag = "Technique" | "Deep dive" | "Essay";
 /** Byline + JSON-LD kind (board GO, Oct 3 2026). Omitted = "technique". Essays carry the author's byline. */
 export type PostKind = "essay" | "technique";
+/**
+ * Topic bucket for a later sectioned listing. Stored only — the index does not group or filter on it yet.
+ * `essays` is the field-note bucket for pieces that do not fit the six topic buckets.
+ */
+export const POST_CLUSTERS = [
+  "prompting",
+  "tool-reliability",
+  "verification",
+  "agent-architecture",
+  "model-selection",
+  "safety",
+  "essays",
+] as const;
+export type PostCluster = (typeof POST_CLUSTERS)[number];
 
 /**
  * Hero art (SPEC v2 §3/§4, sticker batch v3.1, Oct 2 2026). One 16:9 file (1920×1080) under public/art/digest/,
@@ -39,6 +53,8 @@ export type Post = {
   tag?: PostTag;
   /** Byline kind. Omitted = "technique" ("Daily Digest · Edited by …"); "essay" = "By …" + bio. */
   kind?: PostKind;
+  /** Topic bucket. Not rendered as sections yet. */
+  cluster: PostCluster;
   /** Per-article sticker art (card + story hero + alt + pad). Required: there is no fallback art. */
   hero: PostHero;
   /** One-line dek (≤70, COPY.md v2) for cards AND the story page under the H1, so they match. Omitted = `dek`. */
@@ -58,6 +74,7 @@ export type Post = {
 export const posts: Post[] = [
   {
     slug: "reuse-the-same-key-when-a-tool-retries",
+    cluster: "tool-reliability",
     title: "Reuse the same key when a tool retries",
     dek: "Prevents double-charges on payment or deploy retries.",
     cardDek: "Reuse one request ID on retries so payments and deploys run once.",
@@ -76,6 +93,7 @@ export const posts: Post[] = [
   },
   {
     slug: "require-held-out-lift-before-shipping-harness-edits",
+    cluster: "verification",
     title: "Require held-out lift before shipping harness edits",
     dek: "Stops train-only tweaks that fail on new cases.",
     cardDek: "Only ship a setup tweak if it also helps on cases it wasn't tuned on.",
@@ -94,6 +112,7 @@ export const posts: Post[] = [
   },
   {
     slug: "load-only-the-tools-this-turn-needs",
+    cluster: "agent-architecture",
     title: "Load only the tools this turn needs",
     dek: "Cuts prompt size without losing the needed tool.",
     cardDek: "Give the agent only the tools this turn needs, so prompts stay small.",
@@ -112,6 +131,7 @@ export const posts: Post[] = [
   },
   {
     slug: "refuse-answers-that-dont-match-tool-results",
+    cluster: "verification",
     title: "Refuse answers that don’t match tool results",
     dek: "Stops invented “CI green” or fake search hits from shipping as done.",
     cardDek: "Catch answers that claim results the tools never returned.",
@@ -130,6 +150,7 @@ export const posts: Post[] = [
   },
   {
     slug: "bind-every-claim-to-a-real-citation",
+    cluster: "verification",
     title: "Bind every claim to a real citation",
     dek: "Blocks unsupported or mis-cited final answers.",
     cardDek: "Tie every claim to a real source, or leave it out.",
@@ -148,6 +169,7 @@ export const posts: Post[] = [
   },
   {
     slug: "compare-models-only-under-a-locked-setup",
+    cluster: "model-selection",
     title: "Compare models only under a locked setup",
     dek: "Stops harness help from looking like model skill.",
     cardDek: "Test every model on the same setup, so the score reflects the model.",
@@ -166,6 +188,7 @@ export const posts: Post[] = [
   },
   {
     slug: "block-done-if-code-changed-after-tests",
+    cluster: "verification",
     title: "Block “done” if code changed after tests",
     dek: "Stops untested edits from being reported as finished.",
     cardDek: "Don't call it done if code changed after the last test run.",
@@ -184,6 +207,7 @@ export const posts: Post[] = [
   },
   {
     slug: "trim-long-logs-from-both-ends",
+    cluster: "tool-reliability",
     title: "Trim long logs from both ends",
     dek: "Keeps the error codes the model needs when logs get cut.",
     cardDek: "Cut long logs from both ends so the error lines survive.",
@@ -202,6 +226,7 @@ export const posts: Post[] = [
   },
   {
     slug: "prove-it-before-irreversible-actions",
+    cluster: "safety",
     title: "Prove it before irreversible actions",
     dek: "Blocks send, delete, and force-push without fresh proof.",
     cardDek: "Get fresh proof before a send, delete, or overwrite you can't undo.",
@@ -220,6 +245,7 @@ export const posts: Post[] = [
   },
   {
     slug: "tell-failed-tools-what-to-try-next",
+    cluster: "tool-reliability",
     title: "Tell failed tools what to try next",
     dek: "Turns vague errors into a short list of safe fixes.",
     cardDek: "Turn vague errors into a short list of safe next steps.",
@@ -238,6 +264,7 @@ export const posts: Post[] = [
   },
   {
     slug: "dont-blind-retry-sends-or-charges",
+    cluster: "tool-reliability",
     title: "Don't blind-retry sends or charges",
     dek: "Stops duplicate emails and double charges after timeouts.",
     cardDek: "Check before retrying so a timeout doesn't send or charge twice.",
@@ -256,6 +283,7 @@ export const posts: Post[] = [
   },
   {
     slug: "laya-ai-deep-dive",
+    cluster: "model-selection",
     title: "Laya AI deep dive — open typed decisions, not a chat model",
     dek: "Full board brief: Laya is ConvAI’s open System-1 decision model (not the community mirror). How to run it, when it fits. Cross-links Jev.",
     cardDek: "What Laya is, how to run it, and when it beats a chat model.",
@@ -338,6 +366,7 @@ export const posts: Post[] = [
   },
   {
     slug: "system-one-and-jev-deep-dive",
+    cluster: "model-selection",
     title: "System One & Jev — TypeSafe’s hosted typed-decision model",
     dek: "Full board brief on TypeSafe’s System One category and Jev (Almeida): how the API works, when it beats LLMs, vs open Laya.",
     cardDek: "How TypeSafe's decision model works and when it beats a chat model.",
@@ -419,6 +448,7 @@ export const posts: Post[] = [
   },
   {
     slug: "paperclip-deep-dive",
+    cluster: "agent-architecture",
     title: "Paperclip deep dive — control plane for multi-agent companies",
     dek: "Full board brief on Paperclip (from NetworkChuck’s Sep 24 video): org-layer for AI agent teams, install path, risks (skills/CVEs/budgets), vs OpenClaw.",
     cardDek: "A tool for running AI agent teams: setup, risks, and how it compares.",
@@ -533,6 +563,7 @@ export const posts: Post[] = [
   },
   {
     slug: "keep-hard-rules-sticky",
+    cluster: "prompting",
     title: "Keep hard rules sticky",
     dek: "Soft reminders fade in long chats. Re-inject the non-negotiables every turn.",
     cardDek: "Repeat the must-follow rules every turn so long chats keep them.",
@@ -555,6 +586,7 @@ export const posts: Post[] = [
   },
   {
     slug: "refuse-answers-sources-do-not-support",
+    cluster: "verification",
     title: "Refuse answers sources do not support",
     dek: "Stops shipping answers that look cited but are not backed.",
     cardDek: "Don't ship an answer unless its sources actually back it.",
@@ -573,6 +605,7 @@ export const posts: Post[] = [
   },
   {
     slug: "do-not-swap-tools-on-a-hunch",
+    cluster: "tool-reliability",
     title: "Do not swap tools on a hunch",
     dek: "Blocks risky mid-flight tool swaps without proof.",
     cardDek: "Don't let an agent switch tools mid-task without proof it needs to.",
@@ -591,6 +624,7 @@ export const posts: Post[] = [
   },
   {
     slug: "check-each-tool-step-before-next",
+    cluster: "verification",
     title: "Check each tool step before next",
     dek: "Stops bad tool steps from cascading into the rest of the run.",
     cardDek: "Check each step's result so one bad step doesn't spoil the run.",
@@ -609,6 +643,7 @@ export const posts: Post[] = [
   },
   {
     slug: "ask-before-doing-what-wasnt-asked",
+    cluster: "safety",
     title: "Ask before doing what wasn't asked",
     dek: "Stops agents from doing helpful extras nobody asked for.",
     cardDek: "Make agents ask before adding extras you didn't request.",
@@ -634,6 +669,7 @@ export const posts: Post[] = [
   },
   {
     slug: "test-search-before-saying-none",
+    cluster: "tool-reliability",
     title: "Test search before saying none",
     dek: "A broken search tool can return the same clean empty list as a real \"nothing found.\" One lookup you know should hit tells them apart.",
     cardDek: "Run one search you know should hit before you trust an empty result.",
@@ -667,6 +703,7 @@ export const posts: Post[] = [
   },
   {
     slug: "make-routers-pick-from-a-fixed-list",
+    cluster: "agent-architecture",
     title: "Make routers pick from a fixed list",
     dek: "Stops chatty router replies from sending tickets to the wrong queue.",
     cardDek: "Give the sorting step a fixed list so tickets land in the right queue.",
@@ -692,6 +729,7 @@ export const posts: Post[] = [
   },
   {
     slug: "dont-follow-orders-in-tool-text",
+    cluster: "safety",
     title: "Don't follow orders in tool text",
     dek: "Tool replies are data, not instructions. Check them for commands before the agent plans its next step.",
     cardDek: "Treat tool replies as data, so hidden commands can't steer your agent.",
@@ -723,6 +761,7 @@ export const posts: Post[] = [
   },
   {
     slug: "the-ai-safety-paradox",
+    cluster: "safety",
     title: "The AI Safety Paradox",
     dek: "Asking the inmates to guard the prison.",
     cardDek: "Asking the inmates to guard the prison.",
@@ -754,6 +793,7 @@ export const posts: Post[] = [
   },
   {
     slug: "break-loops-when-progress-stalls",
+    cluster: "agent-architecture",
     title: "Break loops when progress stalls",
     dek: "A busy agent isn't always a working one. Check progress every few steps, and force a change of course when it stalls.",
     cardDek: "Check progress every few steps and change course when an agent stalls.",
@@ -788,6 +828,7 @@ export const posts: Post[] = [
   },
   {
     slug: "show-fixes-only-when-things-break",
+    cluster: "agent-architecture",
     title: "Show fixes only when things break",
     dek: "Agents keep their hard-won lessons without tripping over them on healthy steps.",
     cardDek: "Show an agent its past fixes only when a step actually goes wrong.",
@@ -817,6 +858,7 @@ export const posts: Post[] = [
   },
   {
     slug: "google-ai-search-eating-its-own-traffic",
+    cluster: "essays",
     title: "Google's AI Search Is Eating Its Own Traffic",
     dek: "Google's AI answers, not ChatGPT, are draining clicks from the web.",
     cardDek: "Google's AI answers, not ChatGPT, are draining clicks from the web.",
@@ -839,6 +881,7 @@ export const posts: Post[] = [
   },
   {
     slug: "ai-agents-reverse-engineering-games-software",
+    cluster: "essays",
     title: "AI Agents Are Reverse-Engineering Games and Software. Here's Where Caution Still Belongs",
     dek: "AI agents speed up rebuilding games and apps, but the limits are real.",
     cardDek: "AI agents speed up rebuilding games and apps, but the limits are real.",
@@ -872,6 +915,7 @@ export const posts: Post[] = [
   },
   {
     slug: "stop-picking-tools-that-are-down",
+    cluster: "tool-reliability",
     title: "Stop picking tools that are down",
     dek: "Rank tools by recent success, and retry the ones you benched.",
     hero: {
@@ -905,6 +949,7 @@ export const posts: Post[] = [
   },
   {
     slug: "ai-harnesses-explained",
+    cluster: "agent-architecture",
     title: "AI Harnesses Explained: Why the Model Is Only Half the Equation",
     dek: "What harnesses are, how Hermes Agent works, and how to choose the right model and tools for the job.",
     cardDek: "Same model, different harness, different results. Test the system.",
@@ -1000,6 +1045,7 @@ export const posts: Post[] = [
   },
   {
     slug: "approve-button-human-name",
+    cluster: "essays",
     title: "The Approve Button Still Has a Human Name on It",
     dek: "Agents made pull requests cheap. Reading them still costs the same.",
     cardDek: "Agents made pull requests cheap. Reading them still costs the same.",
@@ -1047,6 +1093,7 @@ export const posts: Post[] = [
   },
   {
     slug: "muse-grok-bots-chatgpt-dots",
+    cluster: "essays",
     title: "Muse vs. Grok Bots vs. ChatGPT Dots: three bets on the personal AI agent",
     dek: "Meta, OpenAI and a team of specialists want to run your errands.",
     cardDek: "Meta, OpenAI and a team of specialists want to run your errands.",
@@ -1123,6 +1170,7 @@ export const posts: Post[] = [
   },
   {
     slug: "check-for-cut-off-answers",
+    cluster: "verification",
     title: "Check for cut-off answers",
     dek: "A better prompt can quietly cut off the answer. Count the cut-offs.",
     hero: {
@@ -1156,6 +1204,7 @@ export const posts: Post[] = [
   },
   {
     slug: "dont-keep-only-the-shortest-answer",
+    cluster: "verification",
     title: "Don't keep only the shortest answer",
     dek: "Weigh every answer by length, and let your results set the weight.",
     hero: {
@@ -1189,6 +1238,7 @@ export const posts: Post[] = [
   },
   {
     slug: "test-review-against-the-better-model",
+    cluster: "model-selection",
     title: "Test review against the better model",
     dek: "A reviewer model can cost more and score lower. Test it fairly.",
     hero: {
@@ -1222,6 +1272,7 @@ export const posts: Post[] = [
   },
   {
     slug: "check-confidence-before-routing-on-it",
+    cluster: "verification",
     title: "Check confidence before routing on it",
     dek: "A small model's doubt finds its mistakes on some tasks, not all.",
     hero: {
@@ -1256,6 +1307,7 @@ export const posts: Post[] = [
   },
   {
     slug: "match-table-layout-to-table-shape",
+    cluster: "prompting",
     title: "Match table layout to table shape",
     dek: "Tall tables read best row by row. Wide ones, column by column.",
     hero: {
@@ -1288,6 +1340,7 @@ export const posts: Post[] = [
   },
   {
     slug: "cdm-vs-llm-vs-jev",
+    cluster: "model-selection",
     title: "CDM vs LLM vs Jev: picking the right model type",
     dek: "Decide whether a task needs a writing model (LLM), a typed decision model (Jev), or a task-specific extractor/classifier (ScaleDown CDM).",
     cardDek: "Decide whether a task needs an LLM, Jev, or a ScaleDown CDM.",
@@ -1349,6 +1402,7 @@ export const posts: Post[] = [
   },
   {
     slug: "layered-agent-code-review-round-cap",
+    cluster: "verification",
     title: "Layered agent code review with a round cap",
     dek: "Move most code reading to verified AI review, scale human approval by risk, and stop agent review loops from running forever.",
     cardDek: "Verified AI review, risk-scaled approval, and a cap on review rounds.",
@@ -1438,6 +1492,7 @@ export const posts: Post[] = [
   },
   {
     slug: "ask-multi-step-questions-on-their-own",
+    cluster: "prompting",
     title: "Ask multi-step questions on their own",
     dek: "Bundling questions saves calls, but the ones that need thinking break.",
     hero: {
@@ -1471,6 +1526,7 @@ export const posts: Post[] = [
   },
   {
     slug: "make-tools-say-what-they-skipped",
+    cluster: "tool-reliability",
     title: "Make tools say what they skipped",
     dek: "If a tool hides a cap or guess, agent and checker treat it as fact.",
     hero: {
@@ -1497,6 +1553,7 @@ export const posts: Post[] = [
   },
   {
     slug: "write-down-your-checks-before-pushback",
+    cluster: "verification",
     title: "Write down your checks before pushback",
     dek: "Write your checks before a complaint, or good work gets thrown away.",
     hero: {
@@ -1522,6 +1579,7 @@ export const posts: Post[] = [
   },
   {
     slug: "one-client-many-cli-auth-channels",
+    cluster: "agent-architecture",
     title: "One client for many providers",
     dek: "Put a local gateway in front so one OpenAI-shaped client can reach many auth channels.",
     cardDek: "One OpenAI-shaped client. A local gateway maps aliases to auth.",
@@ -1550,6 +1608,7 @@ export const posts: Post[] = [
   },
   {
     slug: "ask-for-the-outcome-not-a-longer-prompt",
+    cluster: "prompting",
     title: "Ask for the outcome first",
     dek: "Better results come from a clear outcome, not a longer prompt.",
     hero: {
@@ -1588,6 +1647,7 @@ export const posts: Post[] = [
   },
   {
     slug: "retire-old-facts-when-they-change",
+    cluster: "agent-architecture",
     title: "Retire old facts when they change",
     dek: "When a memory fact changes, retire the old note.",
     hero: {
@@ -1616,6 +1676,7 @@ export const posts: Post[] = [
   },
   {
     slug: "let-code-count-the-votes",
+    cluster: "verification",
     title: "Let code count the votes",
     dek: "When one tool was confidently wrong, a plain vote got 20 of 20 right while the models got 8 and 11.",
     cardDek: "Plain vote got 20/20; models got 8 and 11.",
@@ -1644,6 +1705,7 @@ export const posts: Post[] = [
   },
   {
     slug: "give-the-brief-not-the-dump",
+    cluster: "prompting",
     title: "Give the brief, not the dump",
     dek: "Brief only the facts that change the answer, and make the model ask before it invents the rest.",
     cardDek: "Give the facts that change the answer; ask when one is missing.",
@@ -1680,6 +1742,7 @@ export const posts: Post[] = [
   },
   {
     slug: "filter-tool-results-in-code",
+    cluster: "agent-architecture",
     title: "Filter tool results in code",
     dek: "On tables of 40 rows or more, small models picked the right rows 0 of 36 times; code filtering got 33 of 36.",
     cardDek: "Code filter got 33/36; models 0 past 40 rows.",
