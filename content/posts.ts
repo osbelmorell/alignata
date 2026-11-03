@@ -1642,6 +1642,34 @@ export const posts: Post[] = [
       "- [arXiv:2610.41191 — AI security investigators / equal-vote (CAV) paper](https://arxiv.org/abs/2610.41191)",
     ],
   },
+  {
+    slug: "filter-tool-results-in-code",
+    title: "Filter tool results in code",
+    dek: "On tables of 40 rows or more, small models picked the right rows 0 of 36 times; code filtering got 33 of 36.",
+    cardDek: "Code filter got 33/36; models 0 past 40 rows.",
+    hero: {
+      src: "/art/digest/filter-tool-results-in-code-sticker.webp",
+      alt: "A person in a coral sweater sifts a short stack of row cards through a sieve while a long table scroll sits unused, navy outlines, filled navy hair.",
+      pad: "#FDFAF5",
+    },
+    date: "2026-11-03",
+    paragraphs: [
+      "## The problem",
+      "A search or database tool hands your agent a table: flights, orders, tickets, listings. Then the user asks a follow-up like \"which of those are nonstop in business?\" The easy design pastes the whole table into the model's context and lets it pick the rows. The tool computed the data correctly, but the model has to re-read and re-filter it on every turn, and each turn is a fresh chance to drop a row or invent one. The answer still looks confident, so nobody notices.",
+      "## The technique",
+      "Keep the rows out of the model. Store the tool's results in your own session state. When a follow-up arrives, ask the model only to turn the question into filter arguments, such as cabin, stops, a price cap or a time window, against a small fixed schema. Plain code applies the filter and shows the rows straight to the user. The model writes the query, and code does the counting.",
+      "This comes from a new study of a deployed award-travel agent (arXiv:2611.00442).",
+      "## What we saw",
+      "Over 24 recorded dialogues and 339 scored turns per setup, the keep-rows-in-code design got 92.3% of turns fully right and the paste-the-table design got 45.7%. The paste design was near-perfect at 10 rows or fewer and fell to 8% or less past about 74 rows. The point where it broke depended on the model, from under 10 rows for GPT-4o-mini to about 198 for Gemini 2.5 Pro. The code path stayed flat at every size and cost about $0.012 a turn. Those are their numbers.",
+      "Our own check was much smaller: two small open models (3B and 7B), greedy decoding, a seeded table of made-up flights and six filter questions at 10, 40, 80 and 120 rows. When the models picked rows from the pasted table, they got the exact set right 3 times out of 12 at 10 rows and 0 times out of 36 at 40 rows or more. Most answers mixed real matches with wrong ones. When the models only wrote filter arguments and code did the rest, they got 11 of 12 right at every size, because the arguments don't depend on how long the table is. The one miss was real: the smaller model read \"before 08:00\" as \"after 08:00\". Across all 48 paired cases, code filtering won 41 and lost none.",
+      "## Limits",
+      "Our test is small and synthetic: six questions repeated across four table sizes, so the cases are not independent, and the models are much smaller than production ones. Bigger models hold out to larger tables, but the study shows they still break past a size you won't know in advance. This only works when the follow-up maps to a filter you defined. Open-ended questions like \"which one is the best deal?\" still need the model. A wrong argument fails quietly too, so show the user the filter you applied. Cut-offs like \"under 40,000\" can be off by one if your schema doesn't say whether the limit is included.",
+      "## Try it",
+      "Find the place where your agent pastes tool rows back into the prompt for follow-ups. Keep the rows in state, define a short filter schema, ask the model for arguments only and filter in code. Then run your real follow-up questions at your largest real table size, both ways, and count exact matches. If the paste version only fails on big tables, you've found your size limit.",
+      "## Sources",
+      "- [arXiv:2611.00442 — award-travel agent / filter-in-code (BYPASS) study](https://arxiv.org/abs/2611.00442)",
+    ],
+  },
 ];
 
 export function getPost(slug: string): Post | undefined {
