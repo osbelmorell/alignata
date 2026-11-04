@@ -448,7 +448,8 @@ test("Daily Digest pages render: story cards (eyebrow = tag, title is the link, 
   const { default: Index } = await import("../app/daily-digest/page.tsx");
   const list = getPostsNewestFirst();
   const cards = renderToStaticMarkup(createElement(Index));
-  assert.equal((cards.match(/data-post-card=/g) || []).length, 47);
+  const listingExtra = 3 + list.filter((p) => meta.postTag(p) === "Deep dive" || meta.postTag(p) === "Essay").length;
+  assert.equal((cards.match(/data-post-card=/g) || []).length, list.length + listingExtra, "feed plus start-here and flagship story cards");
   assert.equal((cards.match(/fx-scard fx-lead/g) || []).length, 10, "a lead row every 5 cards (47 cards → 10) (§3 desktop layout repeated)");
   assert.ok(!/>Open</.test(cards), "no Open pill on the digest");
   const esc = (t) => t.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
@@ -488,7 +489,6 @@ test("Daily Digest listing: positioning, start here, flagship strip, top RSS, cl
   const { default: Index } = await import("../app/daily-digest/page.tsx");
   const html = renderToStaticMarkup(createElement(Index));
   assert.ok(html.includes(DIGEST_POSITIONING), "positioning line");
-  assert.equal((html.match(/data-post-card=/g) || []).length, 47, "flagship and start-here do not add story cards");
   const follow = html.indexOf('href="/daily-digest/rss.xml" type="application/rss+xml">Follow via RSS');
   const start = html.indexOf('id="digest-start"');
   const flag = html.indexOf('id="digest-flagship"');
@@ -497,19 +497,35 @@ test("Daily Digest listing: positioning, start here, flagship strip, top RSS, cl
   assert.ok(html.includes('<p class="fx-rss"><a class="fx-text-link" href="/daily-digest/rss.xml">RSS feed</a></p>'), "footer RSS link kept");
   assert.ok(!/<(form|input|textarea)\b/i.test(html), "no email capture");
   const startOrder = ["cdm-vs-llm-vs-jev", "ai-harnesses-explained", "the-ai-safety-paradox"];
+  const startHtml = html.slice(start, flag);
   let at = start;
   for (const slug of startOrder) {
     const i = html.indexOf(`href="/daily-digest/${slug}"`, at);
     assert.ok(i > at, `start here link ${slug}`);
     at = i;
+    assert.ok(startHtml.includes(`src="/art/digest/${slug}-sticker.webp"`), `start here art ${slug}`);
+    assert.ok(startHtml.includes(`data-post-card="${slug}"`), `start here card ${slug}`);
   }
-  assert.ok(html.includes("Three model types do different jobs."));
-  assert.ok(html.includes("The model is half the system."));
-  assert.ok(html.includes("asking the model to police itself"));
+  assert.ok(startHtml.includes("Three model types do different jobs."));
+  assert.ok(startHtml.includes("The model is half the system."));
+  assert.ok(startHtml.includes("asking the model to police itself"));
   const flagship = posts.filter((p) => postTag(p) === "Deep dive" || postTag(p) === "Essay").map((p) => p.slug);
   assert.equal(flagship.length, 11);
   const flagHtml = html.slice(flag, feed);
-  for (const slug of flagship) assert.ok(flagHtml.includes(`href="/daily-digest/${slug}"`), `flagship ${slug}`);
+  for (const slug of flagship) {
+    assert.ok(flagHtml.includes(`href="/daily-digest/${slug}"`), `flagship ${slug}`);
+    assert.ok(flagHtml.includes(`src="/art/digest/${slug}-sticker.webp"`), `flagship art ${slug}`);
+  }
+  assert.equal((html.slice(feed).match(/data-post-card=/g) || []).length, 47, "dated feed is still every article once");
+  assert.equal((html.match(/data-post-card=/g) || []).length, 47 + startOrder.length + flagship.length, "start here and flagship reuse story cards");
+  const { readFileSync } = await import("node:fs");
+  const listingCss = readFileSync("app/appstore.css", "utf8");
+  assert.match(listingCss, /\.fx-digest-cards \{[^}]*gap: 24px/);
+  assert.match(listingCss, /\.fx-digest-cards \.fx-scard-dek \{[^}]*-webkit-line-clamp: 3/);
+  assert.match(listingCss, /\.fx-digest-cards \.fx-scard-date \{[^}]*margin-top: auto/);
+  assert.match(listingCss, /\.fx-start \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(listingCss, /\.fx-flagship \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.ok(!listingCss.includes(".fx-flag-title"), "text chips gone");
   for (const p of posts) {
     if (postTag(p) === "Technique") assert.ok(!flagHtml.includes(`href="/daily-digest/${p.slug}"`), `${p.slug} stays out of the flagship strip`);
   }
@@ -1097,7 +1113,9 @@ test("Daily Digest dates: every article card (home feed, /daily-digest, Next art
   const { default: Index } = await import("../app/daily-digest/page.tsx");
   const index = renderToStaticMarkup(createElement(Index));
   const list = getPostsNewestFirst();
-  assert.equal((index.match(/fx-scard-date/g) || []).length, list.length, "one date per digest card");
+  const { postTag } = await import("../lib/daily-digest/meta.ts");
+  const listingCards = 3 + list.filter((p) => postTag(p) === "Deep dive" || postTag(p) === "Essay").length;
+  assert.equal((index.match(/fx-scard-date/g) || []).length, list.length + listingCards, "feed, start here, and flagship cards are dated");
   for (const p of list) assert.ok(dated(index, p.slug, p.date), `${p.slug}: dated on /daily-digest`);
   const { default: Home } = await import("../app/page.tsx");
   const home = renderToStaticMarkup(createElement(Home));

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { getPost, getPostsNewestFirst, type Post } from "@/content/posts";
 import { ArticleStoryCard } from "@/components/appstore/StoryCard";
 import { NewMarkBoot } from "@/components/daily-digest/NewMarkBoot";
@@ -56,9 +55,9 @@ function startHerePost(slug: string): Post {
 }
 
 /**
- * /daily-digest: positioning line, pinned entry posts, a flagship strip of existing Deep dive and Essay tags,
+ * /daily-digest: positioning line, three pinned entry cards, then Deep dive and Essay cards,
  * then every article as a story card (no app row), newest first. Eyebrow = the tag. Desktop repeats the §3 layout:
- * a full-width lead row, then a 2-up grid, every 5 cards.
+ * a full-width lead row, then a 2-up grid, every 5 cards. Listing picks reuse ArticleStoryCard (same sticker).
  */
 export default function DailyDigestIndexPage() {
   const posts = getPostsNewestFirst();
@@ -85,29 +84,20 @@ export default function DailyDigestIndexPage() {
         </section>
         <section className="fx-digest-block" aria-labelledby="digest-start">
           <h2 id="digest-start">Start here</h2>
-          <ol className="fx-start">
-            {START_HERE.map(({ slug, why }) => {
-              const post = startHerePost(slug);
-              return (
-                <li key={slug}>
-                  <h3>
-                    <Link href={`/daily-digest/${post.slug}`}>{post.title}</Link>
-                  </h3>
-                  <p>{why}</p>
-                </li>
-              );
-            })}
+          <ol className="fx-digest-cards fx-start">
+            {START_HERE.map(({ slug, why }, i) => (
+              <li key={slug}>
+                <ArticleStoryCard post={startHerePost(slug)} dek={why} heading="h3" morph={false} eager={i === 0} newMark />
+              </li>
+            ))}
           </ol>
         </section>
         <section className="fx-digest-block" aria-labelledby="digest-flagship">
           <h2 id="digest-flagship">Deep dives and essays</h2>
-          <ul className="fx-flagship">
+          <ul className="fx-digest-cards fx-flagship">
             {flagship.map((post) => (
               <li key={post.slug}>
-                <Link href={`/daily-digest/${post.slug}`} data-tag={postTag(post)}>
-                  <span className="fx-flag-tag">{postTag(post)}</span>
-                  <span className="fx-flag-title">{post.title}</span>
-                </Link>
+                <ArticleStoryCard post={post} heading="h3" morph={false} newMark />
               </li>
             ))}
           </ul>

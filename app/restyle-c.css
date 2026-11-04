@@ -53,12 +53,6 @@ a.fx-open, a.fx-open:visited, a.fx-open:hover { background: #fff; color: var(--i
 .fx-scard[data-tag="Essay"] { background: var(--tint-essay); --accent: var(--purple); }
 .fx-scard[data-tag="Technique"] { background: var(--tint-tech); --accent: #4C7FD6; }
 .fx-scard[data-tag="Deep dive"] { background: var(--tint-deep); --accent: #2FA37A; }
-/* Flagship strip uses the same type tints as the story cards. */
-.fx-start > li { background: #fff; }
-.fx-flagship a[data-tag="Deep dive"] { background: var(--tint-deep); }
-.fx-flagship a[data-tag="Essay"] { background: var(--tint-essay); }
-.fx-flag-tag { color: var(--ink); }
-.fx-start h3 a:focus-visible, .fx-flagship a:focus-visible { outline-color: var(--purple); }
 .fx-scard-art { margin: 12px 12px 0; border-radius: var(--r-art); overflow: hidden; }
 .fx-scard .fx-eyebrow { font-size: 13px; letter-spacing: 0.02em; text-transform: none; font-weight: 600; color: var(--ink); padding-bottom: 12px;
   background: linear-gradient(var(--accent), var(--accent)) 0 100% / 38% 3px no-repeat, linear-gradient(rgb(35 35 63 / 0.08), rgb(35 35 63 / 0.08)) 0 100% / 100% 3px no-repeat; }
