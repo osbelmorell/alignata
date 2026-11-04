@@ -42,42 +42,49 @@ export function ToolStoryCard({ app, pos, lead = false, homeTarget = false }: { 
 export function ArticleStoryCard({
   post,
   eyebrow,
+  dek,
   heading: H = "h2",
   lead = false,
   eager = false,
   homeTarget = false,
   newMark = false,
+  morph = true,
 }: {
   post: Post;
   /** Home and /daily-digest cards only (never the article page's next card): the client-only "New" / "Updated" mark. */
   newMark?: boolean;
   /** Default: the tag ("Technique" / "Deep dive" / "Essay"), as on /daily-digest. The feed passes "Daily Digest · <tag>". */
   eyebrow?: string;
+  /** Replaces the card dek. Start here passes its why-read line. */
+  dek?: string;
   heading?: "h2" | "h3";
   lead?: boolean;
   eager?: boolean;
   /** Homepage only: data-home-target="article:<slug>" for home_click. */
   homeTarget?: boolean;
+  /** False on listing picks that repeat a slug already in the dated feed, so art-<slug> / title-<slug> stay unique. */
+  morph?: boolean;
 }) {
   const art = cardImage(post);
+  const title = (
+    <H className="fx-scard-title">
+      <Link
+        className="fx-stretch"
+        href={`/daily-digest/${post.slug}`}
+        {...(homeTarget ? { "data-home-target": `article:${post.slug}` } : {})}
+      >
+        {newMark ? <NewMarkSr slug={post.slug} date={post.date} updated={post.updated?.date} /> : null}
+        {post.title}
+      </Link>
+    </H>
+  );
   return (
     <article className={`fx-scard${lead ? " fx-lead" : ""}`} data-kind="article" data-post-card={post.slug} data-tag={postTag(post)}>
-      <ArtFigure slug={post.slug} className="fx-scard-art" src={art.src} alt={art.alt} pad={art.pad} eager={eager} sizes={lead ? LEAD_SIZES : undefined} />
+      <ArtFigure slug={post.slug} className="fx-scard-art" src={art.src} alt={art.alt} pad={art.pad} eager={eager} morph={morph} sizes={lead ? LEAD_SIZES : undefined} />
       <div className="fx-scard-text">
         <p className="fx-eyebrow">{eyebrow ?? postTag(post)}</p>
-        <Morph name={`title-${post.slug}`}>
-          <H className="fx-scard-title">
-            <Link
-              className="fx-stretch"
-              href={`/daily-digest/${post.slug}`}
-              {...(homeTarget ? { "data-home-target": `article:${post.slug}` } : {})}
-            >
-              {newMark ? <NewMarkSr slug={post.slug} date={post.date} updated={post.updated?.date} /> : null}
-              {post.title}
-            </Link>
-          </H>
-        </Morph>
-        <p className="fx-scard-dek">{postCardDek(post)}</p>
+        {morph ? <Morph name={`title-${post.slug}`}>{title}</Morph> : title}
+        <p className="fx-scard-dek">{dek ?? postCardDek(post)}</p>
         <p className="fx-meta fx-scard-date">
           <time dateTime={post.date}>{shortDate(post.date)}</time>
         </p>

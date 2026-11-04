@@ -16,6 +16,7 @@ export function ArtFigure({
   eager = false,
   hero = false,
   sizes,
+  morph = true,
 }: {
   slug: string;
   className: string;
@@ -25,20 +26,22 @@ export function ArtFigure({
   eager?: boolean;
   hero?: boolean;
   sizes?: string;
+  /** False when this slug's art is already on the page (listing picks above the feed). One art-<slug> name, so the feed card still morphs to the story. */
+  morph?: boolean;
 }) {
-  return (
-    <Morph name={`art-${slug}`}>
-      <figure className={className} style={{ "--art-pad": pad } as React.CSSProperties} data-art={slug}>
-        <Img
-          src={src}
-          alt={alt}
-          width={ART_W}
-          height={ART_H}
-          sizes={sizes ?? (hero ? "(max-width: 899.98px) 100vw, 680px" : undefined)}
-          {...(hero || eager ? { fetchPriority: "high" as const } : { loading: "lazy" as const })}
-          decoding="async"
-        />
-      </figure>
-    </Morph>
+  const figure = (
+    <figure className={className} style={{ "--art-pad": pad } as React.CSSProperties} data-art={slug}>
+      <Img
+        src={src}
+        alt={alt}
+        width={ART_W}
+        height={ART_H}
+        sizes={sizes ?? (hero ? "(max-width: 899.98px) 100vw, 680px" : undefined)}
+        {...(hero || eager ? { fetchPriority: "high" as const } : { loading: "lazy" as const })}
+        decoding="async"
+      />
+    </figure>
   );
+  if (!morph) return figure;
+  return <Morph name={`art-${slug}`}>{figure}</Morph>;
 }
