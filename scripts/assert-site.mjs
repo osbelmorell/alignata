@@ -931,7 +931,8 @@ test("tool_open: story row Opens + sticky Open count (same event + payload); row
 });
 
 test("sitemap: adds exactly the tool stories (no Deploy Decision story); everything else unchanged", async () => {
-  const urls = (await import("../app/sitemap.ts")).default().map((e) => e.url);
+  const entries = (await import("../app/sitemap.ts")).default();
+  const urls = entries.map((e) => e.url);
   const { getApps } = await import("../lib/apps.ts");
   const { posts } = await import("../content/posts.ts");
   const mod = await import("../app/apps/[slug]/page.tsx");
@@ -950,6 +951,14 @@ test("sitemap: adds exactly the tool stories (no Deploy Decision story); everyth
   assert.ok(!urls.includes(`${S}/terms`), "Terms is held: not in the sitemap");
   assert.equal(urls.length, 74);
   assert.equal(new Set(urls).size, urls.length);
+  for (const p of posts) {
+    assert.equal(entries.find((e) => e.url === `${S}/daily-digest/${p.slug}`)?.lastModified, p.updated?.date ?? p.date, `${p.slug} lastmod`);
+  }
+  assert.equal(entries.find((e) => e.url === `${S}/daily-digest`)?.lastModified, undefined, "digest index has no lastmod");
+  for (const e of entries) {
+    if (e.url.includes("/daily-digest/") || e.url.includes("/guides/")) continue;
+    assert.equal(e.lastModified, undefined, `${e.url} lastmod unchanged`);
+  }
   const robots = (await import("../app/robots.ts")).default();
   assert.deepEqual(robots, { rules: { userAgent: "*", allow: "/" }, sitemap: "https://alignata.com/sitemap.xml" }, "robots unchanged");
 });
@@ -1223,33 +1232,59 @@ test("Daily Digest kind + byline: default technique, AI Safety Paradox is an ess
   }
 });
 
-test("Daily Digest JSON-LD: Article with datePublished; essay author Person, technique author Organization + editor Person", async () => {
+test("Daily Digest JSON-LD: Article with datePublished, dateModified, publisher, Daily Digest series; BreadcrumbList; essay author Person, technique author Organization + editor Person", async () => {
   const { renderToStaticMarkup } = await import("react-dom/server");
   const { getPost } = await import("../content/posts.ts");
-  const { articleJsonLd, jsonLdScript } = await import("../lib/daily-digest/jsonld.ts");
+  const { articleJsonLd, digestBreadcrumbJsonLd, jsonLdScript } = await import("../lib/daily-digest/jsonld.ts");
   const { default: Article } = await import("../app/daily-digest/[slug]/page.tsx");
+  const crumbs = (post) => ({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://alignata.com/" },
+      { "@type": "ListItem", position: 2, name: "Daily Digest", item: "https://alignata.com/daily-digest" },
+      { "@type": "ListItem", position: 3, name: post.title, item: `https://alignata.com/daily-digest/${post.slug}` },
+    ],
+  });
   const ld = async (slug) => {
     const html = renderToStaticMarkup(await Article({ params: Promise.resolve({ slug }) }));
+    assert.ok(!html.includes("FAQPage") && !html.includes("HowTo"), `${slug}: no invented FAQ or HowTo`);
     const m = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g);
-    assert.equal(m?.length, 1, `${slug}: one JSON-LD script`);
-    return JSON.parse(m[0].replace(/^<script[^>]*>/, "").replace(/<\/script>$/, ""));
+    assert.equal(m?.length, 2, `${slug}: Article + BreadcrumbList`);
+    return m.map((s) => JSON.parse(s.replace(/^<script[^>]*>/, "").replace(/<\/script>$/, "")));
   };
   const essay = getPost("the-ai-safety-paradox");
-  const e = await ld(essay.slug);
+  const [e, eb] = await ld(essay.slug);
   assert.equal(e["@context"], "https://schema.org");
   assert.equal(e["@type"], "Article");
   assert.equal(e.headline, essay.title);
   assert.equal(e.datePublished, essay.date);
+  assert.equal(e.dateModified, essay.date, "no updated date → dateModified is the publish date");
   assert.equal(e.url, `https://alignata.com/daily-digest/${essay.slug}`);
   assert.equal(e.image, `https://alignata.com/art/digest/${essay.slug}-sticker.webp`);
+  assert.deepEqual(e.publisher, { "@type": "Organization", name: "Alignata", url: "https://alignata.com" });
+  assert.deepEqual(e.isPartOf, { "@type": "CreativeWorkSeries", name: "Daily Digest", url: "https://alignata.com/daily-digest" });
   assert.deepEqual(e.author, { "@type": "Person", name: "Osbel Morell" });
   assert.equal(e.editor, undefined);
+  assert.deepEqual(eb, crumbs(essay));
   const tech = getPost("break-loops-when-progress-stalls");
-  const t = await ld(tech.slug);
+  const [t, tb] = await ld(tech.slug);
   assert.equal(t.datePublished, "2026-10-02");
+  assert.equal(t.dateModified, "2026-10-02");
+  assert.deepEqual(t.publisher, { "@type": "Organization", name: "Alignata", url: "https://alignata.com" });
+  assert.deepEqual(t.isPartOf, { "@type": "CreativeWorkSeries", name: "Daily Digest", url: "https://alignata.com/daily-digest" });
   assert.deepEqual(t.author, { "@type": "Organization", name: "Alignata Daily Digest", url: "https://alignata.com/daily-digest" });
   assert.deepEqual(t.editor, { "@type": "Person", name: "Osbel Morell" });
   assert.deepEqual(t, articleJsonLd(tech));
+  assert.deepEqual(tb, digestBreadcrumbJsonLd(tech));
+  assert.equal(articleJsonLd({ ...tech, updated: { date: "2026-11-01", note: "Added a second test result." } }).dateModified, "2026-11-01", "dateModified follows updated.date");
+  const sample = getPost("verify-before-you-trust-the-answer");
+  const [sv, sb] = await ld(sample.slug);
+  assert.equal(sv.datePublished, "2026-11-04");
+  assert.equal(sv.dateModified, "2026-11-04");
+  assert.deepEqual(sv.publisher, { "@type": "Organization", name: "Alignata", url: "https://alignata.com" });
+  assert.deepEqual(sv.isPartOf, { "@type": "CreativeWorkSeries", name: "Daily Digest", url: "https://alignata.com/daily-digest" });
+  assert.deepEqual(sb, crumbs(sample));
   const s = jsonLdScript({ x: "</script><!-- a & b" });
   assert.ok(!s.includes("<") && !s.includes(">") && !s.includes("&"), "escaped");
   assert.deepEqual(JSON.parse(s), { x: "</script><!-- a & b" });
@@ -1970,7 +2005,11 @@ test("Release B outputs for an updated post (temp fixture post, never in posts.t
     assert.ok(xml.includes("<lastBuildDate>Wed, 04 Nov 2026 12:00:00 GMT</lastBuildDate>"), "channel lastBuildDate follows the update");
     const sm = (await import("../app/sitemap.ts")).default();
     assert.equal(sm.find((e) => e.url.endsWith(`/daily-digest/${p.slug}`)).lastModified, "2026-11-04");
-    assert.equal(sm.filter((e) => e.url.includes("/daily-digest/") && e.lastModified).length, mod.posts.filter((x) => x.updated).length, "only updated posts");
+    for (const post of mod.posts) {
+      const row = sm.find((e) => e.url.endsWith(`/daily-digest/${post.slug}`));
+      assert.equal(row.lastModified, post.updated?.date ?? post.date, `${post.slug} lastmod is updated date, else publish date`);
+    }
+    assert.equal(sm.find((e) => e.url === "https://alignata.com/daily-digest").lastModified, undefined, "digest index has no lastmod");
     const { renderToStaticMarkup } = await import("react-dom/server");
     const { default: Page } = await import("../app/daily-digest/[slug]/page.tsx");
     const html = renderToStaticMarkup(await Page({ params: Promise.resolve({ slug: p.slug }) }));
