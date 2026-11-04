@@ -13,7 +13,7 @@ import { BackLink } from "@/components/site/BackLink";
 import { ShareEnd } from "@/components/site/ShareButton";
 import { ogImage, ogPath, shareMeta } from "@/lib/share/og";
 import { DigestOpen } from "@/components/daily-digest/DigestOpen";
-import { articleJsonLd, jsonLdScript } from "@/lib/daily-digest/jsonld";
+import { articleJsonLd, digestBreadcrumbJsonLd, jsonLdScript } from "@/lib/daily-digest/jsonld";
 
 export const dynamicParams = false;
 
@@ -73,6 +73,7 @@ export default async function DailyDigestPostPage({
       <BackLink href="/daily-digest" label="Daily Digest" share={{ path: `/daily-digest/${post.slug}`, slug: post.slug, label: "Share this article", title: post.title }} />
       <main className="fx-story">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(articleJsonLd(post)) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(digestBreadcrumbJsonLd(post)) }} />
         <article>
           <ArtFigure slug={post.slug} className="fx-story-hero" src={hero.src} alt={hero.alt} pad={hero.pad} hero />
           <div className="fx-story-col">

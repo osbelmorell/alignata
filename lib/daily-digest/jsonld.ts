@@ -8,6 +8,8 @@ const SITE = "https://alignata.com";
 /**
  * schema.org Article for a Daily Digest story. Essays: author = Person "Osbel Morell". Techniques: author =
  * Organization "Alignata Daily Digest", editor = Person "Osbel Morell". datePublished = the article date.
+ * dateModified = the updated date, else the article date. publisher = Organization "Alignata". isPartOf = the
+ * Daily Digest series. A series-specific isPartOf waits until posts carry series metadata.
  */
 export function articleJsonLd(post: Post): Record<string, unknown> {
   const person = { "@type": "Person", name: AUTHOR_NAME };
@@ -22,10 +24,27 @@ export function articleJsonLd(post: Post): Record<string, unknown> {
     headline: post.title,
     description: toPlainText(postCardDek(post)),
     datePublished: post.date,
+    dateModified: post.updated?.date ?? post.date,
     image: `${SITE}${heroImage(post).src}`,
     url,
     mainEntityOfPage: url,
+    publisher: { "@type": "Organization", name: "Alignata", url: SITE },
+    isPartOf: { "@type": "CreativeWorkSeries", name: "Daily Digest", url: `${SITE}/daily-digest` },
     ...byline,
+  };
+}
+
+/** BreadcrumbList: Home › Daily Digest › this article. Second JSON-LD script on the story page. */
+export function digestBreadcrumbJsonLd(post: Post): Record<string, unknown> {
+  const url = `${SITE}/daily-digest/${post.slug}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
+      { "@type": "ListItem", position: 2, name: "Daily Digest", item: `${SITE}/daily-digest` },
+      { "@type": "ListItem", position: 3, name: post.title, item: url },
+    ],
   };
 }
 

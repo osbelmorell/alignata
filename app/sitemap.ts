@@ -10,9 +10,9 @@ const SITE = "https://alignata.com";
 
 /**
  * Home, /apps, every tool listed in public/apps.json (the /apps catalog), each tool's story /apps/<slug> (every tool
- * with a story; Deploy Decision Card has none), /daily-digest and each digest article, then each PUBLISHED guide
- * /guides/<slug> with lastmod (draft guides never). Unlisted tools (not in apps.json) and redirect-only paths are never
- * included.
+ * with a story; Deploy Decision Card has none), /daily-digest and each digest article (lastmod = updated date,
+ * else the publish date), then each PUBLISHED guide /guides/<slug> with lastmod (draft guides never). Unlisted tools
+ * (not in apps.json) and redirect-only paths are never included.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const tools = getApps()
@@ -22,10 +22,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     .map((a) => storyHref(a.id))
     .filter((h): h is string => !!h);
   const paths = ["/", "/apps", ...tools, ...stories, "/daily-digest", ...posts.map((p) => `/daily-digest/${p.slug}`), ...COMPANY_PATHS];
-  const updated = new Map(posts.filter((p) => p.updated).map((p) => [`/daily-digest/${p.slug}`, p.updated!.date]));
+  const digestLastMod = new Map(posts.map((p) => [`/daily-digest/${p.slug}`, p.updated?.date ?? p.date]));
   return [
     ...[...new Set(paths)].map((p) => {
-      const lastModified = updated.get(p);
+      const lastModified = digestLastMod.get(p);
       return { url: p === "/" ? SITE : `${SITE}${p}`, ...(lastModified ? { lastModified } : {}) };
     }),
     ...guideSitemapEntries(),
