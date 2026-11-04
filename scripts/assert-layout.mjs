@@ -1,6 +1,7 @@
 // Rendered layout checks (real browsers on the built site). Run after `npm run build`: npm run test:layout.
-// Featured (lead) cards on / and /daily-digest: the art keeps a 12px inset on all four sides at every desktop width
+// Featured (lead) cards on / : the art keeps a 12px inset on all four sides at every desktop width
 // 900-1100 (QA #13: a taller text column left 14-97px under the art from 900 to ~1030px), in Chromium and WebKit.
+// /daily-digest no longer uses lead rows; its cards are the equal-height digest grid.
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
@@ -28,7 +29,7 @@ for (const [name, engine] of [["chromium", chromium], ["webkit", webkit]]) {
     const browser = await engine.launch();
     const bad = [];
     try {
-      for (const path of ["/", "/daily-digest"]) {
+      for (const path of ["/"]) {
         const page = await browser.newPage({ viewport: { width: 900, height: 900 } });
         await page.goto(BASE + path, { waitUntil: "load" });
         for (const w of WIDTHS) {
