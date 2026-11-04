@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { getPost, getPostsNewestFirst, type Post } from "@/content/posts";
 import { ArticleStoryCard } from "@/components/appstore/StoryCard";
+import { DigestFind } from "@/components/daily-digest/DigestFind";
 import { NewMarkBoot } from "@/components/daily-digest/NewMarkBoot";
 import { PageFade } from "@/components/appstore/Motion";
 import { BackLink } from "@/components/site/BackLink";
 import { PageHero } from "@/components/site/PageHero";
+import { DIGEST_FILTER_BOOT, START_HERE, START_HERE_SLUGS, digestSearchText, groupByMonth } from "@/lib/daily-digest/listing";
 import { DIGEST_POSITIONING, postTag } from "@/lib/daily-digest/meta";
 import { ogImage, ogPath, shareMeta } from "@/lib/share/og";
 
@@ -32,22 +34,6 @@ export const metadata: Metadata = {
   twitter: SHARE.twitter,
 };
 
-/** Pinned entry posts. Why-read lines are listing copy, not a new content field. */
-const START_HERE: { slug: string; why: string }[] = [
-  {
-    slug: "cdm-vs-llm-vs-jev",
-    why: "Three model types do different jobs. Read this before you treat every task as a chat model.",
-  },
-  {
-    slug: "ai-harnesses-explained",
-    why: "The model is half the system. This is the harness around it: tools, checks, and the loop.",
-  },
-  {
-    slug: "the-ai-safety-paradox",
-    why: "A field note on asking the model to police itself, and why that does not hold.",
-  },
-];
-
 function startHerePost(slug: string): Post {
   const post = getPost(slug);
   if (!post) throw new Error(`Start here post missing: ${slug}`);
@@ -55,21 +41,21 @@ function startHerePost(slug: string): Post {
 }
 
 /**
- * /daily-digest: positioning line, three pinned entry cards, then Deep dive and Essay cards,
- * then every article as a story card (no app row), newest first. Eyebrow = the tag. Desktop repeats the §3 layout:
- * a full-width lead row, then a 2-up grid, every 5 cards. Listing picks reuse ArticleStoryCard (same sticker).
+ * /daily-digest: compact head, then the newest-first feed. The three Start here pins are not
+ * repeated in the feed; they sit below it. Type chips and search filter the feed in the browser
+ * and write ?type=&q= . Canonical stays /daily-digest. No lead rows: every card is the same
+ * equal-height story card (24px gap, 16:9 inset).
  */
 export default function DailyDigestIndexPage() {
   const posts = getPostsNewestFirst();
-  const flagship = posts.filter((post) => {
-    const tag = postTag(post);
-    return tag === "Deep dive" || tag === "Essay";
-  });
+  const feed = posts.filter((post) => !START_HERE_SLUGS.has(post.slug));
+  const months = groupByMonth(feed);
   return (
     <PageFade>
       <BackLink href="/" label="Home" share={{ path: "/daily-digest", slug: "daily-digest", label: "Share the Daily Digest", title: "Daily Digest" }} />
-      <main className="fx-wrap">
+      <main className="fx-wrap fx-digest-index">
         <NewMarkBoot posts={posts} />
+        <script dangerouslySetInnerHTML={{ __html: DIGEST_FILTER_BOOT }} />
         <section className="fx-page-head fx-head-split">
           <div>
             <h1 className="fx-display">Daily Digest</h1>
@@ -82,30 +68,35 @@ export default function DailyDigestIndexPage() {
           </div>
           <PageHero src="/art/digest-hero-sticker.webp" />
         </section>
+        <section className="fx-digest-latest" aria-label="Latest">
+          <DigestFind />
+          <div className="fx-digest-months">
+            {months.map((month, monthIndex) => (
+              <section key={month.key} data-digest-month={month.key} aria-labelledby={`digest-month-${month.key}`}>
+                <h2 id={`digest-month-${month.key}`} className="fx-digest-month">{month.label}</h2>
+                <ul className="fx-digest-cards fx-latest">
+                  {month.posts.map((post, i) => (
+                    <li key={post.slug} data-tag={postTag(post)} data-search={digestSearchText(post)}>
+                      <ArticleStoryCard post={post} heading="h3" eager={monthIndex === 0 && i === 0} newMark />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+          <p id="digest-empty" className="fx-digest-empty" hidden aria-live="polite">
+            No articles match.
+          </p>
+        </section>
         <section className="fx-digest-block" aria-labelledby="digest-start">
           <h2 id="digest-start">Start here</h2>
           <ol className="fx-digest-cards fx-start">
-            {START_HERE.map(({ slug, why }, i) => (
+            {START_HERE.map(({ slug, why }) => (
               <li key={slug}>
-                <ArticleStoryCard post={startHerePost(slug)} dek={why} heading="h3" morph={false} eager={i === 0} newMark />
+                <ArticleStoryCard post={startHerePost(slug)} dek={why} heading="h3" newMark />
               </li>
             ))}
           </ol>
-        </section>
-        <section className="fx-digest-block" aria-labelledby="digest-flagship">
-          <h2 id="digest-flagship">Deep dives and essays</h2>
-          <ul className="fx-digest-cards fx-flagship">
-            {flagship.map((post) => (
-              <li key={post.slug}>
-                <ArticleStoryCard post={post} heading="h3" morph={false} newMark />
-              </li>
-            ))}
-          </ul>
-        </section>
-        <section className="fx-feed" aria-label="All articles">
-          {posts.map((post, i) => (
-            <ArticleStoryCard key={post.slug} post={post} lead={i % 5 === 0} eager={i === 0} newMark />
-          ))}
         </section>
         <p className="fx-rss">
           <a className="fx-text-link" href="/daily-digest/rss.xml">

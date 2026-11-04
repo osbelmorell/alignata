@@ -197,7 +197,8 @@ a.fx-text-link:focus-visible { outline: 3px solid var(--ink); outline-offset: 2p
 @media (min-width: 900px) { .fx-rss { margin-top: 72px; } }
 /* Follow link under the listing intro (the footer link stays). */
 .fx-digest-follow { margin-top: 8px; }
-/* Start here + Deep dives/essays: the same story cards as the feed, in an even grid. Dated feed rules stay on .fx-feed. */
+/* Latest feed + Start here: the same story cards, even grid, 24px gap, equal heights.
+   Dated homepage feed rules stay on .fx-feed. Month labels are plain body type and do not stick. */
 .fx-digest-block { margin-top: 40px; }
 .fx-digest-block > h2 { font-family: var(--display); font-weight: 600; font-size: 26px; line-height: 1.2; letter-spacing: -0.015em; }
 .fx-digest-cards { list-style: none; margin: 24px 0 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: stretch; }
@@ -207,9 +208,28 @@ a.fx-text-link:focus-visible { outline: 3px solid var(--ink); outline-offset: 2p
 .fx-digest-cards .fx-scard-title { font-size: 20px; }
 .fx-digest-cards .fx-scard-dek { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
 .fx-digest-cards .fx-scard-date { margin-top: auto; padding-top: 12px; }
+.fx-digest-latest { margin-top: 8px; min-width: 0; }
+.fx-digest-month { margin: 20px 0 0; font-family: var(--body); font-weight: 600; font-size: 15px; line-height: 1.3; letter-spacing: 0; color: var(--ink-2); }
+.fx-digest-cards.fx-latest { margin-top: 12px; }
+.fx-digest-empty { margin-top: 16px; color: var(--ink-2); }
+.fx-digest-find { margin-top: 16px; display: grid; gap: 8px; min-width: 0; }
+.fx-digest-chips { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.fx-digest-chips button { box-sizing: border-box; min-height: 44px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--ink);
+  font-family: var(--body); font-size: 15px; font-weight: 600; line-height: 1; white-space: nowrap; cursor: pointer; }
+.fx-digest-chips button[aria-pressed="true"] { background: var(--purple); border-color: var(--purple); color: #fff; }
+.fx-digest-chips button:focus-visible, .fx-digest-q:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
+.fx-digest-q { display: block; width: 100%; max-width: 100%; box-sizing: border-box; height: 44px; min-height: 44px; margin: 0; padding: 0 14px; border: 1px solid var(--line); border-radius: 14px;
+  background: #fff; color: var(--ink); font-family: var(--body); font-size: 16px; font-weight: 500; line-height: 1.2; }
+.fx-digest-q::placeholder { color: var(--ink-2); }
+/* Phone: the listing illustration stacks under the title and pushes the newest card below the fold. */
+@media (max-width: 899.98px) {
+  .fx-digest-index .fx-page-hero { display: none; }
+}
 @media (min-width: 900px) {
   .fx-digest-block { margin-top: 56px; }
   .fx-digest-cards .fx-scard-title { font-size: 22px; }
+  .fx-digest-find { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+  .fx-digest-q { width: min(320px, 100%); }
   .fx-start { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .fx-flagship { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fx-latest { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

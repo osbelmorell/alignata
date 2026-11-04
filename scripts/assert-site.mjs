@@ -448,9 +448,8 @@ test("Daily Digest pages render: story cards (eyebrow = tag, title is the link, 
   const { default: Index } = await import("../app/daily-digest/page.tsx");
   const list = getPostsNewestFirst();
   const cards = renderToStaticMarkup(createElement(Index));
-  const listingExtra = 3 + list.filter((p) => meta.postTag(p) === "Deep dive" || meta.postTag(p) === "Essay").length;
-  assert.equal((cards.match(/data-post-card=/g) || []).length, list.length + listingExtra, "feed plus start-here and flagship story cards");
-  assert.equal((cards.match(/fx-scard fx-lead/g) || []).length, 10, "a lead row every 5 cards (47 cards → 10) (§3 desktop layout repeated)");
+  assert.equal((cards.match(/data-post-card=/g) || []).length, list.length, "each article once: pins are not repeated in the feed");
+  assert.equal((cards.match(/fx-scard fx-lead/g) || []).length, 0, "digest listing uses equal-height cards, not lead rows");
   assert.ok(!/>Open</.test(cards), "no Open pill on the digest");
   const esc = (t) => t.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
   for (const p of list) {
@@ -481,53 +480,99 @@ test("Daily Digest pages render: story cards (eyebrow = tag, title is the link, 
   assert.match(eb, /<p class="fx-byline">— Osbel Morell<\/p><\/div>$/);
 });
 
-test("Daily Digest listing: positioning, start here, flagship strip, top RSS, cluster on every post", async () => {
+test("Daily Digest listing: positioning, latest feed, start here below, type chips, cluster on every post", async () => {
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
-  const { posts, POST_CLUSTERS } = await import("../content/posts.ts");
+  const { posts, POST_CLUSTERS, getPostsNewestFirst } = await import("../content/posts.ts");
   const { DIGEST_POSITIONING, postTag } = await import("../lib/daily-digest/meta.ts");
+  const listing = await import("../lib/daily-digest/listing.ts");
   const { default: Index } = await import("../app/daily-digest/page.tsx");
   const html = renderToStaticMarkup(createElement(Index));
   assert.ok(html.includes(DIGEST_POSITIONING), "positioning line");
   const follow = html.indexOf('href="/daily-digest/rss.xml" type="application/rss+xml">Follow via RSS');
+  const latest = html.indexOf('class="fx-digest-latest"');
   const start = html.indexOf('id="digest-start"');
-  const flag = html.indexOf('id="digest-flagship"');
-  const feed = html.indexOf('<section class="fx-feed"');
-  assert.ok(follow > -1 && follow < start && start < flag && flag < feed, "follow link, then start here, then flagship, then the dated feed");
+  assert.ok(follow > -1 && follow < latest && latest < start, "follow link, then the latest feed, then start here");
+  assert.equal(html.indexOf('id="digest-flagship"'), -1, "deep dives strip removed");
+  assert.ok(!html.includes("Deep dives and essays"), "flagship heading gone");
   assert.ok(html.includes('<p class="fx-rss"><a class="fx-text-link" href="/daily-digest/rss.xml">RSS feed</a></p>'), "footer RSS link kept");
-  assert.ok(!/<(form|input|textarea)\b/i.test(html), "no email capture");
+  assert.ok(!/type="email"|newsletter|placeholder="[^"]*email/i.test(html), "no email capture");
+  assert.match(html, /type="search"/, "search field");
+  assert.match(html, /aria-pressed="true">All</);
+  assert.match(html, /aria-pressed="false">Technique</);
+  assert.match(html, /aria-pressed="false">Deep dive</);
+  assert.match(html, /aria-pressed="false">Essay</);
+  assert.ok(!html.includes(">Techniques<") && !html.includes(">Deep dives<") && !html.includes(">Essays<"), "chip labels are the tag strings");
+  assert.ok(!/>Top</.test(html), "no Top sort");
+  const pageSrc = (await import("node:fs")).readFileSync("app/daily-digest/page.tsx", "utf8");
+  assert.match(pageSrc, /canonical:\s*"\/daily-digest"/, "canonical stays /daily-digest");
   const startOrder = ["cdm-vs-llm-vs-jev", "ai-harnesses-explained", "the-ai-safety-paradox"];
-  const startHtml = html.slice(start, flag);
+  assert.deepEqual(listing.START_HERE.map((item) => item.slug), startOrder);
+  const feedHtml = html.slice(latest, start);
+  const startHtml = html.slice(start);
+  const feedPosts = getPostsNewestFirst().filter((p) => !listing.START_HERE_SLUGS.has(p.slug));
+  assert.equal((feedHtml.match(/data-post-card=/g) || []).length, posts.length - startOrder.length, "latest feed omits the three pins");
+  assert.ok(feedHtml.indexOf(">November 2026<") < feedHtml.indexOf(`data-post-card="${feedPosts[0].slug}"`), "month header before the newest card");
+  assert.equal(feedPosts[0].date.slice(0, 7), "2026-11");
+  let prev = feedHtml.indexOf(">November 2026<");
+  for (const post of feedPosts.slice(0, 2)) {
+    const i = feedHtml.indexOf(`data-post-card="${post.slug}"`);
+    assert.ok(i > prev, `feed order ${post.slug}`);
+    prev = i;
+  }
+  for (const slug of startOrder) {
+    assert.ok(!feedHtml.includes(`data-post-card="${slug}"`), `${slug} is not in the latest feed`);
+    assert.ok(startHtml.includes(`data-post-card="${slug}"`), `start here card ${slug}`);
+    assert.ok(startHtml.includes(`src="/art/digest/${slug}-sticker.webp"`), `start here art ${slug}`);
+    assert.equal(html.split(`data-post-card="${slug}"`).length - 1, 1, `${slug} appears once`);
+  }
   let at = start;
   for (const slug of startOrder) {
     const i = html.indexOf(`href="/daily-digest/${slug}"`, at);
     assert.ok(i > at, `start here link ${slug}`);
     at = i;
-    assert.ok(startHtml.includes(`src="/art/digest/${slug}-sticker.webp"`), `start here art ${slug}`);
-    assert.ok(startHtml.includes(`data-post-card="${slug}"`), `start here card ${slug}`);
   }
   assert.ok(startHtml.includes("Three model types do different jobs."));
   assert.ok(startHtml.includes("The model is half the system."));
   assert.ok(startHtml.includes("asking the model to police itself"));
-  const flagship = posts.filter((p) => postTag(p) === "Deep dive" || postTag(p) === "Essay").map((p) => p.slug);
-  assert.equal(flagship.length, 11);
-  const flagHtml = html.slice(flag, feed);
-  for (const slug of flagship) {
-    assert.ok(flagHtml.includes(`href="/daily-digest/${slug}"`), `flagship ${slug}`);
-    assert.ok(flagHtml.includes(`src="/art/digest/${slug}-sticker.webp"`), `flagship art ${slug}`);
-  }
-  assert.equal((html.slice(feed).match(/data-post-card=/g) || []).length, 47, "dated feed is still every article once");
-  assert.equal((html.match(/data-post-card=/g) || []).length, 47 + startOrder.length + flagship.length, "start here and flagship reuse story cards");
+  assert.equal((html.match(/data-post-card=/g) || []).length, posts.length, "each article once on the page");
+  for (const p of posts) assert.equal(html.split(`data-post-card="${p.slug}"`).length - 1, 1, `${p.slug} once`);
   const { readFileSync } = await import("node:fs");
   const listingCss = readFileSync("app/appstore.css", "utf8");
   assert.match(listingCss, /\.fx-digest-cards \{[^}]*gap: 24px/);
   assert.match(listingCss, /\.fx-digest-cards \.fx-scard-dek \{[^}]*-webkit-line-clamp: 3/);
   assert.match(listingCss, /\.fx-digest-cards \.fx-scard-date \{[^}]*margin-top: auto/);
   assert.match(listingCss, /\.fx-start \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
-  assert.match(listingCss, /\.fx-flagship \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(listingCss, /\.fx-latest \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(listingCss, /\.fx-digest-chips \{[^}]*flex-wrap: wrap/);
+  assert.ok(listingCss.includes(".fx-digest-index .fx-page-hero { display: none; }"), "phone hides the listing hero so the newest card can lead");
+  const monthRule = listingCss.slice(listingCss.indexOf(".fx-digest-month {"), listingCss.indexOf("}", listingCss.indexOf(".fx-digest-month {")));
+  assert.match(monthRule, /font-family: var\(--body\)/);
+  assert.ok(!/sticky/.test(monthRule), "month headers are plain type, not sticky");
+  assert.ok(!listingCss.includes(".fx-flagship"), "flagship strip layout gone");
   assert.ok(!listingCss.includes(".fx-flag-title"), "text chips gone");
-  for (const p of posts) {
-    if (postTag(p) === "Technique") assert.ok(!flagHtml.includes(`href="/daily-digest/${p.slug}"`), `${p.slug} stays out of the flagship strip`);
+  assert.equal(listing.parseDigestType("essay"), "essay");
+  assert.equal(listing.parseDigestType("nope"), "all");
+  assert.equal(listing.parseDigestType(null), "all");
+  const sample = posts.find((p) => p.slug === "give-the-brief-not-the-dump");
+  const search = listing.digestSearchText(sample);
+  assert.equal(listing.postMatches({ tag: postTag(sample), search }, "technique", "brief"), true);
+  assert.equal(listing.postMatches({ tag: postTag(sample), search }, "essay", "brief"), false);
+  assert.equal(listing.postMatches({ tag: "Essay", search: "safety paradox" }, "essay", "Safety"), true);
+  const groups = listing.groupByMonth(feedPosts);
+  assert.equal(groups[0].label, "November 2026");
+  assert.deepEqual(groups[0].posts.map((p) => p.slug), feedPosts.filter((p) => p.date.startsWith("2026-11")).map((p) => p.slug));
+  const vm = await import("node:vm");
+  for (const [type, q] of [["all", ""], ["essay", ""], ["deep-dive", 'say "hi"'], ["technique", "brief"]]) {
+    const params = new URLSearchParams();
+    if (type !== "all") params.set("type", type);
+    if (q) params.set("q", q);
+    const style = { id: "", textContent: "" };
+    const head = { appendChild(el) { this.el = el; } };
+    const document = { getElementById() { return null; }, createElement() { return style; }, head };
+    vm.runInNewContext(listing.DIGEST_FILTER_BOOT, { location: { search: params.size ? `?${params}` : "" }, document, URLSearchParams });
+    const expected = listing.digestFilterCss(type, q);
+    assert.equal(type === "all" && !q ? style.textContent : style.textContent, expected, `boot css ${type} ${q}`);
   }
   const allowed = new Set(POST_CLUSTERS);
   assert.equal(allowed.size, 7);
@@ -1113,9 +1158,7 @@ test("Daily Digest dates: every article card (home feed, /daily-digest, Next art
   const { default: Index } = await import("../app/daily-digest/page.tsx");
   const index = renderToStaticMarkup(createElement(Index));
   const list = getPostsNewestFirst();
-  const { postTag } = await import("../lib/daily-digest/meta.ts");
-  const listingCards = 3 + list.filter((p) => postTag(p) === "Deep dive" || postTag(p) === "Essay").length;
-  assert.equal((index.match(/fx-scard-date/g) || []).length, list.length + listingCards, "feed, start here, and flagship cards are dated");
+  assert.equal((index.match(/fx-scard-date/g) || []).length, list.length, "each article card is dated once");
   for (const p of list) assert.ok(dated(index, p.slug, p.date), `${p.slug}: dated on /daily-digest`);
   const { default: Home } = await import("../app/page.tsx");
   const home = renderToStaticMarkup(createElement(Home));
@@ -1955,7 +1998,7 @@ test("Release A wiring: mark on home + /daily-digest cards only, never the artic
   const html = renderToStaticMarkup(createElement(Index));
   assert.ok(!html.includes("dd-new-style{") && !html.includes("fx-sr") && !html.includes('content:"New"'.replace(/"/g, "&quot;")), "server/hydration render: no mark (client-only)");
   assert.equal((html.match(/<script>\(function\(m\)/g) || []).length, 1, "one boot script, before the feed");
-  assert.ok(html.indexOf("<script>(function(m)") < html.indexOf('<section class="fx-feed"'), "boot script runs before the cards are parsed");
+  assert.ok(html.indexOf("<script>(function(m)") < html.indexOf('class="fx-digest-latest"'), "boot script runs before the cards are parsed");
   assert.ok(html.includes('<p class="fx-rss"><a class="fx-text-link" href="/daily-digest/rss.xml">RSS feed</a></p>'));
   const dd = readFileSync("components/daily-digest/DigestOpen.tsx", "utf8");
   assert.ok(dd.includes("shouldSkip(") && dd.includes("dogfoodSession(") && dd.includes("SID_KEY") && dd.includes("VID_KEY"), "existing skip rule, dogfood flag and ids");
